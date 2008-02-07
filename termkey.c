@@ -130,41 +130,53 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
     return TERMKEY_RES_NONE;
 
   unsigned char cmd = tk->buffer[csi_end];
-  int arg1 = -1;
-  int arg2 = -1;
+  int arg[16];
+  char present = 0;
+  int args = 0;
 
   size_t p = introlen;
 
-  // Now attempt to parse out up to the first two 1;2; separated arguments
-  if(tk->buffer[p] >= '0' && tk->buffer[p] <= '9') {
-    arg1 = 0;
-    while(p < csi_end && tk->buffer[p] != ';') {
-      arg1 = (arg1 * 10) + tk->buffer[p] - '0';
-      p++;
-    }
+  // Now attempt to parse out up number;number;... separated values
+  while(p < csi_end) {
+    unsigned char c = tk->buffer[p];
 
-    if(tk->buffer[p] == ';')
-      p++;
-
-    if(tk->buffer[p] >= '0' && tk->buffer[p] <= '9') {
-      arg2 = 0;
-      while(p < csi_end && tk->buffer[p] != ';') {
-        arg2 = (arg2 * 10) + tk->buffer[p] - '0';
-        p++;
+    if(c >= '0' && c <= '9') {
+      if(!present) {
+        arg[args] = c - '0';
+        present = 1;
+      }
+      else {
+        arg[args] = (arg[args] * 10) + c - '0';
       }
     }
+    else if(c == ';') {
+      if(!present)
+        arg[args] = -1;
+      present = 0;
+      args++;
+
+      if(args > 16)
+        break;
+    }
+
+    p++;
   }
+
+  if(!present)
+    arg[args] = -1;
+
+  args++;
 
   eatbytes(tk, csi_end + 1);
 
   if(cmd == '~') {
-    if(arg1 >= 0 && arg1 < tk->ncsifuncs)
-      key->code = tk->csifuncs[arg1];
+    if(arg[0] >= 0 && arg[0] < tk->ncsifuncs)
+      key->code = tk->csifuncs[arg[0]];
     else
       key->code = TERMKEY_SYM_UNKNOWN;
 
     if(key->code == TERMKEY_SYM_UNKNOWN)
-      fprintf(stderr, "CSI function key %d\n", arg1);
+      fprintf(stderr, "CSI function key %d\n", arg[0]);
   }
   else {
     if(cmd < tk->ncsi_ss3s)
@@ -173,10 +185,10 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
       key->code = TERMKEY_SYM_UNKNOWN;
 
     if(key->code == TERMKEY_SYM_UNKNOWN)
-      fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg1, arg2, cmd);
+      fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg[0], arg[1], cmd);
   }
 
-  key->modifiers = arg2 == -1 ? 0 : arg2 - 1;
+  key->modifiers = (args > 1 && arg[1] != -1) ? arg[1] - 1 : 0;
   key->flags = TERMKEY_KEYFLAG_SPECIAL;
 
   return TERMKEY_RES_KEY;
