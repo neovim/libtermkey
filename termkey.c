@@ -44,7 +44,7 @@ static inline void eatbytes(termkey_t *tk, size_t count)
   tk->buffvalid -= count;
 }
 
-static int getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
+static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
 {
   size_t csi_end = introlen;
 
@@ -54,10 +54,8 @@ static int getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
     csi_end++;
   }
 
-  if(csi_end >= tk->buffvalid) {
-    key->code = TERMKEY_SYM_NONE;
-    return key->code;
-  }
+  if(csi_end >= tk->buffvalid)
+    return TERMKEY_RES_NONE;
 
   unsigned char cmd = tk->buffer[csi_end];
   int arg1 = -1;
@@ -85,7 +83,7 @@ static int getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
     }
   }
 
-  key->code = TERMKEY_SYM_UNKNOWN;
+  eatbytes(tk, csi_end + 1);
 
   switch(cmd) {
     case 'A': key->code = TERMKEY_SYM_UP;    break;
@@ -118,31 +116,29 @@ static int getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
 
         default:
           fprintf(stderr, "CSI function key %d\n", arg1);
+          key->code = TERMKEY_SYM_UNKNOWN;
       }
       break;
 
     default:
       fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg1, arg2, cmd);
+      key->code = TERMKEY_SYM_UNKNOWN;
   }
 
   key->modifiers = arg2 == -1 ? 0 : arg2 - 1;
   key->flags = TERMKEY_KEYFLAG_SPECIAL;
 
-  eatbytes(tk, csi_end + 1);
-
-  return key->code;
+  return TERMKEY_RES_KEY;
 }
 
-static int getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
+static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
 {
-  if(introlen + 1 < tk->buffvalid) {
-    key->code = TERMKEY_SYM_NONE;
-    return key->code;
-  }
+  if(introlen + 1 < tk->buffvalid)
+    return TERMKEY_RES_NONE;
 
   unsigned char cmd = tk->buffer[introlen];
 
-  key->code = TERMKEY_SYM_UNKNOWN;
+  eatbytes(tk, introlen + 1);
 
   switch(cmd) {
     case 'A': key->code = TERMKEY_SYM_UP;       break;
@@ -176,7 +172,7 @@ static int getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
 
     default:
       fprintf(stderr, "SS3 %c (0x%02x)\n", cmd, cmd);
-      break;
+      key->code = TERMKEY_SYM_UNKNOWN;
   }
 
   key->modifiers = 0;
@@ -216,17 +212,13 @@ static int getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
     }
   }
 
-  eatbytes(tk, introlen + 1);
-
-  return key->code;
+  return TERMKEY_RES_KEY;
 }
 
-int termkey_getkey(termkey_t *tk, termkey_key *key)
+termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  if(tk->buffvalid == 0) {
-    key->code = tk->is_closed ? TERMKEY_SYM_EOF : TERMKEY_SYM_NONE;
-    return key->code;
-  }
+  if(tk->buffvalid == 0)
+    return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
 
   // Now we're sure at least 1 byte is valid
   unsigned char b0 = tk->buffer[0];
@@ -239,7 +231,7 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
 
       eatbytes(tk, 1);
 
-      return key->code;
+      return TERMKEY_RES_KEY;
     }
 
     unsigned char b1 = tk->buffer[1];
@@ -251,19 +243,26 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
 
     tk->buffer++;
 
-    int metakey = termkey_getkey(tk, key);
-    if(metakey != TERMKEY_SYM_NONE) {
-      key->modifiers |= TERMKEY_KEYMOD_ALT;
-      tk->buffer--;
-      eatbytes(tk, 1);
+    termkey_result metakey_result = termkey_getkey(tk, key);
+
+    switch(metakey_result) {
+      case TERMKEY_RES_KEY:
+        key->modifiers |= TERMKEY_KEYMOD_ALT;
+        tk->buffer--;
+        eatbytes(tk, 1);
+        break;
+
+      case TERMKEY_RES_NONE:
+      case TERMKEY_RES_EOF:
+        break;
     }
 
-    return key->code;
+    return metakey_result;
   }
   else if(b0 < 0x20) {
     // Control key
 
-    key->code = TERMKEY_SYM_UNKNOWN;
+    key->code = 0;
 
     if(!(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
       // Try to interpret C0 codes that have nice names
@@ -274,7 +273,7 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
       }
     }
 
-    if(key->code == TERMKEY_SYM_UNKNOWN) {
+    if(!key->code) {
       key->code = b0 + 0x40;
       key->modifiers = TERMKEY_KEYMOD_CTRL;
       key->flags = 0;
@@ -289,7 +288,7 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
 
     eatbytes(tk, 1);
 
-    return key->code;
+    return TERMKEY_RES_KEY;
   }
   else if(b0 == 0x20 && !(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
     key->code = TERMKEY_SYM_SPACE;
@@ -298,7 +297,7 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
 
     eatbytes(tk, 1);
 
-    return key->code;
+    return TERMKEY_RES_KEY;
   }
   else if(b0 == 0x7f && !(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
     key->code = TERMKEY_SYM_DEL;
@@ -307,7 +306,7 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
 
     eatbytes(tk, 1);
 
-    return key->code;
+    return TERMKEY_RES_KEY;
   }
   else if(b0 >= 0x20 && b0 < 0x80) {
     // ASCII lowbyte range
@@ -320,17 +319,17 @@ int termkey_getkey(termkey_t *tk, termkey_key *key)
 
     eatbytes(tk, 1);
 
-    return key->code;
+    return TERMKEY_RES_KEY;
   }
 
   fprintf(stderr, "TODO - tk->buffer[0] == 0x%02x\n", tk->buffer[0]);
   return TERMKEY_SYM_NONE;
 }
 
-int termkey_waitkey(termkey_t *tk, termkey_key *key)
+termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
 {
-  int ret;
-  while((ret = termkey_getkey(tk, key)) == TERMKEY_SYM_NONE) {
+  termkey_result ret;
+  while((ret = termkey_getkey(tk, key)) == TERMKEY_RES_NONE) {
     termkey_advisereadable(tk);
   }
 
@@ -362,7 +361,7 @@ void termkey_advisereadable(termkey_t *tk)
 
 // Must be kept synchronised with enum termkey_sym_e in termkey.h
 const char *keynames[] = {
-  "None",
+  "NONE",
 
   // Special names in C0
   "Backspace",
@@ -425,10 +424,7 @@ const char *keynames[] = {
 
 const char *termkey_describe_sym(int code)
 {
-  if(code == -1)
-    return "EOF";
-
-  if(code == -2)
+  if(code == TERMKEY_SYM_UNKNOWN)
     return "UNKNOWN";
 
   if(code < sizeof(keynames)/sizeof(keynames[0]))
