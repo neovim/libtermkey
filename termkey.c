@@ -15,6 +15,19 @@ struct termkey {
   size_t buffsize;
 
   char   is_closed;
+
+  int  nkeynames;
+  const char **keynames;
+
+  int ncsi_ss3s;
+  int *csi_ss3s;
+
+  int nss3s;
+  int *ss3s;
+  char *ss3_kpalts;
+
+  int ncsifuncs;
+  int *csifuncs;
 };
 
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
@@ -29,6 +42,65 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
   tk->buffsize  = buffsize;
 
   tk->is_closed = 0;
+
+  // Special built-in names
+  termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
+
+  // C0
+  termkey_register_keyname(tk, TERMKEY_SYM_BACKSPACE, "Backspace");
+  termkey_register_keyname(tk, TERMKEY_SYM_TAB,       "Tab");
+  termkey_register_keyname(tk, TERMKEY_SYM_ENTER,     "Enter");
+  termkey_register_keyname(tk, TERMKEY_SYM_ESCAPE,    "Escape");
+
+  // G1
+  termkey_register_keyname(tk, TERMKEY_SYM_SPACE, "Space");
+  termkey_register_keyname(tk, TERMKEY_SYM_DEL,   "DEL");
+
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_UP,    'A', "Up");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_DOWN,  'B', "Down");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_RIGHT, 'C', "Right");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_LEFT,  'D', "Left");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_BEGIN, 'E', "Begin");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_END,   'F', "End");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_HOME,  'H', "Home");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_F1,    'P', "F1");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_F2,    'Q', "F2");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_F3,    'R', "F3");
+  termkey_register_csi_ss3(tk, TERMKEY_SYM_F4,    'S', "F4");
+
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPENTER,  'M', "KPEnter",  0);
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPEQUALS, 'X', "KPEquals", '=');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPMULT,   'j', "KPMult",   '*');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPPLUS,   'k', "KPPlus",   '+');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPCOMMA,  'l', "KPComma",  ',');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPMINUS,  'm', "KPMinus",  '-');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPPERIOD, 'n', "KPPeriod", '.');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KPDIV,    'o', "KPDiv",    '/');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP0,      'p', "KP0",      '0');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP1,      'q', "KP1",      '1');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP2,      'r', "KP2",      '2');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP3,      's', "KP3",      '3');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP4,      't', "KP4",      '4');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP5,      'u', "KP5",      '5');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP6,      'v', "KP6",      '6');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP7,      'w', "KP7",      '7');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP8,      'x', "KP8",      '8');
+  termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP9,      'y', "KP9",      '9');
+
+  termkey_register_csifunc(tk, TERMKEY_SYM_HOME,      1, "Home");
+  termkey_register_csifunc(tk, TERMKEY_SYM_INSERT,    2, "Insert");
+  termkey_register_csifunc(tk, TERMKEY_SYM_DELETE,    3, "Delete");
+  termkey_register_csifunc(tk, TERMKEY_SYM_END,       4, "End");
+  termkey_register_csifunc(tk, TERMKEY_SYM_PAGEUP,    5, "PageUp");
+  termkey_register_csifunc(tk, TERMKEY_SYM_PAGEDOWN,  6, "PageDown");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F5,       15, "F5");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F6,       17, "F6");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F7,       18, "F7");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F8,       19, "F8");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F9,       20, "F9");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F10,      21, "F10");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F11,      23, "F11");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F12,      24, "F12");
 
   return tk;
 }
@@ -85,44 +157,23 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   eatbytes(tk, csi_end + 1);
 
-  switch(cmd) {
-    case 'A': key->code = TERMKEY_SYM_UP;    break;
-    case 'B': key->code = TERMKEY_SYM_DOWN;  break;
-    case 'C': key->code = TERMKEY_SYM_RIGHT; break;
-    case 'D': key->code = TERMKEY_SYM_LEFT;  break;
-    case 'E': key->code = TERMKEY_SYM_BEGIN; break;
-    case 'F': key->code = TERMKEY_SYM_END;   break;
-    case 'H': key->code = TERMKEY_SYM_HOME;  break;
-    case 'P': key->code = TERMKEY_SYM_F1;    break;
-    case 'Q': key->code = TERMKEY_SYM_F2;    break;
-    case 'R': key->code = TERMKEY_SYM_F3;    break;
-    case 'S': key->code = TERMKEY_SYM_F4;    break;
-    case '~':
-      switch(arg1) {
-        case  1: key->code = TERMKEY_SYM_HOME;     break;
-        case  2: key->code = TERMKEY_SYM_INSERT;   break;
-        case  3: key->code = TERMKEY_SYM_DELETE;   break;
-        case  4: key->code = TERMKEY_SYM_END;      break;
-        case  5: key->code = TERMKEY_SYM_PAGEUP;   break;
-        case  6: key->code = TERMKEY_SYM_PAGEDOWN; break;
-        case 15: key->code = TERMKEY_SYM_F5;       break;
-        case 17: key->code = TERMKEY_SYM_F6;       break;
-        case 18: key->code = TERMKEY_SYM_F7;       break;
-        case 19: key->code = TERMKEY_SYM_F8;       break;
-        case 20: key->code = TERMKEY_SYM_F9;       break;
-        case 21: key->code = TERMKEY_SYM_F10;      break;
-        case 23: key->code = TERMKEY_SYM_F11;      break;
-        case 24: key->code = TERMKEY_SYM_F12;      break;
-
-        default:
-          fprintf(stderr, "CSI function key %d\n", arg1);
-          key->code = TERMKEY_SYM_UNKNOWN;
-      }
-      break;
-
-    default:
-      fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg1, arg2, cmd);
+  if(cmd == '~') {
+    if(arg1 >= 0 && arg1 < tk->ncsifuncs)
+      key->code = tk->csifuncs[arg1];
+    else
       key->code = TERMKEY_SYM_UNKNOWN;
+
+    if(key->code == TERMKEY_SYM_UNKNOWN)
+      fprintf(stderr, "CSI function key %d\n", arg1);
+  }
+  else {
+    if(cmd < tk->ncsi_ss3s)
+      key->code = tk->csi_ss3s[cmd];
+    else
+      key->code = TERMKEY_SYM_UNKNOWN;
+
+    if(key->code == TERMKEY_SYM_UNKNOWN)
+      fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg1, arg2, cmd);
   }
 
   key->modifiers = arg2 == -1 ? 0 : arg2 - 1;
@@ -140,77 +191,31 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
 
   eatbytes(tk, introlen + 1);
 
-  switch(cmd) {
-    case 'A': key->code = TERMKEY_SYM_UP;       break;
-    case 'B': key->code = TERMKEY_SYM_DOWN;     break;
-    case 'C': key->code = TERMKEY_SYM_RIGHT;    break;
-    case 'D': key->code = TERMKEY_SYM_LEFT;     break;
-    case 'F': key->code = TERMKEY_SYM_END;      break;
-    case 'H': key->code = TERMKEY_SYM_HOME;     break;
-    case 'M': key->code = TERMKEY_SYM_KPENTER;  break;
-    case 'P': key->code = TERMKEY_SYM_F1;       break;
-    case 'Q': key->code = TERMKEY_SYM_F2;       break;
-    case 'R': key->code = TERMKEY_SYM_F3;       break;
-    case 'S': key->code = TERMKEY_SYM_F4;       break;
-    case 'X': key->code = TERMKEY_SYM_KPEQUALS; break;
-    case 'j': key->code = TERMKEY_SYM_KPMULT;   break;
-    case 'k': key->code = TERMKEY_SYM_KPPLUS;   break;
-    case 'l': key->code = TERMKEY_SYM_KPCOMMA;  break;
-    case 'm': key->code = TERMKEY_SYM_KPMINUS;  break;
-    case 'n': key->code = TERMKEY_SYM_KPPERIOD; break;
-    case 'o': key->code = TERMKEY_SYM_KPDIV;    break;
-    case 'p': key->code = TERMKEY_SYM_KP0;      break;
-    case 'q': key->code = TERMKEY_SYM_KP1;      break;
-    case 'r': key->code = TERMKEY_SYM_KP2;      break;
-    case 's': key->code = TERMKEY_SYM_KP3;      break;
-    case 't': key->code = TERMKEY_SYM_KP4;      break;
-    case 'u': key->code = TERMKEY_SYM_KP5;      break;
-    case 'v': key->code = TERMKEY_SYM_KP6;      break;
-    case 'w': key->code = TERMKEY_SYM_KP7;      break;
-    case 'x': key->code = TERMKEY_SYM_KP8;      break;
-    case 'y': key->code = TERMKEY_SYM_KP9;      break;
+  key->code = TERMKEY_SYM_UNKNOWN;
 
-    default:
-      fprintf(stderr, "SS3 %c (0x%02x)\n", cmd, cmd);
-      key->code = TERMKEY_SYM_UNKNOWN;
-  }
+  if(cmd < tk->ncsi_ss3s)
+    key->code = tk->csi_ss3s[cmd];
 
-  key->modifiers = 0;
-  key->flags = TERMKEY_KEYFLAG_SPECIAL;
-
-  if(tk->flags & TERMKEY_FLAG_CONVERTKP) {
-    char is_kp = 1;
-    switch(key->code) {
-      case TERMKEY_SYM_KP0:      key->code = '0'; break;
-      case TERMKEY_SYM_KP1:      key->code = '1'; break;
-      case TERMKEY_SYM_KP2:      key->code = '2'; break;
-      case TERMKEY_SYM_KP3:      key->code = '3'; break;
-      case TERMKEY_SYM_KP4:      key->code = '4'; break;
-      case TERMKEY_SYM_KP5:      key->code = '5'; break;
-      case TERMKEY_SYM_KP6:      key->code = '6'; break;
-      case TERMKEY_SYM_KP7:      key->code = '7'; break;
-      case TERMKEY_SYM_KP8:      key->code = '8'; break;
-      case TERMKEY_SYM_KP9:      key->code = '9'; break;
-      case TERMKEY_SYM_KPPLUS:   key->code = '+'; break;
-      case TERMKEY_SYM_KPMINUS:  key->code = '-'; break;
-      case TERMKEY_SYM_KPMULT:   key->code = '*'; break;
-      case TERMKEY_SYM_KPDIV:    key->code = '/'; break;
-      case TERMKEY_SYM_KPCOMMA:  key->code = ','; break;
-      case TERMKEY_SYM_KPPERIOD: key->code = '.'; break;
-      case TERMKEY_SYM_KPEQUALS: key->code = '='; break;
-
-      default:
-        is_kp = 0;
-        break;
-    }
-
-    if(is_kp) {
+  if(key->code == TERMKEY_SYM_UNKNOWN && cmd < tk->nss3s) {
+    if(tk->flags & TERMKEY_FLAG_CONVERTKP && tk->ss3_kpalts[cmd]) {
+      key->code = tk->ss3_kpalts[cmd];
+      key->modifiers = 0;
       key->flags = 0;
 
       key->utf8[0] = key->code;
       key->utf8[1] = 0;
+
+      return TERMKEY_RES_KEY;
     }
+
+    key->code = tk->ss3s[cmd];
   }
+
+  if(key->code == TERMKEY_SYM_UNKNOWN)
+    fprintf(stderr, "SS3 %c (0x%02x)\n", cmd, cmd);
+
+  key->modifiers = 0;
+  key->flags = TERMKEY_KEYFLAG_SPECIAL;
 
   return TERMKEY_RES_KEY;
 }
@@ -359,76 +364,96 @@ void termkey_advisereadable(termkey_t *tk)
     termkey_pushinput(tk, buffer, len);
 }
 
-// Must be kept synchronised with enum termkey_sym_e in termkey.h
-const char *keynames[] = {
-  "NONE",
-
-  // Special names in C0
-  "Backspace",
-  "Tab",
-  "Enter",
-  "Escape",
-
-  // Special names in G0
-  "Space",
-  "DEL",
-
-  // CSI keys
-  "Up",
-  "Down",
-  "Left",
-  "Right",
-  "Begin",
-
-  // CSI function keys
-  "Insert",
-  "Delete",
-  "Home",
-  "End",
-  "PageUp",
-  "PageDown",
-
-  "F1",
-  "F2",
-  "F3",
-  "F4",
-  "F5",
-  "F6",
-  "F7",
-  "F8",
-  "F9",
-  "F10",
-  "F11",
-  "F12",
-
-  // Numeric keypad special keys
-  "KP0",
-  "KP1",
-  "KP2",
-  "KP3",
-  "KP4",
-  "KP5",
-  "KP6",
-  "KP7",
-  "KP8",
-  "KP9",
-  "KPEnter",
-  "KPPlus",
-  "KPMinus",
-  "KPMult",
-  "KPDiv",
-  "KPComma",
-  "KPPeriod",
-  "KPEquals",
-};
-
-const char *termkey_describe_sym(int code)
+const char *termkey_describe_sym(termkey_t *tk, int code)
 {
   if(code == TERMKEY_SYM_UNKNOWN)
     return "UNKNOWN";
 
-  if(code < sizeof(keynames)/sizeof(keynames[0]))
-    return keynames[code];
+  if(code < tk->nkeynames)
+    return tk->keynames[code];
 
   return "UNKNOWN";
+}
+
+int termkey_register_keyname(termkey_t *tk, int code, const char *name)
+{
+  if(!code)
+    code = tk->nkeynames;
+
+  if(code >= tk->nkeynames) {
+    tk->keynames = g_renew(const char*, tk->keynames, code + 1);
+
+    // Fill in the hole
+    for(int i = tk->nkeynames; i < code; i++)
+      tk->keynames[i] = NULL;
+
+    tk->nkeynames = code + 1;
+  }
+
+  tk->keynames[code] = name;
+
+  return code;
+}
+
+int termkey_register_csi_ss3(termkey_t *tk, int code, unsigned char cmd, const char *name)
+{
+  if(name)
+    code = termkey_register_keyname(tk, code, name);
+
+  if(cmd >= tk->ncsi_ss3s) {
+    tk->csi_ss3s = g_renew(int, tk->csi_ss3s, cmd + 1);
+
+    // Fill in the hole
+    for(int i = tk->ncsi_ss3s; i < cmd; i++)
+      tk->csi_ss3s[i] = TERMKEY_SYM_UNKNOWN;
+
+    tk->ncsi_ss3s = cmd + 1;
+  }
+
+  tk->csi_ss3s[cmd] = code;
+
+  return code;
+}
+
+int termkey_register_ss3kpalt(termkey_t *tk, int code, unsigned char cmd, const char *name, char kpalt)
+{
+  if(name)
+    code = termkey_register_keyname(tk, code, name);
+
+  if(cmd >= tk->nss3s) {
+    tk->ss3s       = g_renew(int,  tk->ss3s,       cmd + 1);
+    tk->ss3_kpalts = g_renew(char, tk->ss3_kpalts, cmd + 1);
+
+    // Fill in the hole
+    for(int i = tk->nss3s; i < cmd; i++) {
+      tk->ss3s[i]       = TERMKEY_SYM_UNKNOWN;
+      tk->ss3_kpalts[i] = 0;
+    }
+
+    tk->nss3s = cmd + 1;
+  }
+
+  tk->ss3s[cmd]       = code;
+  tk->ss3_kpalts[cmd] = kpalt;
+
+  return code;
+}
+
+int termkey_register_csifunc(termkey_t *tk, int code, int number, const char *name)
+{
+  if(name)
+    code = termkey_register_keyname(tk, code, name);
+
+  if(number >= tk->ncsifuncs) {
+    tk->csifuncs = g_renew(int, tk->csifuncs, number + 1);
+    tk->ncsifuncs = number + 1;
+
+    // Fill in the hole
+    for(int i = tk->ncsifuncs; i < number; i++)
+      tk->csifuncs[i] = TERMKEY_SYM_UNKNOWN;
+  }
+
+  tk->csifuncs[number] = code;
+
+  return code;
 }
