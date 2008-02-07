@@ -112,7 +112,14 @@ void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputle
 
 void       termkey_advisereadable(termkey_t *tk);
 
+// Registration of keys and names
+int        termkey_register_keyname(termkey_t *tk, int code, const char *name);
 
-const char *termkey_describe_sym(int code);
+int        termkey_register_csi_ss3(termkey_t *tk, int code, unsigned char cmd, const char *name);
+int        termkey_register_ss3kpalt(termkey_t *tk, int code, unsigned char cmd, const char *name, char kpalt);
+int        termkey_register_csifunc(termkey_t *tk, int code, int number, const char *name);
+
+
+const char *termkey_describe_sym(termkey_t *tk, int code);
 
 #endif

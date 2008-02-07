@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 
   tcsetattr(0, TCSANOW, &termios);
 
-  termkey_t *tk = termkey_new(0, TERMKEY_FLAG_CONVERTKP);
+  termkey_t *tk = termkey_new(0, 0);
 
   termkey_result ret;
   termkey_key key;
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
           key.modifiers & TERMKEY_KEYMOD_SHIFT ? "S-" : "",
           key.modifiers & TERMKEY_KEYMOD_ALT   ? "A-" : "",
           key.modifiers & TERMKEY_KEYMOD_CTRL  ? "C-" : "",
-          termkey_describe_sym(key.code),
+          termkey_describe_sym(tk, key.code),
           key.code);
     else
       printf("Key %s%s%s%s (U+%04X)\n",
