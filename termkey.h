@@ -5,9 +5,8 @@
 #include <stdlib.h>
 
 typedef enum {
-  TERMKEY_SYM_EOF  = -1, // Stream closed
-  TERMKEY_SYM_UNKNOWN = -2,
-  TERMKEY_SYM_NONE = 0,  // Did not find a key
+  TERMKEY_SYM_UNKNOWN = -1,
+  TERMKEY_SYM_NONE = 0,
 
   // Special names in C0
   TERMKEY_SYM_BACKSPACE,
@@ -68,7 +67,13 @@ typedef enum {
   TERMKEY_SYM_KPEQUALS,
 
   // et cetera ad nauseum
-} termkey_sym_e;
+} termkey_sym;
+
+typedef enum {
+  TERMKEY_RES_NONE,
+  TERMKEY_RES_KEY,
+  TERMKEY_RES_EOF,
+} termkey_result;
 
 enum {
   TERMKEY_KEYFLAG_SPECIAL = 0x01, // 'code' is a special keycode, not a unicode codepoint
@@ -100,8 +105,8 @@ enum {
 termkey_t *termkey_new(int fd, int flags);
 void       termkey_free(termkey_t *tk);
 
-int        termkey_getkey(termkey_t *tk, termkey_key *key);
-int        termkey_waitkey(termkey_t *tk, termkey_key *key);
+termkey_result termkey_getkey(termkey_t *tk, termkey_key *key);
+termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key);
 
 void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen);
 
