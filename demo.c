@@ -20,9 +20,10 @@ int main(int argc, char *argv[]) {
 
   termkey_t *tk = termkey_new(0, TERMKEY_FLAG_CONVERTKP);
 
+  termkey_result ret;
   termkey_key key;
 
-  while(termkey_waitkey(tk, &key) && key.code != TERMKEY_SYM_EOF) {
+  while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
     if(key.flags & TERMKEY_KEYFLAG_SPECIAL)
       printf("Key %s%s%s%s (code %d)\n",
           key.modifiers & TERMKEY_KEYMOD_SHIFT ? "S-" : "",
