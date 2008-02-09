@@ -35,6 +35,25 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
 {
   termkey_t *tk = g_new0(struct termkey, 1);
 
+  if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
+    int locale_is_utf8 = 0;
+    char *e;
+
+    if((e = getenv("LANG")) && strstr(e, "UTF-8"))
+      locale_is_utf8 = 1;
+
+    if(!locale_is_utf8 && (e = getenv("LC_MESSAGES")) && strstr(e, "UTF-8"))
+      locale_is_utf8 = 1;
+
+    if(!locale_is_utf8 && (e = getenv("LC_ALL")) && strstr(e, "UTF-8"))
+      locale_is_utf8 = 1;
+
+    if(locale_is_utf8)
+      flags |= TERMKEY_FLAG_UTF8;
+    else
+      flags |= TERMKEY_FLAG_RAW;
+  }
+
   tk->fd    = fd;
   tk->flags = flags;
 
@@ -233,6 +252,42 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
   return TERMKEY_RES_KEY;
 }
 
+#define UTF8_INVALID 0xFFFD
+
+static int utf8_seqlen(int codepoint)
+{
+  if(codepoint < 0x0000080) return 1;
+  if(codepoint < 0x0000800) return 2;
+  if(codepoint < 0x0010000) return 3;
+  if(codepoint < 0x0200000) return 4;
+  if(codepoint < 0x4000000) return 5;
+  return 6;
+}
+
+static void fill_utf8(termkey_key *key)
+{
+  int codepoint = key->code;
+  int nbytes = utf8_seqlen(codepoint);
+
+  key->utf8[nbytes] = 0;
+
+  // This is easier done backwards
+  int b = nbytes;
+  while(b-- > 0) {
+    key->utf8[b] = codepoint & 0x3f;
+    codepoint >>= 6;
+  }
+
+  switch(nbytes) {
+    case 1: key->utf8[0] =        (codepoint & 0x7f); break;
+    case 2: key->utf8[0] = 0xc0 | (codepoint & 0x1f); break;
+    case 3: key->utf8[0] = 0xe0 | (codepoint & 0x0f); break;
+    case 4: key->utf8[0] = 0xf0 | (codepoint & 0x07); break;
+    case 5: key->utf8[0] = 0xf8 | (codepoint & 0x03); break;
+    case 6: key->utf8[0] = 0xfc | (codepoint & 0x01); break;
+  }
+}
+
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
   if(tk->buffvalid == 0)
@@ -339,8 +394,119 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
     return TERMKEY_RES_KEY;
   }
+  else if(b0 >= 0x80 && b0 < 0xa0) {
+    // TODO - C1 or UTF-8?
+    fprintf(stderr, "TODO - b0 is 0x%02x - Might be C1, might be UTF-8\n", b0);
+  }
+  else if(tk->flags & TERMKEY_FLAG_UTF8) {
+    // Some UTF-8
+    int nbytes;
+    int codepoint;
 
-  fprintf(stderr, "TODO - tk->buffer[0] == 0x%02x\n", tk->buffer[0]);
+    key->flags = 0;
+    key->modifiers = 0;
+
+    if(b0 < 0xc0) {
+      // Starts with a continuation byte - that's not right
+      key->code = UTF8_INVALID;
+
+      fill_utf8(key);
+      eatbytes(tk, 1);
+
+      return TERMKEY_RES_KEY;
+    }
+    else if(b0 < 0xe0) {
+      nbytes = 2;
+      codepoint = b0 & 0x1f;
+    }
+    else if(b0 < 0xf0) {
+      nbytes = 3;
+      codepoint = b0 & 0x0f;
+    }
+    else if(b0 < 0xf8) {
+      nbytes = 4;
+      codepoint = b0 & 0x07;
+    }
+    else if(b0 < 0xfc) {
+      nbytes = 5;
+      codepoint = b0 & 0x03;
+    }
+    else if(b0 < 0xfe) {
+      nbytes = 6;
+      codepoint = b0 & 0x01;
+    }
+    else {
+      key->code = UTF8_INVALID;
+
+      fill_utf8(key);
+      eatbytes(tk, 1);
+
+      return TERMKEY_RES_KEY;
+    }
+
+    if(tk->buffvalid < nbytes)
+      return TERMKEY_RES_NONE;
+
+    for(int b = 1; b < nbytes; b++) {
+      unsigned char cb = tk->buffer[b];
+      if(cb < 0x80 || cb >= 0xc0) {
+        key->code = UTF8_INVALID;
+
+        fill_utf8(key);
+        eatbytes(tk, b - 1);
+
+        return TERMKEY_RES_KEY;
+      }
+
+      codepoint <<= 6;
+      codepoint |= cb & 0x3f;
+    }
+
+    // Check for overlong sequences
+    if(nbytes > utf8_seqlen(codepoint)) {
+      key->code = UTF8_INVALID;
+
+      fill_utf8(key);
+      eatbytes(tk, nbytes);
+
+      return TERMKEY_RES_KEY;
+    }
+
+    // Check for UTF-16 surrogates or invalid codepoints
+    if((codepoint >= 0xD800 && codepoint <= 0xDFFF) ||
+       codepoint == 0xFFFE ||
+       codepoint == 0xFFFF)
+    {
+      key->code = UTF8_INVALID;
+
+      fill_utf8(key);
+      eatbytes(tk, nbytes);
+
+      return TERMKEY_RES_KEY;
+    }
+
+    key->code = codepoint;
+    memcpy(key->utf8, tk->buffer, nbytes);
+    key->utf8[nbytes] = 0;
+
+    eatbytes(tk, nbytes);
+
+    return TERMKEY_RES_KEY;
+  }
+  else {
+    // Non UTF-8 case - just report the raw byte
+    key->code = b0;
+    key->modifiers = 0;
+    key->flags = 0;
+
+    key->utf8[0] = key->code;
+    key->utf8[1] = 0;
+
+    eatbytes(tk, 1);
+
+    return TERMKEY_RES_KEY;
+  }
+
   return TERMKEY_SYM_NONE;
 }
 

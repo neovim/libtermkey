@@ -90,9 +90,9 @@ typedef struct {
   int code;
   int flags;
 
-  /* Any Unicode character can be UTF-8 encoded in no more than 5 bytes, plus
+  /* Any Unicode character can be UTF-8 encoded in no more than 6 bytes, plus
    * terminating NUL */
-  char utf8[6];
+  char utf8[7];
 } termkey_key;
 
 typedef struct termkey termkey_t;
@@ -100,6 +100,8 @@ typedef struct termkey termkey_t;
 enum {
   TERMKEY_FLAG_NOINTERPRET = 0x01, // Do not interpret C0//G1 codes if possible
   TERMKEY_FLAG_CONVERTKP   = 0x02, // Convert KP codes to regular keypresses
+  TERMKEY_FLAG_RAW         = 0x04, // Input is raw bytes, not UTF-8
+  TERMKEY_FLAG_UTF8        = 0x08, // Input is definitely UTF-8
 };
 
 termkey_t *termkey_new(int fd, int flags);
