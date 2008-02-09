@@ -1,5 +1,6 @@
 #include "termkey.h"
 
+#include <errno.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -370,7 +371,9 @@ void termkey_advisereadable(termkey_t *tk)
   unsigned char buffer[64]; // Smaller than the default size
   size_t len = read(tk->fd, buffer, sizeof buffer);
 
-  if(len == -1)
+  if(len == -1 && errno == EAGAIN)
+    return;
+  else if(len < 1)
     tk->is_closed = 1;
   else
     termkey_pushinput(tk, buffer, len);
