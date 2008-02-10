@@ -119,6 +119,7 @@ void       termkey_advisereadable(termkey_t *tk);
 // Registration of keys and names
 termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, const char *name);
 
+termkey_keysym termkey_register_c0(termkey_t *tk, termkey_keysym code, unsigned char ctrl, const char *name);
 termkey_keysym termkey_register_csi_ss3(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name);
 termkey_keysym termkey_register_ss3kpalt(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name, char kpalt);
 termkey_keysym termkey_register_csifunc(termkey_t *tk, termkey_keysym code, int number, const char *name);
