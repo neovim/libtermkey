@@ -444,6 +444,7 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
       case TERMKEY_RES_NONE:
       case TERMKEY_RES_EOF:
+      case TERMKEY_RES_AGAIN:
         break;
     }
 
@@ -569,17 +570,21 @@ void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
   tk->buffcount += inputlen;
 }
 
-void termkey_advisereadable(termkey_t *tk)
+termkey_result termkey_advisereadable(termkey_t *tk)
 {
   unsigned char buffer[64]; // Smaller than the default size
   size_t len = read(tk->fd, buffer, sizeof buffer);
 
   if(len == -1 && errno == EAGAIN)
-    return;
-  else if(len < 1)
+    return TERMKEY_RES_NONE;
+  else if(len < 1) {
     tk->is_closed = 1;
-  else
+    return TERMKEY_RES_NONE;
+  }
+  else {
     termkey_pushinput(tk, buffer, len);
+    return TERMKEY_RES_AGAIN;
+  }
 }
 
 const char *termkey_describe_sym(termkey_t *tk, termkey_keysym code)
