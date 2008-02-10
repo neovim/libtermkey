@@ -73,6 +73,7 @@ typedef enum {
   TERMKEY_RES_NONE,
   TERMKEY_RES_KEY,
   TERMKEY_RES_EOF,
+  TERMKEY_RES_AGAIN,
 } termkey_result;
 
 enum {
@@ -114,7 +115,7 @@ termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key);
 
 void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen);
 
-void       termkey_advisereadable(termkey_t *tk);
+termkey_result termkey_advisereadable(termkey_t *tk);
 
 // Registration of keys and names
 termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, const char *name);
