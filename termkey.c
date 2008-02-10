@@ -18,6 +18,9 @@ struct termkey {
   int  nkeynames;
   const char **keynames;
 
+  // There are 32 C0 codes
+  termkey_keysym c0[32];
+
   // There are 64 codes 0x40 - 0x7F
   termkey_keysym csi_ss3s[64];
   termkey_keysym ss3s[64];
@@ -67,6 +70,11 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
   tk->is_closed = 0;
 
   int i;
+
+  for(i = 0; i < 32; i++) {
+    tk->c0[i] = TERMKEY_SYM_UNKNOWN;
+  }
+
   for(i = 0; i < 64; i++) {
     tk->csi_ss3s[i] = TERMKEY_SYM_UNKNOWN;
     tk->ss3s[i]     = TERMKEY_SYM_UNKNOWN;
@@ -89,11 +97,10 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
   // Special built-in names
   termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
 
-  // C0
-  termkey_register_keyname(tk, TERMKEY_SYM_BACKSPACE, "Backspace");
-  termkey_register_keyname(tk, TERMKEY_SYM_TAB,       "Tab");
-  termkey_register_keyname(tk, TERMKEY_SYM_ENTER,     "Enter");
-  termkey_register_keyname(tk, TERMKEY_SYM_ESCAPE,    "Escape");
+  termkey_register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, "Backspace");
+  termkey_register_c0(tk, TERMKEY_SYM_TAB,       0x09, "Tab");
+  termkey_register_c0(tk, TERMKEY_SYM_ENTER,     0x0a, "Enter");
+  termkey_register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, "Escape");
 
   // G1
   termkey_register_keyname(tk, TERMKEY_SYM_SPACE, "Space");
@@ -358,14 +365,8 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
     key->code = 0;
 
-    if(!(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
-      // Try to interpret C0 codes that have nice names
-      switch(b0) {
-        case 0x08: key->code = TERMKEY_SYM_BACKSPACE; break;
-        case 0x09: key->code = TERMKEY_SYM_TAB;       break;
-        case 0x0a: key->code = TERMKEY_SYM_ENTER;     break;
-      }
-    }
+    if(!(tk->flags & TERMKEY_FLAG_NOINTERPRET) && tk->c0[b0] != TERMKEY_SYM_UNKNOWN)
+      key->code = tk->c0[b0];
 
     if(!key->code) {
       key->code = b0 + 0x40;
@@ -609,6 +610,21 @@ termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, cons
   }
 
   tk->keynames[code] = name;
+
+  return code;
+}
+
+termkey_keysym termkey_register_c0(termkey_t *tk, termkey_keysym code, unsigned char ctrl, const char *name)
+{
+  if(ctrl >= 0x20) {
+    fprintf(stderr, "Cannot register C0 key at ctrl 0x%02x - out of bounds\n", ctrl);
+    return -1;
+  }
+
+  if(name)
+    code = termkey_register_keyname(tk, code, name);
+
+  tk->c0[ctrl] = code;
 
   return code;
 }
