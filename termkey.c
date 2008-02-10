@@ -301,8 +301,9 @@ static void fill_utf8(termkey_key *key)
 
   // This is easier done backwards
   int b = nbytes;
-  while(b-- > 0) {
-    key->utf8[b] = codepoint & 0x3f;
+  while(b > 1) {
+    b--;
+    key->utf8[b] = 0x80 | (codepoint & 0x3f);
     codepoint >>= 6;
   }
 
