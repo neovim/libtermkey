@@ -1,6 +1,7 @@
 #include "termkey.h"
 
 #include <errno.h>
+#include <poll.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -20,6 +21,8 @@ struct termkey {
   size_t buffcount; // NUMBER of entires valid in buffer
   size_t buffsize; // Total malloc'ed size
 
+  int waittime; // msec
+
   char   is_closed;
 
   int  nkeynames;
@@ -37,7 +40,7 @@ struct termkey {
   struct keyinfo *csifuncs;
 };
 
-termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
+termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
   termkey_t *tk = malloc(sizeof(*tk));
   if(!tk)
@@ -74,6 +77,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
   tk->buffstart = 0;
   tk->buffcount = 0;
   tk->buffsize  = buffsize;
+
+  tk->waittime = waittime;
 
   tk->is_closed = 0;
 
@@ -168,7 +173,17 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
 
 termkey_t *termkey_new(int fd, int flags)
 {
-  return termkey_new_full(fd, flags, 256);
+  return termkey_new_full(fd, flags, 256, 50);
+}
+
+void termkey_setwaittime(termkey_t *tk, int msec)
+{
+  tk->waittime = msec;
+}
+
+int termkey_getwaittime(termkey_t *tk)
+{
+  return tk->waittime;
 }
 
 static inline void eatbytes(termkey_t *tk, size_t count)
@@ -294,8 +309,15 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
     csi_end++;
   }
 
-  if(csi_end >= tk->buffcount)
-    return TERMKEY_RES_NONE;
+  if(csi_end >= tk->buffcount) {
+    if(tk->waittime)
+      return TERMKEY_RES_AGAIN;
+
+    do_codepoint(tk, '[', key);
+    key->modifiers |= TERMKEY_KEYMOD_ALT;
+    eatbytes(tk, introlen);
+    return TERMKEY_RES_KEY;
+  }
 
   unsigned char cmd = CHARAT(csi_end);
   int arg[16];
@@ -372,8 +394,15 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
 static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
 {
-  if(introlen + 1 < tk->buffcount)
-    return TERMKEY_RES_NONE;
+  if(tk->buffcount < introlen + 1) {
+    if(tk->waittime)
+      return TERMKEY_RES_AGAIN;
+
+    do_codepoint(tk, 'O', key);
+    key->modifiers |= TERMKEY_KEYMOD_ALT;
+    eatbytes(tk, tk->buffcount);
+    return TERMKEY_RES_KEY;
+  }
 
   unsigned char cmd = CHARAT(introlen);
 
@@ -419,17 +448,29 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
   if(b0 == 0x1b) {
     if(tk->buffcount == 1) {
+      // This might be an <Esc> press, or it may want to be part of a longer
+      // sequence
+      if(tk->waittime)
+        return TERMKEY_RES_AGAIN;
+
       do_codepoint(tk, b0, key);
       eatbytes(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
     unsigned char b1 = CHARAT(1);
+
     if(b1 == '[')
       return getkey_csi(tk, 2, key);
 
     if(b1 == 'O')
       return getkey_ss3(tk, 2, key);
+
+    if(b1 == 0x1b) {
+      do_codepoint(tk, b0, key);
+      eatbytes(tk, 1);
+      return TERMKEY_RES_KEY;
+    }
 
     tk->buffstart++;
 
@@ -503,7 +544,7 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
     }
 
     if(tk->buffcount < nbytes)
-      return TERMKEY_RES_NONE;
+      return tk->waittime ? TERMKEY_RES_AGAIN : TERMKEY_RES_NONE;
 
     for(int b = 1; b < nbytes; b++) {
       unsigned char cb = CHARAT(b);
@@ -548,14 +589,51 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
   return TERMKEY_SYM_NONE;
 }
 
-termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
+termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
-  termkey_result ret;
-  while((ret = termkey_getkey(tk, key)) == TERMKEY_RES_NONE) {
-    termkey_advisereadable(tk);
-  }
+  int old_waittime = tk->waittime;
+  tk->waittime = 0;
+
+  termkey_result ret = termkey_getkey(tk, key);
+
+  tk->waittime = old_waittime;
 
   return ret;
+}
+
+termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
+{
+  while(1) {
+    termkey_result ret = termkey_getkey(tk, key);
+
+    switch(ret) {
+      case TERMKEY_RES_KEY:
+      case TERMKEY_RES_EOF:
+        return ret;
+
+      case TERMKEY_RES_NONE:
+        termkey_advisereadable(tk);
+        break;
+
+      case TERMKEY_RES_AGAIN:
+        {
+          struct pollfd fd;
+
+          fd.fd = tk->fd;
+          fd.events = POLLIN;
+
+          int pollres = poll(&fd, 1, tk->waittime);
+
+          if(pollres == 0)
+            return termkey_getkey_force(tk, key);
+
+          termkey_advisereadable(tk);
+        }
+        break;
+    }
+  }
+
+  /* UNREACHABLE */
 }
 
 void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
