@@ -85,9 +85,11 @@ enum {
   TERMKEY_KEYMOD_CTRL  = 0x04,
 };
 
+typedef int termkey_keysym;
+
 typedef struct {
   int modifiers;
-  int code;
+  termkey_keysym code; // Or Unicode codepoint
   int flags;
 
   /* Any Unicode character can be UTF-8 encoded in no more than 6 bytes, plus
@@ -115,13 +117,13 @@ void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputle
 void       termkey_advisereadable(termkey_t *tk);
 
 // Registration of keys and names
-int        termkey_register_keyname(termkey_t *tk, int code, const char *name);
+termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, const char *name);
 
-int        termkey_register_csi_ss3(termkey_t *tk, int code, unsigned char cmd, const char *name);
-int        termkey_register_ss3kpalt(termkey_t *tk, int code, unsigned char cmd, const char *name, char kpalt);
-int        termkey_register_csifunc(termkey_t *tk, int code, int number, const char *name);
+termkey_keysym termkey_register_csi_ss3(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name);
+termkey_keysym termkey_register_ss3kpalt(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name, char kpalt);
+termkey_keysym termkey_register_csifunc(termkey_t *tk, termkey_keysym code, int number, const char *name);
 
 
-const char *termkey_describe_sym(termkey_t *tk, int code);
+const char *termkey_describe_sym(termkey_t *tk, termkey_keysym code);
 
 #endif
