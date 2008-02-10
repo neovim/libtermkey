@@ -188,13 +188,14 @@ int termkey_getwaittime(termkey_t *tk)
 
 static inline void eatbytes(termkey_t *tk, size_t count)
 {
-  tk->buffstart += count;
-  tk->buffcount -= count;
-
-  if(tk->buffcount <= 0) {
+  if(count >= tk->buffcount) {
     tk->buffstart = 0;
     tk->buffcount = 0;
+    return;
   }
+
+  tk->buffstart += count;
+  tk->buffcount -= count;
 
   size_t halfsize = tk->buffsize / 2;
 
