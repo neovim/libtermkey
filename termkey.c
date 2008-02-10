@@ -159,6 +159,10 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   termkey_register_csifunc(tk, TERMKEY_SYM_END,       4, "End");
   termkey_register_csifunc(tk, TERMKEY_SYM_PAGEUP,    5, "PageUp");
   termkey_register_csifunc(tk, TERMKEY_SYM_PAGEDOWN,  6, "PageDown");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F1,       11, "F1");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F2,       12, "F2");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F3,       13, "F3");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F4,       14, "F4");
   termkey_register_csifunc(tk, TERMKEY_SYM_F5,       15, "F5");
   termkey_register_csifunc(tk, TERMKEY_SYM_F6,       17, "F6");
   termkey_register_csifunc(tk, TERMKEY_SYM_F7,       18, "F7");
@@ -167,6 +171,14 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   termkey_register_csifunc(tk, TERMKEY_SYM_F10,      21, "F10");
   termkey_register_csifunc(tk, TERMKEY_SYM_F11,      23, "F11");
   termkey_register_csifunc(tk, TERMKEY_SYM_F12,      24, "F12");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F13,      25, "F13");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F14,      26, "F14");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F15,      28, "F15");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F16,      29, "F16");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F17,      31, "F17");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F18,      32, "F18");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F19,      33, "F19");
+  termkey_register_csifunc(tk, TERMKEY_SYM_F20,      34, "F20");
 
   return tk;
 }
