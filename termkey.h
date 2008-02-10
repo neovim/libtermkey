@@ -124,6 +124,10 @@ termkey_keysym termkey_register_csi_ss3(termkey_t *tk, termkey_keysym code, unsi
 termkey_keysym termkey_register_ss3kpalt(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name, char kpalt);
 termkey_keysym termkey_register_csifunc(termkey_t *tk, termkey_keysym code, int number, const char *name);
 
+termkey_keysym termkey_register_c0_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
+termkey_keysym termkey_register_csi_ss3_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, unsigned char cmd, const char *name);
+termkey_keysym termkey_register_ss3kpalt_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
+termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, int number, const char *name);
 
 const char *termkey_describe_sym(termkey_t *tk, termkey_keysym code);
 
