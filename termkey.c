@@ -19,12 +19,12 @@ struct termkey {
   const char **keynames;
 
   // There are 64 codes 0x40 - 0x7F
-  int csi_ss3s[64];
-  int ss3s[64];
+  termkey_keysym csi_ss3s[64];
+  termkey_keysym ss3s[64];
   char ss3_kpalts[64];
 
   int ncsifuncs;
-  int *csifuncs;
+  termkey_keysym *csifuncs;
 };
 
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
@@ -581,7 +581,7 @@ void termkey_advisereadable(termkey_t *tk)
     termkey_pushinput(tk, buffer, len);
 }
 
-const char *termkey_describe_sym(termkey_t *tk, int code)
+const char *termkey_describe_sym(termkey_t *tk, termkey_keysym code)
 {
   if(code == TERMKEY_SYM_UNKNOWN)
     return "UNKNOWN";
@@ -592,7 +592,7 @@ const char *termkey_describe_sym(termkey_t *tk, int code)
   return "UNKNOWN";
 }
 
-int termkey_register_keyname(termkey_t *tk, int code, const char *name)
+termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, const char *name)
 {
   if(!code)
     code = tk->nkeynames;
@@ -613,7 +613,7 @@ int termkey_register_keyname(termkey_t *tk, int code, const char *name)
   return code;
 }
 
-int termkey_register_csi_ss3(termkey_t *tk, int code, unsigned char cmd, const char *name)
+termkey_keysym termkey_register_csi_ss3(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name)
 {
   if(cmd < 0x40 || cmd >= 0x80) {
     fprintf(stderr, "Cannot register CSI/SS3 key at cmd 0x%02x - out of bounds\n", cmd);
@@ -628,7 +628,7 @@ int termkey_register_csi_ss3(termkey_t *tk, int code, unsigned char cmd, const c
   return code;
 }
 
-int termkey_register_ss3kpalt(termkey_t *tk, int code, unsigned char cmd, const char *name, char kpalt)
+termkey_keysym termkey_register_ss3kpalt(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name, char kpalt)
 {
   if(cmd < 0x40 || cmd >= 0x80) {
     fprintf(stderr, "Cannot register SS3 key at cmd 0x%02x - out of bounds\n", cmd);
@@ -644,13 +644,13 @@ int termkey_register_ss3kpalt(termkey_t *tk, int code, unsigned char cmd, const 
   return code;
 }
 
-int termkey_register_csifunc(termkey_t *tk, int code, int number, const char *name)
+termkey_keysym termkey_register_csifunc(termkey_t *tk, termkey_keysym code, int number, const char *name)
 {
   if(name)
     code = termkey_register_keyname(tk, code, name);
 
   if(number >= tk->ncsifuncs) {
-    int *new_csifuncs = realloc(tk->csifuncs, sizeof(new_csifuncs[0]) * (number + 1));
+    termkey_keysym *new_csifuncs = realloc(tk->csifuncs, sizeof(new_csifuncs[0]) * (number + 1));
     tk->csifuncs = new_csifuncs;
 
     // Fill in the hole
