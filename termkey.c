@@ -310,8 +310,14 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   eatbytes(tk, csi_end + 1);
 
+  key->modifiers = 0;
+  key->flags = TERMKEY_KEYFLAG_SPECIAL;
+
   if(cmd == '~') {
-    if(arg[0] >= 0 && arg[0] < tk->ncsifuncs)
+    if(arg[0] == 27) {
+      do_codepoint(tk, arg[2], key);
+    }
+    else if(arg[0] >= 0 && arg[0] < tk->ncsifuncs)
       key->code = tk->csifuncs[arg[0]];
     else
       key->code = TERMKEY_SYM_UNKNOWN;
@@ -327,8 +333,8 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
       fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg[0], arg[1], cmd);
   }
 
-  key->modifiers = (args > 1 && arg[1] != -1) ? arg[1] - 1 : 0;
-  key->flags = TERMKEY_KEYFLAG_SPECIAL;
+  if(args > 1 && arg[1] != -1)
+    key->modifiers |= arg[1] - 1;
 
   return TERMKEY_RES_KEY;
 }
