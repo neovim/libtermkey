@@ -110,7 +110,11 @@ enum {
 termkey_t *termkey_new(int fd, int flags);
 void       termkey_free(termkey_t *tk);
 
+void       termkey_setwaittime(termkey_t *tk, int msec);
+int        termkey_getwaittime(termkey_t *tk);
+
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key);
+termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key);
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key);
 
 void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen);
