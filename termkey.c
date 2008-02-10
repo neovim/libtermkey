@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <string.h>
 
-// Use GLib to implement for now because I am lazy. Rewrite sometime
-#include <glib.h>
 #include <stdio.h>
 
 struct termkey {
@@ -20,12 +18,10 @@ struct termkey {
   int  nkeynames;
   const char **keynames;
 
-  int ncsi_ss3s;
-  int *csi_ss3s;
-
-  int nss3s;
-  int *ss3s;
-  char *ss3_kpalts;
+  // There are 64 codes 0x40 - 0x7F
+  int csi_ss3s[64];
+  int ss3s[64];
+  char ss3_kpalts[64];
 
   int ncsifuncs;
   int *csifuncs;
@@ -33,7 +29,9 @@ struct termkey {
 
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
 {
-  termkey_t *tk = g_new0(struct termkey, 1);
+  termkey_t *tk = malloc(sizeof(*tk));
+  if(!tk)
+    return NULL;
 
   if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
     int locale_is_utf8 = 0;
@@ -57,11 +55,36 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
   tk->fd    = fd;
   tk->flags = flags;
 
-  tk->buffer    = g_malloc0(buffsize);
+  tk->buffer = malloc(buffsize);
+  if(!tk->buffer) {
+    free(tk);
+    return NULL;
+  }
+
   tk->buffvalid = 0;
   tk->buffsize  = buffsize;
 
   tk->is_closed = 0;
+
+  int i;
+  for(i = 0; i < 64; i++) {
+    tk->csi_ss3s[i] = TERMKEY_SYM_UNKNOWN;
+    tk->ss3s[i]     = TERMKEY_SYM_UNKNOWN;
+    tk->ss3_kpalts[i] = 0;
+  }
+
+  // These numbers aren't too important; buffers will be grown if insufficient
+  tk->nkeynames = 64;
+  tk->ncsifuncs = 32;
+
+  tk->keynames = malloc(sizeof(tk->keynames[0]) * tk->nkeynames);
+  tk->csifuncs = malloc(sizeof(tk->csifuncs[0]) * tk->ncsifuncs);
+
+  for(i = 0; i < tk->nkeynames; i++)
+    tk->keynames[i] = NULL;
+
+  for(i = 0; i < tk->ncsifuncs; i++)
+    tk->csifuncs[i] = TERMKEY_SYM_NONE;
 
   // Special built-in names
   termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
@@ -199,10 +222,8 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
       fprintf(stderr, "CSI function key %d\n", arg[0]);
   }
   else {
-    if(cmd < tk->ncsi_ss3s)
-      key->code = tk->csi_ss3s[cmd];
-    else
-      key->code = TERMKEY_SYM_UNKNOWN;
+    // We know from the logic above that cmd must be >= 0x40 and < 0x80
+    key->code = tk->csi_ss3s[cmd - 0x40];
 
     if(key->code == TERMKEY_SYM_UNKNOWN)
       fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg[0], arg[1], cmd);
@@ -223,14 +244,14 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
 
   eatbytes(tk, introlen + 1);
 
-  key->code = TERMKEY_SYM_UNKNOWN;
+  if(cmd < 0x40 || cmd >= 0x80)
+    return TERMKEY_SYM_UNKNOWN;
 
-  if(cmd < tk->ncsi_ss3s)
-    key->code = tk->csi_ss3s[cmd];
+  key->code = tk->csi_ss3s[cmd - 0x40];
 
-  if(key->code == TERMKEY_SYM_UNKNOWN && cmd < tk->nss3s) {
-    if(tk->flags & TERMKEY_FLAG_CONVERTKP && tk->ss3_kpalts[cmd]) {
-      key->code = tk->ss3_kpalts[cmd];
+  if(key->code == TERMKEY_SYM_UNKNOWN) {
+    if(tk->flags & TERMKEY_FLAG_CONVERTKP && tk->ss3_kpalts[cmd - 0x40]) {
+      key->code = tk->ss3_kpalts[cmd - 0x40];
       key->modifiers = 0;
       key->flags = 0;
 
@@ -240,7 +261,7 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
       return TERMKEY_RES_KEY;
     }
 
-    key->code = tk->ss3s[cmd];
+    key->code = tk->ss3s[cmd - 0x40];
   }
 
   if(key->code == TERMKEY_SYM_UNKNOWN)
@@ -577,7 +598,8 @@ int termkey_register_keyname(termkey_t *tk, int code, const char *name)
     code = tk->nkeynames;
 
   if(code >= tk->nkeynames) {
-    tk->keynames = g_renew(const char*, tk->keynames, code + 1);
+    const char **new_keynames = realloc(tk->keynames, sizeof(new_keynames[0]) * (code + 1));
+    tk->keynames = new_keynames;
 
     // Fill in the hole
     for(int i = tk->nkeynames; i < code; i++)
@@ -593,44 +615,31 @@ int termkey_register_keyname(termkey_t *tk, int code, const char *name)
 
 int termkey_register_csi_ss3(termkey_t *tk, int code, unsigned char cmd, const char *name)
 {
+  if(cmd < 0x40 || cmd >= 0x80) {
+    fprintf(stderr, "Cannot register CSI/SS3 key at cmd 0x%02x - out of bounds\n", cmd);
+    return -1;
+  }
+
   if(name)
     code = termkey_register_keyname(tk, code, name);
 
-  if(cmd >= tk->ncsi_ss3s) {
-    tk->csi_ss3s = g_renew(int, tk->csi_ss3s, cmd + 1);
-
-    // Fill in the hole
-    for(int i = tk->ncsi_ss3s; i < cmd; i++)
-      tk->csi_ss3s[i] = TERMKEY_SYM_UNKNOWN;
-
-    tk->ncsi_ss3s = cmd + 1;
-  }
-
-  tk->csi_ss3s[cmd] = code;
+  tk->csi_ss3s[cmd - 0x40] = code;
 
   return code;
 }
 
 int termkey_register_ss3kpalt(termkey_t *tk, int code, unsigned char cmd, const char *name, char kpalt)
 {
+  if(cmd < 0x40 || cmd >= 0x80) {
+    fprintf(stderr, "Cannot register SS3 key at cmd 0x%02x - out of bounds\n", cmd);
+    return -1;
+  }
+
   if(name)
     code = termkey_register_keyname(tk, code, name);
 
-  if(cmd >= tk->nss3s) {
-    tk->ss3s       = g_renew(int,  tk->ss3s,       cmd + 1);
-    tk->ss3_kpalts = g_renew(char, tk->ss3_kpalts, cmd + 1);
-
-    // Fill in the hole
-    for(int i = tk->nss3s; i < cmd; i++) {
-      tk->ss3s[i]       = TERMKEY_SYM_UNKNOWN;
-      tk->ss3_kpalts[i] = 0;
-    }
-
-    tk->nss3s = cmd + 1;
-  }
-
-  tk->ss3s[cmd]       = code;
-  tk->ss3_kpalts[cmd] = kpalt;
+  tk->ss3s[cmd - 0x40]       = code;
+  tk->ss3_kpalts[cmd - 0x40] = kpalt;
 
   return code;
 }
@@ -641,12 +650,14 @@ int termkey_register_csifunc(termkey_t *tk, int code, int number, const char *na
     code = termkey_register_keyname(tk, code, name);
 
   if(number >= tk->ncsifuncs) {
-    tk->csifuncs = g_renew(int, tk->csifuncs, number + 1);
-    tk->ncsifuncs = number + 1;
+    int *new_csifuncs = realloc(tk->csifuncs, sizeof(new_csifuncs[0]) * (number + 1));
+    tk->csifuncs = new_csifuncs;
 
     // Fill in the hole
     for(int i = tk->ncsifuncs; i < number; i++)
       tk->csifuncs[i] = TERMKEY_SYM_UNKNOWN;
+
+    tk->ncsifuncs = number + 1;
   }
 
   tk->csifuncs[number] = code;
