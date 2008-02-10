@@ -16,8 +16,9 @@ struct termkey {
   int    fd;
   int    flags;
   unsigned char *buffer;
-  size_t buffvalid;
-  size_t buffsize;
+  size_t buffstart; // First offset in buffer
+  size_t buffcount; // NUMBER of entires valid in buffer
+  size_t buffsize; // Total malloc'ed size
 
   char   is_closed;
 
@@ -70,7 +71,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize)
     return NULL;
   }
 
-  tk->buffvalid = 0;
+  tk->buffstart = 0;
+  tk->buffcount = 0;
   tk->buffsize  = buffsize;
 
   tk->is_closed = 0;
@@ -171,8 +173,20 @@ termkey_t *termkey_new(int fd, int flags)
 
 static inline void eatbytes(termkey_t *tk, size_t count)
 {
-  memmove(tk->buffer, tk->buffer + count, tk->buffvalid - count);
-  tk->buffvalid -= count;
+  tk->buffstart += count;
+  tk->buffcount -= count;
+
+  if(tk->buffcount <= 0) {
+    tk->buffstart = 0;
+    tk->buffcount = 0;
+  }
+
+  size_t halfsize = tk->buffsize / 2;
+
+  if(tk->buffstart > halfsize) {
+    memcpy(tk->buffer, tk->buffer + halfsize, halfsize);
+    tk->buffstart -= halfsize;
+  }
 }
 
 #define UTF8_INVALID 0xFFFD
@@ -268,20 +282,22 @@ static inline void do_codepoint(termkey_t *tk, int codepoint, termkey_key *key)
     fill_utf8(key);
 }
 
+#define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
+
 static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
 {
   size_t csi_end = introlen;
 
-  while(csi_end < tk->buffvalid) {
-    if(tk->buffer[csi_end] >= 0x40 && tk->buffer[csi_end] < 0x80)
+  while(csi_end < tk->buffcount) {
+    if(CHARAT(csi_end) >= 0x40 && CHARAT(csi_end) < 0x80)
       break;
     csi_end++;
   }
 
-  if(csi_end >= tk->buffvalid)
+  if(csi_end >= tk->buffcount)
     return TERMKEY_RES_NONE;
 
-  unsigned char cmd = tk->buffer[csi_end];
+  unsigned char cmd = CHARAT(csi_end);
   int arg[16];
   char present = 0;
   int args = 0;
@@ -290,7 +306,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   // Now attempt to parse out up number;number;... separated values
   while(p < csi_end) {
-    unsigned char c = tk->buffer[p];
+    unsigned char c = CHARAT(p);
 
     if(c >= '0' && c <= '9') {
       if(!present) {
@@ -356,10 +372,10 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
 static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
 {
-  if(introlen + 1 < tk->buffvalid)
+  if(introlen + 1 < tk->buffcount)
     return TERMKEY_RES_NONE;
 
-  unsigned char cmd = tk->buffer[introlen];
+  unsigned char cmd = CHARAT(introlen);
 
   eatbytes(tk, introlen + 1);
 
@@ -395,34 +411,34 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  if(tk->buffvalid == 0)
+  if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
 
   // Now we're sure at least 1 byte is valid
-  unsigned char b0 = tk->buffer[0];
+  unsigned char b0 = CHARAT(0);
 
   if(b0 == 0x1b) {
-    if(tk->buffvalid == 1) {
+    if(tk->buffcount == 1) {
       do_codepoint(tk, b0, key);
       eatbytes(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
-    unsigned char b1 = tk->buffer[1];
+    unsigned char b1 = CHARAT(1);
     if(b1 == '[')
       return getkey_csi(tk, 2, key);
 
     if(b1 == 'O')
       return getkey_ss3(tk, 2, key);
 
-    tk->buffer++;
+    tk->buffstart++;
 
     termkey_result metakey_result = termkey_getkey(tk, key);
 
     switch(metakey_result) {
       case TERMKEY_RES_KEY:
         key->modifiers |= TERMKEY_KEYMOD_ALT;
-        tk->buffer--;
+        tk->buffstart--;
         eatbytes(tk, 1);
         break;
 
@@ -485,11 +501,11 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
       return TERMKEY_RES_KEY;
     }
 
-    if(tk->buffvalid < nbytes)
+    if(tk->buffcount < nbytes)
       return TERMKEY_RES_NONE;
 
     for(int b = 1; b < nbytes; b++) {
-      unsigned char cb = tk->buffer[b];
+      unsigned char cb = CHARAT(b);
       if(cb < 0x80 || cb >= 0xc0) {
         do_codepoint(tk, UTF8_INVALID, key);
         eatbytes(tk, b - 1);
@@ -543,14 +559,14 @@ termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
 
 void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
 {
-  if(tk->buffvalid + inputlen > tk->buffsize) {
+  if(tk->buffstart + tk->buffcount + inputlen > tk->buffsize) {
     fprintf(stderr, "TODO! Extend input buffer!\n");
     exit(0);
   }
 
   // Not strcpy just in case of NUL bytes
-  memcpy(tk->buffer + tk->buffvalid, input, inputlen);
-  tk->buffvalid += inputlen;
+  memcpy(tk->buffer + tk->buffstart + tk->buffcount, input, inputlen);
+  tk->buffcount += inputlen;
 }
 
 void termkey_advisereadable(termkey_t *tk)
