@@ -105,7 +105,7 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
     tk->keynames[i] = NULL;
 
   for(i = 0; i < tk->ncsifuncs; i++)
-    tk->csifuncs[i].sym = TERMKEY_SYM_NONE;
+    tk->csifuncs[i].sym = TERMKEY_SYM_UNKNOWN;
 
   // Special built-in names
   termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
