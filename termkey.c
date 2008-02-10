@@ -394,9 +394,24 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
     return TERMKEY_RES_KEY;
   }
+  else if(b0 == 0x8f) {
+    return getkey_ss3(tk, 1, key);
+  }
+  else if(b0 == 0x9b) {
+    return getkey_csi(tk, 1, key);
+  }
   else if(b0 >= 0x80 && b0 < 0xa0) {
-    // TODO - C1 or UTF-8?
-    fprintf(stderr, "TODO - b0 is 0x%02x - Might be C1, might be UTF-8\n", b0);
+    // UTF-8 never starts with a C1 byte. So we can be sure of these
+    key->code = b0 - 0x40;
+    key->modifiers = TERMKEY_KEYMOD_CTRL|TERMKEY_KEYMOD_ALT;
+    key->flags = 0;
+
+    key->utf8[0] = key->code;
+    key->utf8[1] = 0;
+
+    eatbytes(tk, 1);
+
+    return TERMKEY_RES_KEY;
   }
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
     // Some UTF-8
