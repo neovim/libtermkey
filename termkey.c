@@ -640,8 +640,11 @@ termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
 void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
 {
   if(tk->buffstart + tk->buffcount + inputlen > tk->buffsize) {
-    fprintf(stderr, "TODO! Extend input buffer!\n");
-    exit(0);
+    while(tk->buffstart + tk->buffcount + inputlen > tk->buffsize)
+      tk->buffsize *= 2;
+
+    unsigned char *newbuffer = realloc(tk->buffer, tk->buffsize);
+    tk->buffer = newbuffer;
   }
 
   // Not strcpy just in case of NUL bytes
