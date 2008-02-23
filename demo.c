@@ -1,24 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "termkey.h"
 
 int main(int argc, char *argv[]) {
-  struct termios termios;
-
-  if(tcgetattr(0, &termios)) {
-    perror("ioctl(TCIOGETS)");
-    exit(1);
-  }
-
-  int old_lflag = termios.c_lflag;
-  termios.c_iflag &= ~(IXON|INLCR|ICRNL);
-  termios.c_lflag &= ~(ICANON|ECHO|ISIG);
-
-  tcsetattr(0, TCSANOW, &termios);
-
   termkey_t *tk = termkey_new(0, 0);
 
   termkey_result ret;
@@ -44,8 +30,5 @@ int main(int argc, char *argv[]) {
       break;
   }
 
-  termios.c_lflag = old_lflag;
-  tcsetattr(0, TCSANOW, &termios);
-
-  termkey_free(tk);
+  termkey_destroy(tk);
 }
