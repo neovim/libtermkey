@@ -153,12 +153,14 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP8,      'x', "KP8",      '8');
   termkey_register_ss3kpalt(tk, TERMKEY_SYM_KP9,      'y', "KP9",      '9');
 
-  termkey_register_csifunc(tk, TERMKEY_SYM_HOME,      1, "Home");
+  termkey_register_csifunc(tk, TERMKEY_SYM_FIND,      1, "Find");
   termkey_register_csifunc(tk, TERMKEY_SYM_INSERT,    2, "Insert");
   termkey_register_csifunc(tk, TERMKEY_SYM_DELETE,    3, "Delete");
-  termkey_register_csifunc(tk, TERMKEY_SYM_END,       4, "End");
+  termkey_register_csifunc(tk, TERMKEY_SYM_SELECT,    4, "Select");
   termkey_register_csifunc(tk, TERMKEY_SYM_PAGEUP,    5, "PageUp");
   termkey_register_csifunc(tk, TERMKEY_SYM_PAGEDOWN,  6, "PageDown");
+  termkey_register_csifunc(tk, TERMKEY_SYM_HOME,      7, "Home");
+  termkey_register_csifunc(tk, TERMKEY_SYM_END,       8, "End");
   termkey_register_csifunc(tk, TERMKEY_SYM_F1,       11, "F1");
   termkey_register_csifunc(tk, TERMKEY_SYM_F2,       12, "F2");
   termkey_register_csifunc(tk, TERMKEY_SYM_F3,       13, "F3");
