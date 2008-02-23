@@ -720,17 +720,6 @@ termkey_result termkey_advisereadable(termkey_t *tk)
   }
 }
 
-const char *termkey_describe_sym(termkey_t *tk, termkey_keysym code)
-{
-  if(code == TERMKEY_SYM_UNKNOWN)
-    return "UNKNOWN";
-
-  if(code < tk->nkeynames)
-    return tk->keynames[code];
-
-  return "UNKNOWN";
-}
-
 termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, const char *name)
 {
   if(!code)
@@ -750,6 +739,17 @@ termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, cons
   tk->keynames[code] = name;
 
   return code;
+}
+
+const char *termkey_get_keyname(termkey_t *tk, termkey_keysym code)
+{
+  if(code == TERMKEY_SYM_UNKNOWN)
+    return "UNKNOWN";
+
+  if(code < tk->nkeynames)
+    return tk->keynames[code];
+
+  return "UNKNOWN";
 }
 
 termkey_keysym termkey_register_c0(termkey_t *tk, termkey_keysym code, unsigned char ctrl, const char *name)
