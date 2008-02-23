@@ -17,14 +17,14 @@ int main(int argc, char *argv[]) {
           termkey_get_keyname(tk, key.code),
           key.code);
     else
-      printf("Key %s%s%s%s (U+%04X)\n",
+      printf("Unicode %s%s%s%s (U+%04X)\n",
           key.modifiers & TERMKEY_KEYMOD_SHIFT ? "Shift-" : "",
           key.modifiers & TERMKEY_KEYMOD_ALT   ? "Alt-" : "",
           key.modifiers & TERMKEY_KEYMOD_CTRL  ? "Ctrl-" : "",
           key.utf8,
           key.code);
 
-    if(key.modifiers & TERMKEY_KEYMOD_CTRL && key.code == 'C')
+    if(key.modifiers & TERMKEY_KEYMOD_CTRL && (key.code == 'C' || key.code == 'c'))
       break;
   }
 
