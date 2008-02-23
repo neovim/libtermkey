@@ -14,7 +14,8 @@ int main(int argc, char *argv[]) {
   }
 
   int old_lflag = termios.c_lflag;
-  termios.c_lflag &= ~(ICANON|ECHO);
+  termios.c_iflag &= ~(IXON|INLCR|ICRNL);
+  termios.c_lflag &= ~(ICANON|ECHO|ISIG);
 
   tcsetattr(0, TCSANOW, &termios);
 
