@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 #include "termkey.h"
 
@@ -16,7 +14,7 @@ int main(int argc, char *argv[]) {
           key.modifiers & TERMKEY_KEYMOD_SHIFT ? "Shift-" : "",
           key.modifiers & TERMKEY_KEYMOD_ALT   ? "Alt-" : "",
           key.modifiers & TERMKEY_KEYMOD_CTRL  ? "Ctrl-" : "",
-          termkey_describe_sym(tk, key.code),
+          termkey_get_keyname(tk, key.code),
           key.code);
     else
       printf("Key %s%s%s%s (U+%04X)\n",
