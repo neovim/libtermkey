@@ -418,7 +418,9 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   if(cmd == '~') {
     if(arg[0] == 27) {
+      int mod = key->modifiers;
       do_codepoint(tk, arg[2], key);
+      key->modifiers |= mod;
     }
     else if(arg[0] >= 0 && arg[0] < tk->ncsifuncs) {
       key->code = tk->csifuncs[arg[0]].sym;
