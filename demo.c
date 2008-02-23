@@ -46,4 +46,6 @@ int main(int argc, char *argv[]) {
 
   termios.c_lflag = old_lflag;
   tcsetattr(0, TCSANOW, &termios);
+
+  termkey_free(tk);
 }

@@ -189,6 +189,15 @@ termkey_t *termkey_new(int fd, int flags)
   return termkey_new_full(fd, flags, 256, 50);
 }
 
+void termkey_free(termkey_t *tk)
+{
+  free(tk->buffer); tk->buffer = NULL;
+  free(tk->keynames); tk->keynames = NULL;
+  free(tk->csifuncs); tk->csifuncs = NULL;
+
+  free(tk);
+}
+
 void termkey_setwaittime(termkey_t *tk, int msec)
 {
   tk->waittime = msec;
