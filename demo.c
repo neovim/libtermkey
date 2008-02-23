@@ -26,16 +26,16 @@ int main(int argc, char *argv[]) {
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
     if(key.flags & TERMKEY_KEYFLAG_SPECIAL)
       printf("Key %s%s%s%s (code %d)\n",
-          key.modifiers & TERMKEY_KEYMOD_SHIFT ? "S-" : "",
-          key.modifiers & TERMKEY_KEYMOD_ALT   ? "A-" : "",
-          key.modifiers & TERMKEY_KEYMOD_CTRL  ? "C-" : "",
+          key.modifiers & TERMKEY_KEYMOD_SHIFT ? "Shift-" : "",
+          key.modifiers & TERMKEY_KEYMOD_ALT   ? "Alt-" : "",
+          key.modifiers & TERMKEY_KEYMOD_CTRL  ? "Ctrl-" : "",
           termkey_describe_sym(tk, key.code),
           key.code);
     else
       printf("Key %s%s%s%s (U+%04X)\n",
-          key.modifiers & TERMKEY_KEYMOD_SHIFT ? "S-" : "",
-          key.modifiers & TERMKEY_KEYMOD_ALT   ? "A-" : "",
-          key.modifiers & TERMKEY_KEYMOD_CTRL  ? "C-" : "",
+          key.modifiers & TERMKEY_KEYMOD_SHIFT ? "Shift-" : "",
+          key.modifiers & TERMKEY_KEYMOD_ALT   ? "Alt-" : "",
+          key.modifiers & TERMKEY_KEYMOD_CTRL  ? "Ctrl-" : "",
           key.utf8,
           key.code);
 
