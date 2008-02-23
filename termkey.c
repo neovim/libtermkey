@@ -112,8 +112,7 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 
   termkey_register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, "Backspace");
   termkey_register_c0(tk, TERMKEY_SYM_TAB,       0x09, "Tab");
-  termkey_register_c0(tk, TERMKEY_SYM_ENTER,     0x0a, "Enter");
-  termkey_register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, NULL);
+  termkey_register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, "Enter");
   termkey_register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, "Escape");
 
   // G1
