@@ -376,6 +376,8 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   if(args > 1 && arg[1] != -1)
     key->modifiers = arg[1] - 1;
+  else
+    key->modifiers = 0;
 
   key->flags = TERMKEY_KEYFLAG_SPECIAL;
 
