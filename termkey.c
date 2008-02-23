@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include <string.h>
+#include <termios.h>
 
 #include <stdio.h>
 
@@ -20,6 +21,9 @@ struct termkey {
   size_t buffstart; // First offset in buffer
   size_t buffcount; // NUMBER of entires valid in buffer
   size_t buffsize; // Total malloc'ed size
+
+  struct termios restore_termios;
+  char restore_termios_valid;
 
   int waittime; // msec
 
@@ -77,6 +81,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   tk->buffstart = 0;
   tk->buffcount = 0;
   tk->buffsize  = buffsize;
+
+  tk->restore_termios_valid = 0;
 
   tk->waittime = waittime;
 
@@ -181,6 +187,19 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   termkey_register_csifunc(tk, TERMKEY_SYM_F19,      33, "F19");
   termkey_register_csifunc(tk, TERMKEY_SYM_F20,      34, "F20");
 
+  if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
+    struct termios termios;
+    if(tcgetattr(fd, &termios) == 0) {
+      tk->restore_termios = termios;
+      tk->restore_termios_valid = 1;
+
+      termios.c_iflag &= ~(IXON|INLCR|ICRNL);
+      termios.c_lflag &= ~(ICANON|ECHO|ISIG);
+
+      tcsetattr(fd, TCSANOW, &termios);
+    }
+  }
+
   return tk;
 }
 
@@ -196,6 +215,14 @@ void termkey_free(termkey_t *tk)
   free(tk->csifuncs); tk->csifuncs = NULL;
 
   free(tk);
+}
+
+void termkey_destroy(termkey_t *tk)
+{
+  if(tk->restore_termios_valid)
+    tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
+
+  termkey_free(tk);
 }
 
 void termkey_setwaittime(termkey_t *tk, int msec)

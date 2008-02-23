@@ -115,10 +115,12 @@ enum {
   TERMKEY_FLAG_CONVERTKP   = 0x02, // Convert KP codes to regular keypresses
   TERMKEY_FLAG_RAW         = 0x04, // Input is raw bytes, not UTF-8
   TERMKEY_FLAG_UTF8        = 0x08, // Input is definitely UTF-8
+  TERMKEY_FLAG_NOTERMIOS   = 0x10, // Do not make initial termios calls on construction
 };
 
 termkey_t *termkey_new(int fd, int flags);
 void       termkey_free(termkey_t *tk);
+void       termkey_destroy(termkey_t *tk);
 
 void       termkey_setwaittime(termkey_t *tk, int msec);
 int        termkey_getwaittime(termkey_t *tk);
