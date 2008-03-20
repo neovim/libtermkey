@@ -1,5 +1,5 @@
-#ifndef __TERMKEY_H__
-#define __TERMKEY_H__
+#ifndef GUARD_TERMKEY_H_
+#define GUARD_TERMKEY_H_
 
 #include <stdint.h>
 #include <stdlib.h>
