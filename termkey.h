@@ -35,27 +35,6 @@ typedef enum {
   TERMKEY_SYM_HOME,
   TERMKEY_SYM_END,
 
-  TERMKEY_SYM_F1,
-  TERMKEY_SYM_F2,
-  TERMKEY_SYM_F3,
-  TERMKEY_SYM_F4,
-  TERMKEY_SYM_F5,
-  TERMKEY_SYM_F6,
-  TERMKEY_SYM_F7,
-  TERMKEY_SYM_F8,
-  TERMKEY_SYM_F9,
-  TERMKEY_SYM_F10,
-  TERMKEY_SYM_F11,
-  TERMKEY_SYM_F12,
-  TERMKEY_SYM_F13,
-  TERMKEY_SYM_F14,
-  TERMKEY_SYM_F15,
-  TERMKEY_SYM_F16,
-  TERMKEY_SYM_F17,
-  TERMKEY_SYM_F18,
-  TERMKEY_SYM_F19,
-  TERMKEY_SYM_F20,
-
   // Numeric keypad special keys
   TERMKEY_SYM_KP0,
   TERMKEY_SYM_KP1,
@@ -80,15 +59,17 @@ typedef enum {
 } termkey_sym;
 
 typedef enum {
+  TERMKEY_TYPE_UNICODE,
+  TERMKEY_TYPE_FUNCTION,
+  TERMKEY_TYPE_KEYSYM
+} termkey_type;
+
+typedef enum {
   TERMKEY_RES_NONE,
   TERMKEY_RES_KEY,
   TERMKEY_RES_EOF,
   TERMKEY_RES_AGAIN,
 } termkey_result;
-
-enum {
-  TERMKEY_KEYFLAG_SPECIAL = 0x01, // 'code' is a special keycode, not a unicode codepoint
-};
 
 enum {
   TERMKEY_KEYMOD_SHIFT = 0x01,
@@ -99,9 +80,13 @@ enum {
 typedef int termkey_keysym;
 
 typedef struct {
+  termkey_type type;
+  union {
+    int            codepoint; // TERMKEY_TYPE_UNICODE
+    int            number;    // TERMKEY_TYPE_FUNCTION
+    termkey_keysym sym;       // TERMKEY_TYPE_KEYSYM
+  } code;
   int modifiers;
-  termkey_keysym code; // Or Unicode codepoint
-  int flags;
 
   /* Any Unicode character can be UTF-8 encoded in no more than 6 bytes, plus
    * terminating NUL */
@@ -134,17 +119,17 @@ void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputle
 termkey_result termkey_advisereadable(termkey_t *tk);
 
 // Registration of keys and names
-termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym code, const char *name);
-const char *termkey_get_keyname(termkey_t *tk, termkey_keysym code);
+termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const char *name);
+const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym);
 
-termkey_keysym termkey_register_c0(termkey_t *tk, termkey_keysym code, unsigned char ctrl, const char *name);
-termkey_keysym termkey_register_csi_ss3(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name);
-termkey_keysym termkey_register_ss3kpalt(termkey_t *tk, termkey_keysym code, unsigned char cmd, const char *name, char kpalt);
-termkey_keysym termkey_register_csifunc(termkey_t *tk, termkey_keysym code, int number, const char *name);
+termkey_keysym termkey_register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
+termkey_keysym termkey_register_csi_ss3(termkey_t *tk, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name);
+termkey_keysym termkey_register_ss3kpalt(termkey_t *tk, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name, char kpalt);
+termkey_keysym termkey_register_csifunc(termkey_t *tk, termkey_type type, termkey_keysym sym, int number, const char *name);
 
-termkey_keysym termkey_register_c0_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
-termkey_keysym termkey_register_csi_ss3_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, unsigned char cmd, const char *name);
-termkey_keysym termkey_register_ss3kpalt_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
-termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_keysym code, int modifier_set, int modifier_mask, int number, const char *name);
+termkey_keysym termkey_register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
+termkey_keysym termkey_register_csi_ss3_full(termkey_t *tk, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name);
+termkey_keysym termkey_register_ss3kpalt_full(termkey_t *tk, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
+termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, int number, const char *name);
 
 #endif
