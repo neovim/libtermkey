@@ -855,3 +855,44 @@ termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_type type, t
 
   return sym;
 }
+
+size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, int longmod)
+{
+  size_t pos = 0;
+  size_t l;
+
+  if(key->modifiers & TERMKEY_KEYMOD_CTRL) {
+    l = snprintf(buffer + pos, len - pos, longmod ? "Ctrl-" : "C-");
+    if(l <= 0) return pos;
+    pos += l;
+  }
+
+  if(key->modifiers & TERMKEY_KEYMOD_ALT) {
+    l = snprintf(buffer + pos, len - pos, longmod ? "Alt-" : "A-");
+    if(l <= 0) return pos;
+    pos += l;
+  }
+
+  if(key->modifiers & TERMKEY_KEYMOD_SHIFT) {
+    l = snprintf(buffer + pos, len - pos, longmod ? "Shift-" : "S-");
+    if(l <= 0) return pos;
+    pos += l;
+  }
+
+  switch(key->type) {
+  case TERMKEY_TYPE_UNICODE:
+    l = snprintf(buffer + pos, len - pos, "%s", key->utf8);
+    break;
+  case TERMKEY_TYPE_KEYSYM:
+    l = snprintf(buffer + pos, len - pos, "%s", termkey_get_keyname(tk, key->code.sym));
+    break;
+  case TERMKEY_TYPE_FUNCTION:
+    l = snprintf(buffer + pos, len - pos, "F%d", key->code.number);
+    break;
+  }
+
+  if(l <= 0) return pos;
+  pos += l;
+
+  return pos;
+}
