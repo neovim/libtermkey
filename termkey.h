@@ -132,4 +132,6 @@ termkey_keysym termkey_register_csi_ss3_full(termkey_t *tk, termkey_type type, t
 termkey_keysym termkey_register_ss3kpalt_full(termkey_t *tk, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
 termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, int number, const char *name);
 
+size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, int longmod);
+
 #endif
