@@ -24,7 +24,7 @@ typedef struct {
   struct keyinfo *csifuncs;
 } termkey_csi;
 
-void *termkeycsi_new_driver(termkey_t *tk)
+static void *new_driver(termkey_t *tk)
 {
   termkey_csi *csi = malloc(sizeof *csi);
 
@@ -50,7 +50,7 @@ void *termkeycsi_new_driver(termkey_t *tk)
   return csi;
 }
 
-void termkeycsi_free_driver(void *private)
+static void free_driver(void *private)
 {
   termkey_csi *csi = private;
 
@@ -324,7 +324,7 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
   return TERMKEY_RES_KEY;
 }
 
-termkey_result termkeycsi_getkey(termkey_t *tk, termkey_key *key)
+static termkey_result getkey(termkey_t *tk, termkey_key *key)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
@@ -580,3 +580,10 @@ termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_type type, t
 
   return sym;
 }
+
+struct termkey_driver termkey_driver_csi = {
+  .new_driver  = new_driver,
+  .free_driver = free_driver,
+
+  .getkey = getkey,
+};

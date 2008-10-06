@@ -8,12 +8,6 @@
 
 #include <stdio.h>
 
-// TODO: Move these into t->driver
-void *termkeycsi_new_driver(termkey_t *tk);
-void termkeycsi_free_driver(void *private);
-termkey_result termkeycsi_getkey(termkey_t *tk, termkey_key *key);
-// END TODO
-
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
   termkey_t *tk = malloc(sizeof(*tk));
@@ -65,7 +59,9 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   for(i = 0; i < tk->nkeynames; i++)
     tk->keynames[i] = NULL;
 
-  tk->driver_info = termkeycsi_new_driver(tk);
+  tk->driver = termkey_driver_csi;
+
+  tk->driver_info = (*tk->driver.new_driver)(tk);
 
   // Special built-in names
   termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
@@ -168,7 +164,7 @@ void termkey_free(termkey_t *tk)
   free(tk->buffer); tk->buffer = NULL;
   free(tk->keynames); tk->keynames = NULL;
 
-  termkeycsi_free_driver(tk->driver_info);
+  (*tk->driver.free_driver)(tk->driver_info);
   tk->driver_info = NULL; /* Be nice to GC'ers, etc */
 
   free(tk);
@@ -194,7 +190,7 @@ int termkey_getwaittime(termkey_t *tk)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  return termkeycsi_getkey(tk, key);
+  return (*tk->driver.getkey)(tk, key);
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
