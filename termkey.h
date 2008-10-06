@@ -136,6 +136,7 @@ typedef enum {
   TERMKEY_FORMAT_LONGMOD = 1,
   TERMKEY_FORMAT_CARETCTRL = 2,
   TERMKEY_FORMAT_ALTISMETA = 4,
+  TERMKEY_FORMAT_WRAPBRACKET = 8,
 } termkey_format;
 
 size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format);
