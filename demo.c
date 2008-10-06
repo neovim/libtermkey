@@ -10,14 +10,10 @@ int main(int argc, char *argv[]) {
   termkey_key key;
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
-    if(key.type == TERMKEY_TYPE_UNICODE && !key.modifiers)
-      printf("%s\n", key.utf8);
-    else {
-      termkey_snprint_key(tk, buffer, sizeof buffer, &key, 0);
-      printf("<%s> or ", buffer);
-      termkey_snprint_key(tk, buffer, sizeof buffer, &key, ~0);
-      printf("<%s>\n", buffer);
-    }
+    termkey_snprint_key(tk, buffer, sizeof buffer, &key, 0);
+    printf("%s or ", buffer);
+    termkey_snprint_key(tk, buffer, sizeof buffer, &key, ~0);
+    printf("%s\n", buffer);
 
     if(key.type == TERMKEY_TYPE_UNICODE && 
        key.modifiers & TERMKEY_KEYMOD_CTRL &&
