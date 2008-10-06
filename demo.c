@@ -13,7 +13,9 @@ int main(int argc, char *argv[]) {
     if(key.type == TERMKEY_TYPE_UNICODE && !key.modifiers)
       printf("%s\n", key.utf8);
     else {
-      termkey_snprint_key(tk, buffer, sizeof buffer, &key, 1);
+      termkey_snprint_key(tk, buffer, sizeof buffer, &key, 0);
+      printf("<%s> or ", buffer);
+      termkey_snprint_key(tk, buffer, sizeof buffer, &key, ~0);
       printf("<%s>\n", buffer);
     }
 
