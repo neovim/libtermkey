@@ -856,10 +856,12 @@ termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_type type, t
   return sym;
 }
 
-size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, int longmod)
+size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format)
 {
   size_t pos = 0;
   size_t l;
+
+  int longmod = format & TERMKEY_FORMAT_LONGMOD;
 
   if(key->modifiers & TERMKEY_KEYMOD_CTRL) {
     l = snprintf(buffer + pos, len - pos, longmod ? "Ctrl-" : "C-");
