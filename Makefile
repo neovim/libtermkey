@@ -7,10 +7,10 @@ endif
 
 all: demo
 
-demo: termkey.o demo.c
+demo: termkey.o driver-csi.o demo.c
 	gcc $(CCFLAGS) $(LDFLAGS) -o $@ $^
 
-termkey.o: termkey.c
+%.o: %.c
 	gcc $(CCFLAGS) -o $@ -c $^
 
 .PHONY: clean
