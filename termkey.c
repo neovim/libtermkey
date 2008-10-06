@@ -65,78 +65,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 
   // Special built-in names
   termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
-
-  termkey_register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, "Backspace");
-  termkey_register_c0(tk, TERMKEY_SYM_TAB,       0x09, "Tab");
-  termkey_register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, "Enter");
-  termkey_register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, "Escape");
-
-  // G1
   termkey_register_keyname(tk, TERMKEY_SYM_SPACE, "Space");
   termkey_register_keyname(tk, TERMKEY_SYM_DEL,   "DEL");
-
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,    'A', "Up");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,  'B', "Down");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT, 'C', "Right");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,  'D', "Left");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN, 'E', "Begin");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,   'F', "End");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,  'H', "Home");
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_FUNCTION, 1, 'P', NULL);
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_FUNCTION, 2, 'Q', NULL);
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_FUNCTION, 3, 'R', NULL);
-  termkey_register_csi_ss3(tk, TERMKEY_TYPE_FUNCTION, 4, 'S', NULL);
-
-  termkey_register_csi_ss3_full(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB, TERMKEY_KEYMOD_SHIFT, TERMKEY_KEYMOD_SHIFT, 'Z', NULL);
-
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPENTER,  'M', "KPEnter",  0);
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPEQUALS, 'X', "KPEquals", '=');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMULT,   'j', "KPMult",   '*');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPLUS,   'k', "KPPlus",   '+');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPCOMMA,  'l', "KPComma",  ',');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMINUS,  'm', "KPMinus",  '-');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPERIOD, 'n', "KPPeriod", '.');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPDIV,    'o', "KPDiv",    '/');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP0,      'p', "KP0",      '0');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP1,      'q', "KP1",      '1');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP2,      'r', "KP2",      '2');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP3,      's', "KP3",      '3');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP4,      't', "KP4",      '4');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP5,      'u', "KP5",      '5');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP6,      'v', "KP6",      '6');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP7,      'w', "KP7",      '7');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP8,      'x', "KP8",      '8');
-  termkey_register_ss3kpalt(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP9,      'y', "KP9",      '9');
-
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      1, "Find");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    2, "Insert");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    3, "Delete");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    4, "Select");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    5, "PageUp");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  6, "PageDown");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      7, "Home");
-  termkey_register_csifunc(tk, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       8, "End");
-
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 1,  11, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 2,  12, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 3,  13, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 4,  14, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 5,  15, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 6,  17, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 7,  18, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 8,  19, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 9,  20, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 10, 21, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 11, 23, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 12, 24, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 13, 25, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 14, 26, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 15, 28, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 16, 29, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 17, 31, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 18, 32, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 19, 33, NULL);
-  termkey_register_csifunc(tk, TERMKEY_TYPE_FUNCTION, 20, 34, NULL);
 
   if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
