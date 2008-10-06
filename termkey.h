@@ -133,7 +133,9 @@ termkey_keysym termkey_register_ss3kpalt_full(termkey_t *tk, termkey_type type, 
 termkey_keysym termkey_register_csifunc_full(termkey_t *tk, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, int number, const char *name);
 
 typedef enum {
-  TERMKEY_FORMAT_LONGMOD = 1
+  TERMKEY_FORMAT_LONGMOD = 1,
+  TERMKEY_FORMAT_CARETCTRL = 2,
+  TERMKEY_FORMAT_ALTISMETA = 4,
 } termkey_format;
 
 size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format);
