@@ -1,6 +1,10 @@
 CCFLAGS=-Wall -Iinclude -std=c99
 LDFLAGS=
 
+ifeq ($(DEBUG),1)
+  CCFLAGS+=-ggdb -DDEBUG
+endif
+
 all: demo
 
 demo: termkey.o demo.c
