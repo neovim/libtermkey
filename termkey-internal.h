@@ -8,8 +8,9 @@
 
 struct termkey_driver
 {
-  void *(*new_driver)(void);
-  void  (*free_driver)(void *);
+  void          *(*new_driver)(termkey_t *tk);
+  void           (*free_driver)(void *);
+  termkey_result (*getkey)(termkey_t *tk, termkey_key *key);
 };
 
 struct termkey {
@@ -34,6 +35,6 @@ struct termkey {
   void *driver_info;
 };
 
-void *termkeycsi_new_driver(termkey_t *t);
+extern struct termkey_driver termkey_driver_csi;
 
 #endif
