@@ -139,6 +139,10 @@ typedef enum {
   TERMKEY_FORMAT_WRAPBRACKET = 8,
 } termkey_format;
 
+// Some useful combinations
+
+#define TERMKEY_FORMAT_VIM (TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_WRAPBRACKET)
+
 size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format);
 
 #endif
