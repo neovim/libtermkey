@@ -863,6 +863,18 @@ size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key 
 
   int longmod = format & TERMKEY_FORMAT_LONGMOD;
 
+  if(format & TERMKEY_FORMAT_CARETCTRL) {
+    if(key->type == TERMKEY_TYPE_UNICODE &&
+       key->modifiers == TERMKEY_KEYMOD_CTRL &&
+       key->code.number >= '@' &&
+       key->code.number <= '_') {
+      l = snprintf(buffer + pos, len - pos, "^");
+      if(l <= 0) return pos;
+      pos += l;
+      goto do_codepoint;
+    }
+  }
+
   if(key->modifiers & TERMKEY_KEYMOD_CTRL) {
     l = snprintf(buffer + pos, len - pos, longmod ? "Ctrl-" : "C-");
     if(l <= 0) return pos;
@@ -870,7 +882,10 @@ size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key 
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_ALT) {
-    l = snprintf(buffer + pos, len - pos, longmod ? "Alt-" : "A-");
+    int altismeta = format & TERMKEY_FORMAT_ALTISMETA;
+
+    l = snprintf(buffer + pos, len - pos, longmod ? ( altismeta ? "Meta-" : "Alt-" )
+                                                  : ( altismeta ? "M-"    : "A-" ));
     if(l <= 0) return pos;
     pos += l;
   }
@@ -880,6 +895,8 @@ size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key 
     if(l <= 0) return pos;
     pos += l;
   }
+
+do_codepoint:
 
   switch(key->type) {
   case TERMKEY_TYPE_UNICODE:
