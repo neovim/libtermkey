@@ -363,19 +363,12 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  return (*tk->driver.getkey)(tk, key);
+  return (*tk->driver.getkey)(tk, key, 0);
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
-  int old_waittime = tk->waittime;
-  tk->waittime = 0;
-
-  termkey_result ret = termkey_getkey(tk, key);
-
-  tk->waittime = old_waittime;
-
-  return ret;
+  return (*tk->driver.getkey)(tk, key, 1);
 }
 
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
