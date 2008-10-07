@@ -141,25 +141,6 @@ static void free_driver(void *private)
   free(csi);
 }
 
-static inline void eatbytes(termkey_t *tk, size_t count)
-{
-  if(count >= tk->buffcount) {
-    tk->buffstart = 0;
-    tk->buffcount = 0;
-    return;
-  }
-
-  tk->buffstart += count;
-  tk->buffcount -= count;
-
-  size_t halfsize = tk->buffsize / 2;
-
-  if(tk->buffstart > halfsize) {
-    memcpy(tk->buffer, tk->buffer + halfsize, halfsize);
-    tk->buffstart -= halfsize;
-  }
-}
-
 #define UTF8_INVALID 0xFFFD
 
 static int utf8_seqlen(int codepoint)
@@ -275,7 +256,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
     do_codepoint(tk, '[', key);
     key->modifiers |= TERMKEY_KEYMOD_ALT;
-    eatbytes(tk, introlen);
+    (*tk->method.eatbytes)(tk, introlen);
     return TERMKEY_RES_KEY;
   }
 
@@ -317,7 +298,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   args++;
 
-  eatbytes(tk, csi_end + 1);
+  (*tk->method.eatbytes)(tk, csi_end + 1);
 
   if(args > 1 && arg[1] != -1)
     key->modifiers = arg[1] - 1;
@@ -368,13 +349,13 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
 
     do_codepoint(tk, 'O', key);
     key->modifiers |= TERMKEY_KEYMOD_ALT;
-    eatbytes(tk, tk->buffcount);
+    (*tk->method.eatbytes)(tk, tk->buffcount);
     return TERMKEY_RES_KEY;
   }
 
   unsigned char cmd = CHARAT(introlen);
 
-  eatbytes(tk, introlen + 1);
+  (*tk->method.eatbytes)(tk, introlen + 1);
 
   if(cmd < 0x40 || cmd >= 0x80)
     return TERMKEY_SYM_UNKNOWN;
@@ -422,7 +403,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
         return TERMKEY_RES_AGAIN;
 
       do_codepoint(tk, b0, key);
-      eatbytes(tk, 1);
+      (*tk->method.eatbytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
@@ -436,7 +417,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
 
     if(b1 == 0x1b) {
       do_codepoint(tk, b0, key);
-      eatbytes(tk, 1);
+      (*tk->method.eatbytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
@@ -448,7 +429,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
       case TERMKEY_RES_KEY:
         key->modifiers |= TERMKEY_KEYMOD_ALT;
         tk->buffstart--;
-        eatbytes(tk, 1);
+        (*tk->method.eatbytes)(tk, 1);
         break;
 
       case TERMKEY_RES_NONE:
@@ -468,7 +449,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
   else if(b0 < 0xa0) {
     // Single byte C0, G0 or C1 - C1 is never UTF-8 initial byte
     do_codepoint(tk, b0, key);
-    eatbytes(tk, 1);
+    (*tk->method.eatbytes)(tk, 1);
     return TERMKEY_RES_KEY;
   }
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
@@ -482,7 +463,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     if(b0 < 0xc0) {
       // Starts with a continuation byte - that's not right
       do_codepoint(tk, UTF8_INVALID, key);
-      eatbytes(tk, 1);
+      (*tk->method.eatbytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
     else if(b0 < 0xe0) {
@@ -507,7 +488,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     }
     else {
       do_codepoint(tk, UTF8_INVALID, key);
-      eatbytes(tk, 1);
+      (*tk->method.eatbytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
@@ -518,7 +499,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
       unsigned char cb = CHARAT(b);
       if(cb < 0x80 || cb >= 0xc0) {
         do_codepoint(tk, UTF8_INVALID, key);
-        eatbytes(tk, b - 1);
+        (*tk->method.eatbytes)(tk, b - 1);
         return TERMKEY_RES_KEY;
       }
 
@@ -537,7 +518,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
       codepoint = UTF8_INVALID;
 
     do_codepoint(tk, codepoint, key);
-    eatbytes(tk, nbytes);
+    (*tk->method.eatbytes)(tk, nbytes);
     return TERMKEY_RES_KEY;
   }
   else {
@@ -549,7 +530,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     key->utf8[0] = key->code.codepoint;
     key->utf8[1] = 0;
 
-    eatbytes(tk, 1);
+    (*tk->method.eatbytes)(tk, 1);
 
     return TERMKEY_RES_KEY;
   }
