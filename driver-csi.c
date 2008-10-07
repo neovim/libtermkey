@@ -122,7 +122,7 @@ static void free_driver(void *private)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
+static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key, int force)
 {
   termkey_csi *csi = tk->driver_info;
 
@@ -135,7 +135,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
   }
 
   if(csi_end >= tk->buffcount) {
-    if(tk->waittime)
+    if(!force)
       return TERMKEY_RES_AGAIN;
 
     (*tk->method.emit_codepoint)(tk, '[', key);
@@ -223,12 +223,12 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key)
+static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key, int force)
 {
   termkey_csi *csi = tk->driver_info;
 
   if(tk->buffcount < introlen + 1) {
-    if(tk->waittime)
+    if(!force)
       return TERMKEY_RES_AGAIN;
 
     (*tk->method.emit_codepoint)(tk, 'O', key);
@@ -271,7 +271,7 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result getkey(termkey_t *tk, termkey_key *key)
+static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
@@ -283,7 +283,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     if(tk->buffcount == 1) {
       // This might be an <Esc> press, or it may want to be part of a longer
       // sequence
-      if(tk->waittime)
+      if(!force)
         return TERMKEY_RES_AGAIN;
 
       (*tk->method.emit_codepoint)(tk, b0, key);
@@ -294,10 +294,10 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     unsigned char b1 = CHARAT(1);
 
     if(b1 == '[')
-      return getkey_csi(tk, 2, key);
+      return getkey_csi(tk, 2, key, force);
 
     if(b1 == 'O')
-      return getkey_ss3(tk, 2, key);
+      return getkey_ss3(tk, 2, key, force);
 
     if(b1 == 0x1b) {
       (*tk->method.emit_codepoint)(tk, b0, key);
@@ -325,10 +325,10 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     return metakey_result;
   }
   else if(b0 == 0x8f) {
-    return getkey_ss3(tk, 1, key);
+    return getkey_ss3(tk, 1, key, force);
   }
   else if(b0 == 0x9b) {
-    return getkey_csi(tk, 1, key);
+    return getkey_csi(tk, 1, key, force);
   }
   else
     return (*tk->method.getkey_simple)(tk, key);
