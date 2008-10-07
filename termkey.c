@@ -13,6 +13,9 @@ static struct termkey_driver *drivers[] = {
   NULL,
 };
 
+// Forwards for the "protected" methods
+static void eatbytes(termkey_t *tk, size_t count);
+
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
   termkey_t *tk = malloc(sizeof(*tk));
@@ -63,6 +66,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   int i;
   for(i = 0; i < tk->nkeynames; i++)
     tk->keynames[i] = NULL;
+
+  tk->method.eatbytes = &eatbytes;
 
   for(i = 0; drivers[i]; i++) {
     void *driver_info = (*drivers[i]->new_driver)(tk);
@@ -131,6 +136,25 @@ void termkey_setwaittime(termkey_t *tk, int msec)
 int termkey_getwaittime(termkey_t *tk)
 {
   return tk->waittime;
+}
+
+static void eatbytes(termkey_t *tk, size_t count)
+{
+  if(count >= tk->buffcount) {
+    tk->buffstart = 0;
+    tk->buffcount = 0;
+    return;
+  }
+
+  tk->buffstart += count;
+  tk->buffcount -= count;
+
+  size_t halfsize = tk->buffsize / 2;
+
+  if(tk->buffstart > halfsize) {
+    memcpy(tk->buffer, tk->buffer + halfsize, halfsize);
+    tk->buffstart -= halfsize;
+  }
 }
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)

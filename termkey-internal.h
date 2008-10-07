@@ -33,6 +33,12 @@ struct termkey {
 
   struct termkey_driver driver;
   void *driver_info;
+
+  // Now some "protected" methods for the driver to call but which we don't
+  // want exported as real symbols in the library
+  struct {
+    void (*eatbytes)(termkey_t *tk, size_t count);
+  } method;
 };
 
 extern struct termkey_driver termkey_driver_csi;
