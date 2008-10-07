@@ -8,6 +8,11 @@
 
 #include <stdio.h>
 
+static struct termkey_driver *drivers[] = {
+  &termkey_driver_csi,
+  NULL,
+};
+
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
   termkey_t *tk = malloc(sizeof(*tk));
@@ -59,9 +64,19 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   for(i = 0; i < tk->nkeynames; i++)
     tk->keynames[i] = NULL;
 
-  tk->driver = termkey_driver_csi;
+  for(i = 0; drivers[i]; i++) {
+    void *driver_info = (*drivers[i]->new_driver)(tk);
+    if(!driver_info)
+      continue;
 
-  tk->driver_info = (*tk->driver.new_driver)(tk);
+    tk->driver = *(drivers[i]);
+    tk->driver_info = driver_info;
+  }
+
+  if(!tk->driver_info) {
+    fprintf(stderr, "Unable to find a terminal driver\n");
+    return NULL;
+  }
 
   // Special built-in names
   termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
