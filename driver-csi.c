@@ -120,8 +120,6 @@ static void free_driver(void *private)
   free(csi);
 }
 
-#define UTF8_INVALID 0xFFFD
-
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
 static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key)
@@ -332,96 +330,8 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
   else if(b0 == 0x9b) {
     return getkey_csi(tk, 1, key);
   }
-  else if(b0 < 0xa0) {
-    // Single byte C0, G0 or C1 - C1 is never UTF-8 initial byte
-    (*tk->method.emit_codepoint)(tk, b0, key);
-    (*tk->method.eat_bytes)(tk, 1);
-    return TERMKEY_RES_KEY;
-  }
-  else if(tk->flags & TERMKEY_FLAG_UTF8) {
-    // Some UTF-8
-    int nbytes;
-    int codepoint;
-
-    key->type = TERMKEY_TYPE_UNICODE;
-    key->modifiers = 0;
-
-    if(b0 < 0xc0) {
-      // Starts with a continuation byte - that's not right
-      (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      (*tk->method.eat_bytes)(tk, 1);
-      return TERMKEY_RES_KEY;
-    }
-    else if(b0 < 0xe0) {
-      nbytes = 2;
-      codepoint = b0 & 0x1f;
-    }
-    else if(b0 < 0xf0) {
-      nbytes = 3;
-      codepoint = b0 & 0x0f;
-    }
-    else if(b0 < 0xf8) {
-      nbytes = 4;
-      codepoint = b0 & 0x07;
-    }
-    else if(b0 < 0xfc) {
-      nbytes = 5;
-      codepoint = b0 & 0x03;
-    }
-    else if(b0 < 0xfe) {
-      nbytes = 6;
-      codepoint = b0 & 0x01;
-    }
-    else {
-      (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      (*tk->method.eat_bytes)(tk, 1);
-      return TERMKEY_RES_KEY;
-    }
-
-    if(tk->buffcount < nbytes)
-      return tk->waittime ? TERMKEY_RES_AGAIN : TERMKEY_RES_NONE;
-
-    for(int b = 1; b < nbytes; b++) {
-      unsigned char cb = CHARAT(b);
-      if(cb < 0x80 || cb >= 0xc0) {
-        (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-        (*tk->method.eat_bytes)(tk, b - 1);
-        return TERMKEY_RES_KEY;
-      }
-
-      codepoint <<= 6;
-      codepoint |= cb & 0x3f;
-    }
-
-    // Check for overlong sequences
-    if(nbytes > utf8_seqlen(codepoint))
-      codepoint = UTF8_INVALID;
-
-    // Check for UTF-16 surrogates or invalid codepoints
-    if((codepoint >= 0xD800 && codepoint <= 0xDFFF) ||
-       codepoint == 0xFFFE ||
-       codepoint == 0xFFFF)
-      codepoint = UTF8_INVALID;
-
-    (*tk->method.emit_codepoint)(tk, codepoint, key);
-    (*tk->method.eat_bytes)(tk, nbytes);
-    return TERMKEY_RES_KEY;
-  }
-  else {
-    // Non UTF-8 case - just report the raw byte
-    key->type = TERMKEY_TYPE_UNICODE;
-    key->code.codepoint = b0;
-    key->modifiers = 0;
-
-    key->utf8[0] = key->code.codepoint;
-    key->utf8[1] = 0;
-
-    (*tk->method.eat_bytes)(tk, 1);
-
-    return TERMKEY_RES_KEY;
-  }
-
-  return TERMKEY_SYM_NONE;
+  else
+    return (*tk->method.getkey_simple)(tk, key);
 }
 
 static termkey_keysym register_csi_ss3(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name)
