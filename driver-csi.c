@@ -256,7 +256,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
     do_codepoint(tk, '[', key);
     key->modifiers |= TERMKEY_KEYMOD_ALT;
-    (*tk->method.eatbytes)(tk, introlen);
+    (*tk->method.eat_bytes)(tk, introlen);
     return TERMKEY_RES_KEY;
   }
 
@@ -298,7 +298,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
 
   args++;
 
-  (*tk->method.eatbytes)(tk, csi_end + 1);
+  (*tk->method.eat_bytes)(tk, csi_end + 1);
 
   if(args > 1 && arg[1] != -1)
     key->modifiers = arg[1] - 1;
@@ -349,13 +349,13 @@ static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *ke
 
     do_codepoint(tk, 'O', key);
     key->modifiers |= TERMKEY_KEYMOD_ALT;
-    (*tk->method.eatbytes)(tk, tk->buffcount);
+    (*tk->method.eat_bytes)(tk, tk->buffcount);
     return TERMKEY_RES_KEY;
   }
 
   unsigned char cmd = CHARAT(introlen);
 
-  (*tk->method.eatbytes)(tk, introlen + 1);
+  (*tk->method.eat_bytes)(tk, introlen + 1);
 
   if(cmd < 0x40 || cmd >= 0x80)
     return TERMKEY_SYM_UNKNOWN;
@@ -403,7 +403,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
         return TERMKEY_RES_AGAIN;
 
       do_codepoint(tk, b0, key);
-      (*tk->method.eatbytes)(tk, 1);
+      (*tk->method.eat_bytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
@@ -417,7 +417,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
 
     if(b1 == 0x1b) {
       do_codepoint(tk, b0, key);
-      (*tk->method.eatbytes)(tk, 1);
+      (*tk->method.eat_bytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
@@ -429,7 +429,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
       case TERMKEY_RES_KEY:
         key->modifiers |= TERMKEY_KEYMOD_ALT;
         tk->buffstart--;
-        (*tk->method.eatbytes)(tk, 1);
+        (*tk->method.eat_bytes)(tk, 1);
         break;
 
       case TERMKEY_RES_NONE:
@@ -449,7 +449,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
   else if(b0 < 0xa0) {
     // Single byte C0, G0 or C1 - C1 is never UTF-8 initial byte
     do_codepoint(tk, b0, key);
-    (*tk->method.eatbytes)(tk, 1);
+    (*tk->method.eat_bytes)(tk, 1);
     return TERMKEY_RES_KEY;
   }
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
@@ -463,7 +463,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     if(b0 < 0xc0) {
       // Starts with a continuation byte - that's not right
       do_codepoint(tk, UTF8_INVALID, key);
-      (*tk->method.eatbytes)(tk, 1);
+      (*tk->method.eat_bytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
     else if(b0 < 0xe0) {
@@ -488,7 +488,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     }
     else {
       do_codepoint(tk, UTF8_INVALID, key);
-      (*tk->method.eatbytes)(tk, 1);
+      (*tk->method.eat_bytes)(tk, 1);
       return TERMKEY_RES_KEY;
     }
 
@@ -499,7 +499,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
       unsigned char cb = CHARAT(b);
       if(cb < 0x80 || cb >= 0xc0) {
         do_codepoint(tk, UTF8_INVALID, key);
-        (*tk->method.eatbytes)(tk, b - 1);
+        (*tk->method.eat_bytes)(tk, b - 1);
         return TERMKEY_RES_KEY;
       }
 
@@ -518,7 +518,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
       codepoint = UTF8_INVALID;
 
     do_codepoint(tk, codepoint, key);
-    (*tk->method.eatbytes)(tk, nbytes);
+    (*tk->method.eat_bytes)(tk, nbytes);
     return TERMKEY_RES_KEY;
   }
   else {
@@ -530,7 +530,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key)
     key->utf8[0] = key->code.codepoint;
     key->utf8[1] = 0;
 
-    (*tk->method.eatbytes)(tk, 1);
+    (*tk->method.eat_bytes)(tk, 1);
 
     return TERMKEY_RES_KEY;
   }
