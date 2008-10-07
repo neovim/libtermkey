@@ -15,6 +15,10 @@ static struct termkey_driver *drivers[] = {
 
 // Forwards for the "protected" methods
 static void eat_bytes(termkey_t *tk, size_t count);
+static void emit_codepoint(termkey_t *tk, int codepoint, termkey_key *key);
+
+static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
+static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
 
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
@@ -67,7 +71,16 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   for(i = 0; i < tk->nkeynames; i++)
     tk->keynames[i] = NULL;
 
+  for(i = 0; i < 32; i++)
+    tk->c0[i].sym = TERMKEY_SYM_NONE;
+
   tk->method.eat_bytes = &eat_bytes;
+  tk->method.emit_codepoint = &emit_codepoint;
+
+  register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, "Backspace");
+  register_c0(tk, TERMKEY_SYM_TAB,       0x09, "Tab");
+  register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, "Enter");
+  register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, "Escape");
 
   for(i = 0; drivers[i]; i++) {
     void *driver_info = (*drivers[i]->new_driver)(tk);
@@ -155,6 +168,87 @@ static void eat_bytes(termkey_t *tk, size_t count)
     memcpy(tk->buffer, tk->buffer + halfsize, halfsize);
     tk->buffstart -= halfsize;
   }
+}
+
+static void fill_utf8(termkey_key *key)
+{
+  int codepoint = key->code.codepoint;
+  int nbytes = utf8_seqlen(codepoint);
+
+  key->utf8[nbytes] = 0;
+
+  // This is easier done backwards
+  int b = nbytes;
+  while(b > 1) {
+    b--;
+    key->utf8[b] = 0x80 | (codepoint & 0x3f);
+    codepoint >>= 6;
+  }
+
+  switch(nbytes) {
+    case 1: key->utf8[0] =        (codepoint & 0x7f); break;
+    case 2: key->utf8[0] = 0xc0 | (codepoint & 0x1f); break;
+    case 3: key->utf8[0] = 0xe0 | (codepoint & 0x0f); break;
+    case 4: key->utf8[0] = 0xf0 | (codepoint & 0x07); break;
+    case 5: key->utf8[0] = 0xf8 | (codepoint & 0x03); break;
+    case 6: key->utf8[0] = 0xfc | (codepoint & 0x01); break;
+  }
+}
+
+static void emit_codepoint(termkey_t *tk, int codepoint, termkey_key *key)
+{
+  if(codepoint < 0x20) {
+    // C0 range
+    key->code.codepoint = 0;
+    key->modifiers = 0;
+
+    if(!(tk->flags & TERMKEY_FLAG_NOINTERPRET) && tk->c0[codepoint].sym != TERMKEY_SYM_UNKNOWN) {
+      key->code.sym = tk->c0[codepoint].sym;
+      key->modifiers |= tk->c0[codepoint].modifier_set;
+    }
+
+    if(!key->code.sym) {
+      key->type = TERMKEY_TYPE_UNICODE;
+      key->code.codepoint = codepoint + 0x40;
+      key->modifiers = TERMKEY_KEYMOD_CTRL;
+    }
+    else {
+      key->type = TERMKEY_TYPE_KEYSYM;
+    }
+  }
+  else if(codepoint == 0x20 && !(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
+    // ASCII space
+    key->type = TERMKEY_TYPE_KEYSYM;
+    key->code.sym = TERMKEY_SYM_SPACE;
+    key->modifiers = 0;
+  }
+  else if(codepoint == 0x7f && !(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
+    // ASCII DEL
+    key->type = TERMKEY_TYPE_KEYSYM;
+    key->code.sym = TERMKEY_SYM_DEL;
+    key->modifiers = 0;
+  }
+  else if(codepoint >= 0x20 && codepoint < 0x80) {
+    // ASCII lowbyte range
+    key->type = TERMKEY_TYPE_UNICODE;
+    key->code.codepoint = codepoint;
+    key->modifiers = 0;
+  }
+  else if(codepoint >= 0x80 && codepoint < 0xa0) {
+    // UTF-8 never starts with a C1 byte. So we can be sure of these
+    key->type = TERMKEY_TYPE_UNICODE;
+    key->code.codepoint = codepoint - 0x40;
+    key->modifiers = TERMKEY_KEYMOD_CTRL|TERMKEY_KEYMOD_ALT;
+  }
+  else {
+    // UTF-8 codepoint
+    key->type = TERMKEY_TYPE_UNICODE;
+    key->code.codepoint = codepoint;
+    key->modifiers = 0;
+  }
+
+  if(key->type == TERMKEY_TYPE_UNICODE)
+    fill_utf8(key);
 }
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
@@ -271,6 +365,28 @@ const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym)
     return tk->keynames[sym];
 
   return "UNKNOWN";
+}
+
+static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name)
+{
+  return register_c0_full(tk, sym, 0, 0, ctrl, name);
+}
+
+static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name)
+{
+  if(ctrl >= 0x20) {
+    fprintf(stderr, "Cannot register C0 key at ctrl 0x%02x - out of bounds\n", ctrl);
+    return -1;
+  }
+
+  if(name)
+    sym = termkey_register_keyname(tk, sym, name);
+
+  tk->c0[ctrl].sym = sym;
+  tk->c0[ctrl].modifier_set = modifier_set;
+  tk->c0[ctrl].modifier_mask = modifier_mask;
+
+  return sym;
 }
 
 size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format)
