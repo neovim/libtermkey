@@ -91,6 +91,7 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 
     tk->driver = *(drivers[i]);
     tk->driver_info = driver_info;
+    break;
   }
 
   if(!tk->driver_info) {
