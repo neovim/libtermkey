@@ -14,7 +14,7 @@ static struct termkey_driver *drivers[] = {
 };
 
 // Forwards for the "protected" methods
-static void eatbytes(termkey_t *tk, size_t count);
+static void eat_bytes(termkey_t *tk, size_t count);
 
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
@@ -67,7 +67,7 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   for(i = 0; i < tk->nkeynames; i++)
     tk->keynames[i] = NULL;
 
-  tk->method.eatbytes = &eatbytes;
+  tk->method.eat_bytes = &eat_bytes;
 
   for(i = 0; drivers[i]; i++) {
     void *driver_info = (*drivers[i]->new_driver)(tk);
@@ -138,7 +138,7 @@ int termkey_getwaittime(termkey_t *tk)
   return tk->waittime;
 }
 
-static void eatbytes(termkey_t *tk, size_t count)
+static void eat_bytes(termkey_t *tk, size_t count)
 {
   if(count >= tk->buffcount) {
     tk->buffstart = 0;
