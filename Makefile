@@ -7,8 +7,8 @@ endif
 
 all: demo
 
-demo: termkey.o driver-csi.o demo.c
-	gcc $(CCFLAGS) $(LDFLAGS) -o $@ $^
+demo: termkey.o driver-csi.o driver-ti.o demo.c
+	gcc $(CCFLAGS) $(LDFLAGS) -o $@ $^ -lncurses
 
 %.o: %.c
 	gcc $(CCFLAGS) -o $@ -c $^
