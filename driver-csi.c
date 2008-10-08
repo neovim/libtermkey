@@ -45,13 +45,13 @@ static void *new_driver(termkey_t *tk)
   for(i = 0; i < csi->ncsifuncs; i++)
     csi->csifuncs[i].sym = TERMKEY_SYM_UNKNOWN;
 
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,    'A', "Up");
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,  'B', "Down");
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT, 'C', "Right");
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,  'D', "Left");
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN, 'E', "Begin");
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,   'F', "End");
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,  'H', "Home");
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,    'A', NULL);
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,  'B', NULL);
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT, 'C', NULL);
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,  'D', NULL);
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN, 'E', NULL);
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,   'F', NULL);
+  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,  'H', NULL);
   register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 1, 'P', NULL);
   register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 2, 'Q', NULL);
   register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 3, 'R', NULL);
@@ -59,33 +59,33 @@ static void *new_driver(termkey_t *tk)
 
   register_csi_ss3_full(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB, TERMKEY_KEYMOD_SHIFT, TERMKEY_KEYMOD_SHIFT, 'Z', NULL);
 
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPENTER,  'M', "KPEnter",  0);
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPEQUALS, 'X', "KPEquals", '=');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMULT,   'j', "KPMult",   '*');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPLUS,   'k', "KPPlus",   '+');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPCOMMA,  'l', "KPComma",  ',');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMINUS,  'm', "KPMinus",  '-');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPERIOD, 'n', "KPPeriod", '.');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPDIV,    'o', "KPDiv",    '/');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP0,      'p', "KP0",      '0');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP1,      'q', "KP1",      '1');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP2,      'r', "KP2",      '2');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP3,      's', "KP3",      '3');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP4,      't', "KP4",      '4');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP5,      'u', "KP5",      '5');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP6,      'v', "KP6",      '6');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP7,      'w', "KP7",      '7');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP8,      'x', "KP8",      '8');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP9,      'y', "KP9",      '9');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPENTER,  'M', NULL, 0);
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPEQUALS, 'X', NULL, '=');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMULT,   'j', NULL, '*');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPLUS,   'k', NULL, '+');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPCOMMA,  'l', NULL, ',');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMINUS,  'm', NULL, '-');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPERIOD, 'n', NULL, '.');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPDIV,    'o', NULL, '/');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP0,      'p', NULL, '0');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP1,      'q', NULL, '1');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP2,      'r', NULL, '2');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP3,      's', NULL, '3');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP4,      't', NULL, '4');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP5,      'u', NULL, '5');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP6,      'v', NULL, '6');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP7,      'w', NULL, '7');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP8,      'x', NULL, '8');
+  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP9,      'y', NULL, '9');
 
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      1, "Find");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    2, "Insert");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    3, "Delete");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    4, "Select");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    5, "PageUp");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  6, "PageDown");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      7, "Home");
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       8, "End");
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      1, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    2, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    3, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    4, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    5, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  6, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      7, NULL);
+  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       8, NULL);
 
   register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 1,  11, NULL);
   register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 2,  12, NULL);
