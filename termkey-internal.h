@@ -54,5 +54,6 @@ struct termkey {
 };
 
 extern struct termkey_driver termkey_driver_csi;
+extern struct termkey_driver termkey_driver_ti;
 
 #endif
