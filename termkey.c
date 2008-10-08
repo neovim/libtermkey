@@ -21,6 +21,20 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key);
 static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
 static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
 
+static struct {
+  termkey_keysym sym;
+  const char *name;
+} keynames[] = {
+  { TERMKEY_SYM_NONE,      "NONE" },
+  { TERMKEY_SYM_BACKSPACE, "Backspace" },
+  { TERMKEY_SYM_TAB,       "Tab" },
+  { TERMKEY_SYM_ENTER,     "Enter" },
+  { TERMKEY_SYM_ESCAPE,    "Escape" },
+  { TERMKEY_SYM_SPACE,     "Space" },
+  { TERMKEY_SYM_DEL,       "DEL" },
+  { 0, NULL },
+};
+
 termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
   termkey_t *tk = malloc(sizeof(*tk));
@@ -79,10 +93,13 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   tk->method.emit_codepoint = &emit_codepoint;
   tk->method.getkey_simple  = &getkey_simple;
 
-  register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, "Backspace");
-  register_c0(tk, TERMKEY_SYM_TAB,       0x09, "Tab");
-  register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, "Enter");
-  register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, "Escape");
+  for(i = 0; keynames[i].name; i++)
+    termkey_register_keyname(tk, keynames[i].sym, keynames[i].name);
+
+  register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, NULL);
+  register_c0(tk, TERMKEY_SYM_TAB,       0x09, NULL);
+  register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, NULL);
+  register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, NULL);
 
   for(i = 0; drivers[i]; i++) {
     void *driver_info = (*drivers[i]->new_driver)(tk);
@@ -98,11 +115,6 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
     fprintf(stderr, "Unable to find a terminal driver\n");
     return NULL;
   }
-
-  // Special built-in names
-  termkey_register_keyname(tk, TERMKEY_SYM_NONE, "NONE");
-  termkey_register_keyname(tk, TERMKEY_SYM_SPACE, "Space");
-  termkey_register_keyname(tk, TERMKEY_SYM_DEL,   "DEL");
 
   if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
