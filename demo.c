@@ -10,9 +10,7 @@ int main(int argc, char *argv[]) {
   termkey_key key;
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
-    termkey_snprint_key(tk, buffer, sizeof buffer, &key, 0);
-    printf("%s or ", buffer);
-    termkey_snprint_key(tk, buffer, sizeof buffer, &key, ~0);
+    termkey_snprint_key(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_VIM);
     printf("%s\n", buffer);
 
     if(key.type == TERMKEY_TYPE_UNICODE && 
