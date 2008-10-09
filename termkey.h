@@ -82,7 +82,7 @@ typedef int termkey_keysym;
 typedef struct {
   termkey_type type;
   union {
-    int            codepoint; // TERMKEY_TYPE_UNICODE
+    long           codepoint; // TERMKEY_TYPE_UNICODE
     int            number;    // TERMKEY_TYPE_FUNCTION
     termkey_keysym sym;       // TERMKEY_TYPE_KEYSYM
   } code;
