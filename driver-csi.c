@@ -37,6 +37,8 @@ static void *new_driver(termkey_t *tk, const char *term)
   // Excellent - we'll continue
 
   termkey_csi *csi = malloc(sizeof *csi);
+  if(!csi)
+    return NULL;
 
   csi->tk = tk;
 
@@ -51,6 +53,8 @@ static void *new_driver(termkey_t *tk, const char *term)
   csi->ncsifuncs = 32;
 
   csi->csifuncs = malloc(sizeof(csi->csifuncs[0]) * csi->ncsifuncs);
+  if(!csi->csifuncs)
+    goto abort_free_csi;
 
   for(i = 0; i < csi->ncsifuncs; i++)
     csi->csifuncs[i].sym = TERMKEY_SYM_UNKNOWN;
@@ -119,6 +123,11 @@ static void *new_driver(termkey_t *tk, const char *term)
   register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 20, 34, NULL);
 
   return csi;
+
+abort_free_csi:
+  free(csi);
+
+  return NULL;
 }
 
 static void free_driver(void *private)
