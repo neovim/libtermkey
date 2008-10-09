@@ -16,7 +16,7 @@ static struct termkey_driver *drivers[] = {
 
 // Forwards for the "protected" methods
 static void eat_bytes(termkey_t *tk, size_t count);
-static void emit_codepoint(termkey_t *tk, int codepoint, termkey_key *key);
+static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key);
 static termkey_result getkey_simple(termkey_t *tk, termkey_key *key);
 
 static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
@@ -230,7 +230,7 @@ static void eat_bytes(termkey_t *tk, size_t count)
   }
 }
 
-static inline int utf8_seqlen(int codepoint)
+static inline int utf8_seqlen(long codepoint)
 {
   if(codepoint < 0x0000080) return 1;
   if(codepoint < 0x0000800) return 2;
@@ -242,7 +242,7 @@ static inline int utf8_seqlen(int codepoint)
 
 static void fill_utf8(termkey_key *key)
 {
-  int codepoint = key->code.codepoint;
+  long codepoint = key->code.codepoint;
   int nbytes = utf8_seqlen(codepoint);
 
   key->utf8[nbytes] = 0;
@@ -265,7 +265,7 @@ static void fill_utf8(termkey_key *key)
   }
 }
 
-static void emit_codepoint(termkey_t *tk, int codepoint, termkey_key *key)
+static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 {
   if(codepoint < 0x20) {
     // C0 range
@@ -338,7 +338,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key)
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
     // Some UTF-8
     int nbytes;
-    int codepoint;
+    long codepoint;
 
     key->type = TERMKEY_TYPE_UNICODE;
     key->modifiers = 0;
