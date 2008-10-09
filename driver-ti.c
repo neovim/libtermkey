@@ -125,6 +125,7 @@ static struct {
   int mods;
 } funcs[] =
 {
+  /* THIS LIST MUST REMAIN SORTED! */
   { "backspace", TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BACKSPACE, 0 },
   { "begin",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN,     0 },
   { "btab",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB,       TERMKEY_KEYMOD_SHIFT },
@@ -147,15 +148,29 @@ static struct {
 
 static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmaskp, int *modsetp)
 {
-  int i;
-  for(i = 0; funcs[i].funcname; i++) {
-    if(strcmp(funcname, funcs[i].funcname) == 0) {
+  // Binary search
+
+  int start = 0;
+  int end   = sizeof(funcs)/sizeof(funcs[0]); // is "one past" the end of the range
+
+  while(1) {
+    int i = (start+end) / 2;
+    int cmp = strcmp(funcname, funcs[i].funcname);
+
+    if(cmp == 0) {
       *typep    = funcs[i].type;
       *symp     = funcs[i].sym;
       *modmaskp = funcs[i].mods;
       *modsetp  = funcs[i].mods;
       return 1;
     }
+    else if(end == start + 1)
+      // That was our last choice and it wasn't it - not found
+      break;
+    else if(cmp > 0)
+      start = i;
+    else
+      end = i;
   }
 
   if(funcname[0] == 'f' && isdigit(funcname[1])) {
