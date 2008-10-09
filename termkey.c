@@ -9,8 +9,8 @@
 #include <stdio.h>
 
 static struct termkey_driver *drivers[] = {
-  &termkey_driver_ti,
   &termkey_driver_csi,
+  &termkey_driver_ti,
   NULL,
 };
 
@@ -133,8 +133,10 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, NULL);
   register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, NULL);
 
+  const char *term = getenv("TERM");
+
   for(i = 0; drivers[i]; i++) {
-    void *driver_info = (*drivers[i]->new_driver)(tk);
+    void *driver_info = (*drivers[i]->new_driver)(tk, term);
     if(!driver_info)
       continue;
 
