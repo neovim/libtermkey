@@ -25,9 +25,12 @@ typedef struct {
 static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmask, int *modsetp);
 static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset);
 
-static void *new_driver(termkey_t *tk)
+static void *new_driver(termkey_t *tk, const char *term)
 {
-  setupterm((char*)0, 1, (int*)0);
+  int err;
+
+  if(setupterm(term, 1, &err) != OK)
+    return NULL;
 
   termkey_ti *ti = malloc(sizeof *ti);
 

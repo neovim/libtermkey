@@ -24,8 +24,18 @@ static termkey_keysym register_csi_ss3_full(termkey_csi *csi, termkey_type type,
 static termkey_keysym register_ss3kpalt_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
 static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, int number, const char *name);
 
-static void *new_driver(termkey_t *tk)
+static void *new_driver(termkey_t *tk, const char *term)
 {
+  // Only care about term types beginning "xterm"
+  if(strncmp(term, "xterm", 5) != 0)
+    return NULL;
+
+  // We want "xterm" or "xtermc" or "xterm-..."
+  if(term[5] != 0 && term[5] != '-' && term[5] != 'c')
+    return NULL;
+
+  // Excellent - we'll continue
+
   termkey_csi *csi = malloc(sizeof *csi);
 
   csi->tk = tk;
