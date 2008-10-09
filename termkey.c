@@ -471,6 +471,7 @@ void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
       tk->buffsize *= 2;
 
     unsigned char *newbuffer = realloc(tk->buffer, tk->buffsize);
+    // TODO: Handle realloc() failure
     tk->buffer = newbuffer;
   }
 
@@ -503,6 +504,7 @@ termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const
 
   if(sym >= tk->nkeynames) {
     const char **new_keynames = realloc(tk->keynames, sizeof(new_keynames[0]) * (sym + 1));
+    // TODO: Handle realloc() failure
     tk->keynames = new_keynames;
 
     // Fill in the hole

@@ -180,7 +180,7 @@ static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, ter
   if(ti->nseqs == ti->alloced_seqs) {
     ti->alloced_seqs *= 2;
     void *newseqs = realloc(ti->seqs, ti->alloced_seqs * sizeof(ti->seqs[9]));
-    // TODO: Error handle
+    // TODO: Handle realloc() failure
     ti->seqs = newseqs;
   }
 
