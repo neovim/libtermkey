@@ -412,6 +412,7 @@ static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type,
 
   if(number >= csi->ncsifuncs) {
     struct keyinfo *new_csifuncs = realloc(csi->csifuncs, sizeof(new_csifuncs[0]) * (number + 1));
+    // TODO: Handle realloc() failure
     csi->csifuncs = new_csifuncs;
 
     // Fill in the hole
