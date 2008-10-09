@@ -164,7 +164,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
   }
 
   unsigned char cmd = CHARAT(csi_end);
-  int arg[16];
+  long arg[16];
   char present = 0;
   int args = 0;
 
@@ -226,7 +226,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
       key->code.sym = TERMKEY_SYM_UNKNOWN;
 
     if(key->code.sym == TERMKEY_SYM_UNKNOWN)
-      fprintf(stderr, "CSI function key %d\n", arg[0]);
+      fprintf(stderr, "CSI function key %ld\n", arg[0]);
   }
   else {
     // We know from the logic above that cmd must be >= 0x40 and < 0x80
@@ -236,7 +236,7 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
     key->modifiers |= csi->csi_ss3s[cmd - 0x40].modifier_set;
 
     if(key->code.sym == TERMKEY_SYM_UNKNOWN)
-      fprintf(stderr, "CSI arg1=%d arg2=%d cmd=%c\n", arg[0], arg[1], cmd);
+      fprintf(stderr, "CSI arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], cmd);
   }
 
   return TERMKEY_RES_KEY;

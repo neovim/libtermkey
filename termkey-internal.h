@@ -48,7 +48,7 @@ struct termkey {
   // want exported as real symbols in the library
   struct {
     void (*eat_bytes)(termkey_t *tk, size_t count);
-    void (*emit_codepoint)(termkey_t *tk, int codepoint, termkey_key *key);
+    void (*emit_codepoint)(termkey_t *tk, long codepoint, termkey_key *key);
     termkey_result (*getkey_simple)(termkey_t *tk, termkey_key *key);
   } method;
 };
