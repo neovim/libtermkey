@@ -33,6 +33,8 @@ static void *new_driver(termkey_t *tk, const char *term)
     return NULL;
 
   termkey_ti *ti = malloc(sizeof *ti);
+  if(!ti)
+    return NULL;
 
   ti->tk = tk;
 
@@ -40,6 +42,8 @@ static void *new_driver(termkey_t *tk, const char *term)
   ti->nseqs = 0;
 
   ti->seqs = malloc(ti->alloced_seqs * sizeof(ti->seqs[0]));
+  if(!ti->seqs)
+    goto abort_free_ti;
 
   int i;
   for(i = 0; strfnames[i]; i++) {
@@ -64,6 +68,11 @@ static void *new_driver(termkey_t *tk, const char *term)
   }
 
   return ti;
+
+abort_free_ti:
+  free(ti);
+
+  return NULL;
 }
 
 static void free_driver(void *private)

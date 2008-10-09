@@ -96,10 +96,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   tk->flags = flags;
 
   tk->buffer = malloc(buffsize);
-  if(!tk->buffer) {
-    free(tk);
-    return NULL;
-  }
+  if(!tk->buffer)
+    goto abort_free_tk;
 
   tk->buffstart = 0;
   tk->buffcount = 0;
@@ -113,6 +111,8 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 
   tk->nkeynames = 64;
   tk->keynames = malloc(sizeof(tk->keynames[0]) * tk->nkeynames);
+  if(!tk->keynames)
+    goto abort_free_buffer;
 
   int i;
   for(i = 0; i < tk->nkeynames; i++)
@@ -147,7 +147,7 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 
   if(!tk->driver_info) {
     fprintf(stderr, "Unable to find a terminal driver\n");
-    return NULL;
+    goto abort_free_keynames;
   }
 
   if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
@@ -164,6 +164,17 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   }
 
   return tk;
+
+abort_free_keynames:
+  free(tk->keynames);
+
+abort_free_buffer:
+  free(tk->buffer);
+
+abort_free_tk:
+  free(tk);
+
+  return NULL;
 }
 
 termkey_t *termkey_new(int fd, int flags)
