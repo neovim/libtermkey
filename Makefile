@@ -1,17 +1,19 @@
-CCFLAGS=-Wall -Iinclude -std=c99
-LDFLAGS=
+CC?=gcc
+CFLAGS?=
+
+CFLAGS_DEBUG=
 
 ifeq ($(DEBUG),1)
-  CCFLAGS+=-ggdb -DDEBUG
+  CFLAGS_DEBUG=-ggdb -DDEBUG
 endif
 
 all: demo
 
 demo: termkey.o driver-csi.o driver-ti.o demo.c
-	gcc $(CCFLAGS) $(LDFLAGS) -o $@ $^ -lncurses
+	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^ -lncurses
 
 %.o: %.c
-	gcc $(CCFLAGS) -o $@ -c $^
+	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $^
 
 .PHONY: clean
 clean:
