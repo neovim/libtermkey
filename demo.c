@@ -6,6 +6,11 @@ int main(int argc, char *argv[]) {
   char buffer[50];
   termkey_t *tk = termkey_new(0, 0);
 
+  if(!tk) {
+    fprintf(stderr, "Cannot allocate termkey instance\n");
+    exit(1);
+  }
+
   termkey_result ret;
   termkey_key key;
 
