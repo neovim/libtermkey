@@ -17,7 +17,7 @@ static struct termkey_driver *drivers[] = {
 // Forwards for the "protected" methods
 static void eat_bytes(termkey_t *tk, size_t count);
 static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key);
-static termkey_result getkey_simple(termkey_t *tk, termkey_key *key);
+static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force);
 
 static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
 static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
@@ -347,7 +347,7 @@ static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey_simple(termkey_t *tk, termkey_key *key)
+static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
 {
   unsigned char b0 = CHARAT(0);
 
