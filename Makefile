@@ -5,6 +5,10 @@ CFLAGS_DEBUG=
 
 SONAME=libtermkey.so.0
 
+PREFIX=/usr/local
+LIBDIR=$(PREFIX)/lib
+INCDIR=$(PREFIX)/include
+
 ifeq ($(DEBUG),1)
   CFLAGS_DEBUG=-ggdb -DDEBUG
 endif
@@ -23,3 +27,11 @@ libtermkey.so: termkey.o driver-csi.o driver-ti.o
 .PHONY: clean
 clean:
 	rm -f *.o demo
+
+.PHONY: install
+install:
+	install -d $(DESTDIR)$(INCDIR)
+	install -m644 termkey.h $(DESTDIR)$(INCDIR)
+	install -d $(DESTDIR)$(LIBDIR)
+	install libtermkey.so $(DESTDIR)$(LIBDIR)/$(SONAME)
+	ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libtermkey.so
