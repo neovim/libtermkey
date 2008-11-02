@@ -185,6 +185,9 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
     }
   }
 
+  if(tk->driver.start_driver)
+    (*tk->driver.start_driver)(tk);
+
   return tk;
 
 abort_free_keynames:
@@ -217,6 +220,9 @@ void termkey_free(termkey_t *tk)
 
 void termkey_destroy(termkey_t *tk)
 {
+  if(tk->driver.stop_driver)
+    (*tk->driver.stop_driver)(tk);
+
   if(tk->restore_termios_valid)
     tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
 
