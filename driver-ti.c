@@ -65,7 +65,8 @@ static void *new_driver(termkey_t *tk, const char *term)
     if(!funcname2keysym(strfnames[i] + 4, &type, &sym, &mask, &set))
       continue;
 
-    register_seq(ti, value, type, sym, mask, set);
+    if(sym != TERMKEY_SYM_NONE)
+      register_seq(ti, value, type, sym, mask, set);
   }
 
   return ti;
@@ -167,6 +168,7 @@ static struct {
   { "left",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,      0 },
   { "mark",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MARK,      0 },
   { "message",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MESSAGE,   0 },
+  { "mouse",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_NONE,      0 },
   { "move",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MOVE,      0 },
   { "next",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 }, // Not quite, but it's the best we can do
   { "npage",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 },
