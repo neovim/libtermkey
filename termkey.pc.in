@@ -1,0 +1,9 @@
+prefix=@PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: termkey
+Description: Abstract terminal key input library
+Version: 0.1
+Libs: -L${libdir} -ltermkey
+Cflags: -I${includedir}

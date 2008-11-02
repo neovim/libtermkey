@@ -35,3 +35,5 @@ install:
 	install -d $(DESTDIR)$(LIBDIR)
 	install libtermkey.so $(DESTDIR)$(LIBDIR)/$(SONAME)
 	ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libtermkey.so
+	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
+	sed "s,@PREFIX@,$(PREFIX)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
