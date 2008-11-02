@@ -351,7 +351,42 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
 {
   unsigned char b0 = CHARAT(0);
 
-  if(b0 < 0xa0) {
+  if(b0 == 0x1b) {
+    // Escape-prefixed value? Might therefore be Alt+key
+    if(tk->buffcount == 1) {
+      // This might be an <Esc> press, or it may want to be part of a longer
+      // sequence
+      if(!force)
+        return TERMKEY_RES_AGAIN;
+
+      (*tk->method.emit_codepoint)(tk, b0, key);
+      (*tk->method.eat_bytes)(tk, 1);
+      return TERMKEY_RES_KEY;
+    }
+
+    // Try another key there
+    tk->buffstart++;
+
+    // Run the full driver
+    termkey_result metakey_result = (*tk->driver.getkey)(tk, key, force);
+
+    switch(metakey_result) {
+      case TERMKEY_RES_KEY:
+        key->modifiers |= TERMKEY_KEYMOD_ALT;
+        tk->buffstart--;
+        (*tk->method.eat_bytes)(tk, 1);
+        break;
+
+      case TERMKEY_RES_NONE:
+      case TERMKEY_RES_EOF:
+      case TERMKEY_RES_AGAIN:
+        tk->buffstart--;
+        break;
+    }
+
+    return metakey_result;
+  }
+  else if(b0 < 0xa0) {
     // Single byte C0, G0 or C1 - C1 is never UTF-8 initial byte
     (*tk->method.emit_codepoint)(tk, b0, key);
     (*tk->method.eat_bytes)(tk, 1);
