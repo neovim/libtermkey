@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 struct ti_keyinfo {
   const char *seq;
@@ -73,6 +74,25 @@ abort_free_ti:
   free(ti);
 
   return NULL;
+}
+
+static void start_driver(termkey_t *tk)
+{
+  /* The terminfo database will contain keys in application cursor key mode.
+   * We may need to enable that mode
+   */
+  if(keypad_xmit) {
+    // Can't call putp or tputs because they suck and don't give us fd control
+    write(tk->fd, keypad_xmit, strlen(keypad_xmit));
+  }
+}
+
+static void stop_driver(termkey_t *tk)
+{
+  if(keypad_local) {
+    // Can't call putp or tputs because they suck and don't give us fd control
+    write(tk->fd, keypad_local, strlen(keypad_local));
+  }
 }
 
 static void free_driver(void *private)
@@ -235,6 +255,9 @@ static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, ter
 struct termkey_driver termkey_driver_ti = {
   .new_driver  = new_driver,
   .free_driver = free_driver,
+
+  .start_driver = start_driver,
+  .stop_driver  = stop_driver,
 
   .getkey = getkey,
 };
