@@ -350,7 +350,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
     return getkey_csi(tk, 1, key, force);
   }
   else
-    return (*tk->method.getkey_simple)(tk, key);
+    return (*tk->method.getkey_simple)(tk, key, force);
 }
 
 static termkey_keysym register_csi_ss3(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name)

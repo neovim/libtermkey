@@ -115,7 +115,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
   }
 
   // No special seq. Must be a simple key then
-  return (*tk->method.getkey_simple)(tk, key);
+  return (*tk->method.getkey_simple)(tk, key, force);
 }
 
 static struct {
