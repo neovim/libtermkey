@@ -22,7 +22,7 @@ libtermkey.so: termkey.o driver-csi.o driver-ti.o
 	$(LD) -shared -soname=$(SONAME) -o $@ $^ -lncurses
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $^
+	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -fPIC -o $@ -c $^
 
 .PHONY: clean
 clean:
