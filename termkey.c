@@ -440,8 +440,19 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
       return TERMKEY_RES_KEY;
     }
 
-    if(tk->buffcount < nbytes)
-      return tk->waittime ? TERMKEY_RES_AGAIN : TERMKEY_RES_NONE;
+    if(tk->buffcount < nbytes) {
+      if(!force)
+        return TERMKEY_RES_AGAIN;
+
+      /* There weren't enough bytes for a complete UTF-8 sequence but caller
+       * demands an answer. About the best thing we can do here is eat as many
+       * bytes as we have, and emit a UTF8_INVALID. If the remaining bytes
+       * arrive later, they'll be invalid too.
+       */
+      (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
+      (*tk->method.eat_bytes)(tk, tk->buffcount);
+      return TERMKEY_RES_KEY;
+    }
 
     for(int b = 1; b < nbytes; b++) {
       unsigned char cb = CHARAT(b);
