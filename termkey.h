@@ -94,9 +94,9 @@ typedef enum {
 } termkey_result;
 
 enum {
-  TERMKEY_KEYMOD_SHIFT = 0x01,
-  TERMKEY_KEYMOD_ALT   = 0x02,
-  TERMKEY_KEYMOD_CTRL  = 0x04,
+  TERMKEY_KEYMOD_SHIFT = 1 << 0,
+  TERMKEY_KEYMOD_ALT   = 1 << 1,
+  TERMKEY_KEYMOD_CTRL  = 1 << 2,
 };
 
 typedef int termkey_keysym;
@@ -118,11 +118,11 @@ typedef struct {
 typedef struct termkey termkey_t;
 
 enum {
-  TERMKEY_FLAG_NOINTERPRET = 0x01, // Do not interpret C0//G1 codes if possible
-  TERMKEY_FLAG_CONVERTKP   = 0x02, // Convert KP codes to regular keypresses
-  TERMKEY_FLAG_RAW         = 0x04, // Input is raw bytes, not UTF-8
-  TERMKEY_FLAG_UTF8        = 0x08, // Input is definitely UTF-8
-  TERMKEY_FLAG_NOTERMIOS   = 0x10, // Do not make initial termios calls on construction
+  TERMKEY_FLAG_NOINTERPRET = 1 << 0, // Do not interpret C0//G1 codes if possible
+  TERMKEY_FLAG_CONVERTKP   = 1 << 1, // Convert KP codes to regular keypresses
+  TERMKEY_FLAG_RAW         = 1 << 2, // Input is raw bytes, not UTF-8
+  TERMKEY_FLAG_UTF8        = 1 << 3, // Input is definitely UTF-8
+  TERMKEY_FLAG_NOTERMIOS   = 1 << 4, // Do not make initial termios calls on construction
 };
 
 termkey_t *termkey_new(int fd, int flags);
@@ -144,10 +144,10 @@ termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const
 const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym);
 
 typedef enum {
-  TERMKEY_FORMAT_LONGMOD = 1,
-  TERMKEY_FORMAT_CARETCTRL = 2,
-  TERMKEY_FORMAT_ALTISMETA = 4,
-  TERMKEY_FORMAT_WRAPBRACKET = 8,
+  TERMKEY_FORMAT_LONGMOD     = 1 << 0, // Shift-... instead of S-...
+  TERMKEY_FORMAT_CARETCTRL   = 1 << 1, // ^X instead of C-X
+  TERMKEY_FORMAT_ALTISMETA   = 1 << 2, // Meta- or M- instead of Alt- or A-
+  TERMKEY_FORMAT_WRAPBRACKET = 1 << 3, // Wrap special keys in brackets like <Escape>
 } termkey_format;
 
 // Some useful combinations
