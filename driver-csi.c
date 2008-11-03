@@ -298,50 +298,11 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
   // Now we're sure at least 1 byte is valid
   unsigned char b0 = CHARAT(0);
 
-  if(b0 == 0x1b) {
-    if(tk->buffcount == 1) {
-      // This might be an <Esc> press, or it may want to be part of a longer
-      // sequence
-      if(!force)
-        return TERMKEY_RES_AGAIN;
-
-      (*tk->method.emit_codepoint)(tk, b0, key);
-      (*tk->method.eat_bytes)(tk, 1);
-      return TERMKEY_RES_KEY;
-    }
-
-    unsigned char b1 = CHARAT(1);
-
-    if(b1 == '[')
-      return getkey_csi(tk, 2, key, force);
-
-    if(b1 == 'O')
-      return getkey_ss3(tk, 2, key, force);
-
-    if(b1 == 0x1b) {
-      (*tk->method.emit_codepoint)(tk, b0, key);
-      (*tk->method.eat_bytes)(tk, 1);
-      return TERMKEY_RES_KEY;
-    }
-
-    tk->buffstart++;
-
-    termkey_result metakey_result = termkey_getkey(tk, key);
-
-    switch(metakey_result) {
-      case TERMKEY_RES_KEY:
-        key->modifiers |= TERMKEY_KEYMOD_ALT;
-        tk->buffstart--;
-        (*tk->method.eat_bytes)(tk, 1);
-        break;
-
-      case TERMKEY_RES_NONE:
-      case TERMKEY_RES_EOF:
-      case TERMKEY_RES_AGAIN:
-        break;
-    }
-
-    return metakey_result;
+  if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == '[') {
+    return getkey_csi(tk, 2, key, force);
+  }
+  else if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == 'O') {
+    return getkey_ss3(tk, 2, key, force);
   }
   else if(b0 == 0x8f) {
     return getkey_ss3(tk, 1, key, force);
