@@ -510,17 +510,25 @@ termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
 
       case TERMKEY_RES_AGAIN:
         {
+          if(tk->is_closed)
+            // We're closed now. Never going to get more bytes so just go with
+            // what we have
+            return termkey_getkey_force(tk, key);
+
           struct pollfd fd;
 
           fd.fd = tk->fd;
           fd.events = POLLIN;
 
-          int pollres = poll(&fd, 1, tk->waittime);
+          poll(&fd, 1, tk->waittime);
 
-          if(pollres == 0)
+          if(fd.revents & (POLLIN|POLLHUP|POLLERR))
+            ret = termkey_advisereadable(tk);
+          else
+            ret = TERMKEY_RES_NONE;
+
+          if(ret == TERMKEY_RES_NONE)
             return termkey_getkey_force(tk, key);
-
-          termkey_advisereadable(tk);
         }
         break;
     }
