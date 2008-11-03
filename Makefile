@@ -21,8 +21,8 @@ demo: libtermkey.so demo.c
 libtermkey.so: termkey.o driver-csi.o driver-ti.o
 	$(LD) -shared -soname=$(SONAME) -o $@ $^ -lncurses
 
-%.o: %.c
-	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -fPIC -o $@ -c $^
+%.o: %.c termkey.h termkey-internal.h
+	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -fPIC -o $@ -c $<
 
 .PHONY: clean
 clean:
