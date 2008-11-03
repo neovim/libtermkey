@@ -372,21 +372,23 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
 
     // Try another key there
     tk->buffstart++;
+    tk->buffcount--;
 
     // Run the full driver
     termkey_result metakey_result = (*tk->driver.getkey)(tk, key, force);
 
+    tk->buffstart--;
+    tk->buffcount++;
+
     switch(metakey_result) {
       case TERMKEY_RES_KEY:
         key->modifiers |= TERMKEY_KEYMOD_ALT;
-        tk->buffstart--;
         (*tk->method.eat_bytes)(tk, 1);
         break;
 
       case TERMKEY_RES_NONE:
       case TERMKEY_RES_EOF:
       case TERMKEY_RES_AGAIN:
-        tk->buffstart--;
         break;
     }
 
