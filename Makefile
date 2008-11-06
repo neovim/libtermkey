@@ -15,9 +15,12 @@ ifeq ($(DEBUG),1)
   CFLAGS_DEBUG=-ggdb -DDEBUG
 endif
 
-all: demo
+all: demo demo-async
 
 demo: libtermkey.so demo.c
+	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
+
+demo-async: libtermkey.so demo-async.c
 	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
 
 libtermkey.so: termkey.o driver-csi.o driver-ti.o
