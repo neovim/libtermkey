@@ -1,3 +1,5 @@
+# vim:ft=nroff
+cat <<EOF
 .TH TERMKEY_GETKEY 3
 .SH NAME
 termkey_getkey, termkey_getkey_force \- retrieve the next key event
@@ -65,6 +67,14 @@ No key events are ready and the terminal has been closed, so no more will arrive
 .TP
 .B TERMKEY_RES_AGAIN
 No key event is ready yet, but a partial one has been found. This is only returned by \fBtermkey_getkey\fP(). To obtain the partial result even if it never completes, use \fBtermkey_getkey_force\fP().
+.SH EXAMPLE
+The following example program prints details of every keypress until the user presses "Ctrl-C". It demonstrates how to use the termkey instance in a typical \fBpoll\fP()-driven asynchronous program, which may include mixed IO with other file handles.
+.PP
+.in +4n
+`sed i.br demo-async.c`
+.in
+.nf
+.fi
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_advisereadable (3),
@@ -72,3 +82,4 @@ No key event is ready yet, but a partial one has been found. This is only return
 .BR termkey_setwaittime (3),
 .BR termkey_get_keyname (3),
 .BR termkey_snprint_key (3)
+EOF

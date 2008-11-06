@@ -15,7 +15,7 @@ ifeq ($(DEBUG),1)
   CFLAGS_DEBUG=-ggdb -DDEBUG
 endif
 
-all: demo demo-async
+all: demo demo-async doc
 
 demo: libtermkey.so demo.c
 	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
@@ -28,6 +28,11 @@ libtermkey.so: termkey.o driver-csi.o driver-ti.o
 
 %.o: %.c termkey.h termkey-internal.h
 	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -fPIC -o $@ -c $<
+
+doc: termkey_waitkey.3 termkey_getkey.3
+
+%.3: %.3.sh
+	sh $< >$@
 
 .PHONY: clean
 clean:
