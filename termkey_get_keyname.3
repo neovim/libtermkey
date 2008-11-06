@@ -10,7 +10,7 @@ termkey_get_keyname \- return a string name for a symbolic key
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_get_keyname\fP returns a human-readable string name for the symbolic key value given by \fBsym\fP. The returned string is owned by the termkey instance \fItk\fP so should not be modified or freed. The returned pointer is guaranteed to be valid until the termkey instance is released using \fBtermkey_free\fP(3).
+\fBtermkey_get_keyname\fP returns a human-readable string name for the symbolic key value given by \fBsym\fP. The returned string is owned by the termkey instance \fItk\fP so should not be modified or freed. The returned pointer is guaranteed to be valid until the termkey instance is released using \fBtermkey_destroy\fP(3).
 .SH "RETURN VALUE"
 \fBtermkey_get_key\fP() returns a pointer to a string.
 .SH "SEE ALSO"
