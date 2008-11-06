@@ -1,0 +1,40 @@
+.TH TERMKEY_SNPRINT_KEY 3
+.SH NAME
+termkey_snprint_key \- format a string representing a key event
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "size_t termkey_snprint_key(termkey_t *" tk ", char *" buffer ", size_t " len ",
+.BI "            termkey_key " key ", termkey_format " format );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_snprint_key\fP formats a string buffer to contain a human-readable representation of a key event. It fills the \fIbuffer\fP in a way analogous to the \fBsnprintf\fP(3) standard library function.
+.PP
+The \fIformat\fP argument specifies the format of the output, as a bitmask of the following constants:
+.TP
+.B TERMKEY_FORMAT_LONGMOD
+Print full modifier names e.g. "Shift-" instead of abbreviating to "S-".
+.TP
+.B TERMKEY_FORMAT_CARETCTRL
+If the only modifier is \fBTERMKEY_MOD_CTRL\fP on a plain letter, render it as "^X" rather than "Ctrl-X".
+.TP
+.B TERMKEY_FORMAT_ALTISMETA
+Use the name "Meta" or the letter "M" instead of "Alt" or "A".
+.TP
+.B TERMKEY_FORMAT_WRAPBRACKET
+If the key event is a special key instead of unmodified Unicode, wrap it in "<brackets>".
+.PP
+The following shortcuts are provided for common combinations of format bits:
+.TP
+.B TERMKEY_FORMAT_VIM
+Shortcut to set \fBALTISMETA\fP and \fBWRAPBRACKET\fP, to give an output close to the format the \fIvim\fP editor uses.
+.SH "RETURN VALUE"
+\fBtermkey_snprint_key\fP() returns the number of characters written to \fIbuffer\fP.
+.SH "SEE ALSO"
+.BR termkey_new (3),
+.BR termkey_getkey (3),
+.BR termkey_waitkey (3),
+.BR termkey_get_keyname (3)
