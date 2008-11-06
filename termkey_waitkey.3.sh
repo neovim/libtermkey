@@ -16,7 +16,7 @@ Link with \fI-ltermkey\fP.
 .PP
 For details of the \fBtermkey_key\fP structure, see \fBtermkey_getkey\fP(3).
 .PP
-Some keypresses generate multiple bytes from the terminal. Because there may be network or other delays between the terminal and an application using termkey, \fBtermkey_waitkey\fP() will attempt to wait for the remaining bytes to arrive if it detects the start of a multibyte sequence. If no more bytes arrive within a certain time, then the bytes will be reported as they stand, even if this results in interpreting a partially-complete Escape sequence as a literal Escape key followed by some normal letters or other symbols. The amount of time to wait can be set by \fBtermkey_setwaittime\fP(3).
+Some keypresses generate multiple bytes from the terminal. Because there may be network or other delays between the terminal and an application using termkey, \fBtermkey_waitkey\fP() will attempt to wait for the remaining bytes to arrive if it detects the start of a multibyte sequence. If no more bytes arrive within a certain time, then the bytes will be reported as they stand, even if this results in interpreting a partially-complete Escape sequence as a literal Escape key followed by some normal letters or other symbols. The amount of time to wait can be set by \fBtermkey_set_waittime\fP(3).
 .SH "RETURN VALUE"
 \fBtermkey_waitkey\fP() returns one of the following constants:
 .TP
@@ -36,7 +36,7 @@ The following example program prints details of every keypress until the user pr
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_getkey (3),
-.BR termkey_setwaittime (3),
+.BR termkey_set_waittime (3),
 .BR termkey_get_keyname (3),
 .BR termkey_snprint_key (3)
 EOF
