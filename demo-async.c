@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     }
 
     if(ret == TERMKEY_RES_AGAIN)
-      nextwait = termkey_getwaittime(tk);
+      nextwait = termkey_get_waittime(tk);
     else
       nextwait = -1;
   }

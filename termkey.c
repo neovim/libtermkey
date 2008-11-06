@@ -229,12 +229,12 @@ void termkey_destroy(termkey_t *tk)
   termkey_free(tk);
 }
 
-void termkey_setwaittime(termkey_t *tk, int msec)
+void termkey_set_waittime(termkey_t *tk, int msec)
 {
   tk->waittime = msec;
 }
 
-int termkey_getwaittime(termkey_t *tk)
+int termkey_get_waittime(termkey_t *tk)
 {
   return tk->waittime;
 }
