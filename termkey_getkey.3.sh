@@ -79,7 +79,7 @@ The following example program prints details of every keypress until the user pr
 .BR termkey_new (3),
 .BR termkey_advisereadable (3),
 .BR termkey_waitkey (3),
-.BR termkey_setwaittime (3),
+.BR termkey_set_waittime (3),
 .BR termkey_get_keyname (3),
 .BR termkey_snprint_key (3)
 EOF
