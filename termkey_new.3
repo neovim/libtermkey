@@ -1,20 +1,20 @@
 .TH TERMKEY_NEW 3
 .SH NAME
-termkey_new, termkey_free \- create or destroy new termkey instance
+termkey_new, termkey_destroy \- create or destroy new termkey instance
 .SH SYNOPSIS
 .nf
 .B #include <termkey.h>
 .sp
 .BI "termkey_tk *termkey_new(int " fd ", int " flags );
 .br
-.BI "void termkey_free(termkey_t *" tk );
+.BI "void termkey_destroy(termkey_t *" tk );
 .fi
 .sp
 Link with \fI\-ltermkey\fP.
 .SH DESCRIPTION
 \fBtermkey_new\fP() creates a new termkey instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fBtermkey_tk\fP structure should be considered opaque; its contents are not intended for use outside of the library.
 .PP
-\fBtermkey_free\fP() destroys the given instance and releases any resources controlled by it. It will not close the underlying filehandle given as the \fIfd\fP argument to \fBtermkey_new\fP().
+\fBtermkey_destroy\fP() destroys the given instance and releases any resources controlled by it. It will not close the underlying filehandle given as the \fIfd\fP argument to \fBtermkey_new\fP().
 .PP
 The following values may be given as the \fIflags\fP bitmask:
 .TP
@@ -37,7 +37,7 @@ Even if the terminal file descriptor \fIfd\fP represents a
 .SM TTY
 device, do not call the \fBtcsetattr\fP() \fBtermios\fP function on it to set it to canonical input mode.
 .SH "RETURN VALUE"
-If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On failure, \fBNULL\fP is returned. \fBtermkey_free\fP() returns no value.
+If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On failure, \fBNULL\fP is returned. \fBtermkey_destroy\fP() returns no value.
 .SH "SEE ALSO"
 .BR termkey_waitkey (3),
 .BR termkey_advisereadable (3),

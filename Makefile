@@ -57,6 +57,6 @@ install-man:
 	for F in *.3; do \
 	  gzip <$$F >$(DESTDIR)$(MAN3DIR)/$$F.gz; \
 	done
-	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_free.3.gz
+	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_destroy.3.gz
 	ln -sf termkey_getkey.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getkey_force.3.gz
 	ln -sf termkey_setwaittime.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getwaittime.3.gz
