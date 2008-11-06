@@ -1,0 +1,30 @@
+.TH TERMKEY_ADVISEREADABLE 3
+.SH NAME
+termkey_advisereadable \- read more bytes from the underlying terminal
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "termkey_result termkey_advisereadable(termkey_t *" tk );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_advisereadable\fP informs the instance that new input may be available on the underlying file descriptor and so it should call \fBread\fP(2) to obtain it. If at least one more byte was read it will return \fBTERMKEY_RES_AGAIN\fP to indicate it may be useful to call \fBtermkey_getkey\fP(3) again. If no more input was read then \fBTERMKEY_RES_NONE\fP is returned.
+.PP
+This function, along with \fBtermkey_getkey\fP(3) make it possible to use the termkey instance in an asynchronous program.
+.PP
+For synchronous usage, \fBtermkey_waitkey\fP(3) performs the input blocking task.
+.SH "RETURN VALUE"
+\fBtermkey_advisereadable\fP() returns one of the following constants:
+.TP
+.B TERMKEY_RES_AGAIN
+At least one byte was read.
+.TP
+.B TERMKEY_RES_NONE
+No nore bytes were read.
+.SH "SEE ALSO"
+.BR termkey_new (3),
+.BR termkey_getkey (3),
+.BR termkey_waitkey (3),
+.BR termkey_setwaittime (3)
