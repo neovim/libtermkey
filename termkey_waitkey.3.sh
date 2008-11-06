@@ -1,3 +1,5 @@
+# vim:ft=nroff
+cat <<EOF
 .TH TERMKEY_WAITKEY 3
 .SH NAME
 termkey_waitkey \- wait for and retrieve the next key event
@@ -23,9 +25,18 @@ A key event as been provided.
 .TP
 .B TERMKEY_RES_EOF
 No key events are ready and the terminal has been closed, so no more will arrive.
+.SH EXAMPLE
+The following example program prints details of every keypress until the user presses "Ctrl-C".
+.PP
+.in +4n
+`sed i.br demo.c`
+.in
+.nf
+.fi
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_getkey (3),
 .BR termkey_setwaittime (3),
 .BR termkey_get_keyname (3),
 .BR termkey_snprint_key (3)
+EOF
