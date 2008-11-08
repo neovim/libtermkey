@@ -172,6 +172,10 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
     goto abort_free_keynames;
   }
 
+#ifdef DEBUG
+  fprintf(stderr, "Using the %s driver\n", tk->driver.name);
+#endif
+
   if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
     if(tcgetattr(fd, &termios) == 0) {
