@@ -9,10 +9,10 @@
 struct termkey_driver
 {
   void          *(*new_driver)(termkey_t *tk, const char *term);
-  void           (*free_driver)(void *);
-  void           (*start_driver)(termkey_t *tk);
-  void           (*stop_driver)(termkey_t *tk);
-  termkey_result (*getkey)(termkey_t *tk, termkey_key *key, int force);
+  void           (*free_driver)(void *info);
+  void           (*start_driver)(termkey_t *tk, void *info);
+  void           (*stop_driver)(termkey_t *tk, void *info);
+  termkey_result (*getkey)(termkey_t *tk, void *info, termkey_key *key, int force);
 };
 
 struct keyinfo {
