@@ -77,7 +77,7 @@ abort_free_ti:
   return NULL;
 }
 
-static void start_driver(termkey_t *tk)
+static void start_driver(termkey_t *tk, void *info)
 {
   /* The terminfo database will contain keys in application cursor key mode.
    * We may need to enable that mode
@@ -88,7 +88,7 @@ static void start_driver(termkey_t *tk)
   }
 }
 
-static void stop_driver(termkey_t *tk)
+static void stop_driver(termkey_t *tk, void *info)
 {
   if(keypad_local) {
     // Can't call putp or tputs because they suck and don't give us fd control
@@ -96,15 +96,15 @@ static void stop_driver(termkey_t *tk)
   }
 }
 
-static void free_driver(void *private)
+static void free_driver(void *info)
 {
 }
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
+static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int force)
 {
-  termkey_ti *ti = tk->driver_info;
+  termkey_ti *ti = info;
 
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;

@@ -186,7 +186,7 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
   }
 
   if(tk->driver.start_driver)
-    (*tk->driver.start_driver)(tk);
+    (*tk->driver.start_driver)(tk, tk->driver_info);
 
   return tk;
 
@@ -221,7 +221,7 @@ void termkey_free(termkey_t *tk)
 void termkey_destroy(termkey_t *tk)
 {
   if(tk->driver.stop_driver)
-    (*tk->driver.stop_driver)(tk);
+    (*tk->driver.stop_driver)(tk, tk->driver_info);
 
   if(tk->restore_termios_valid)
     tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
@@ -375,7 +375,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     tk->buffcount--;
 
     // Run the full driver
-    termkey_result metakey_result = (*tk->driver.getkey)(tk, key, force);
+    termkey_result metakey_result = (*tk->driver.getkey)(tk, tk->driver_info, key, force);
 
     tk->buffstart--;
     tk->buffcount++;
@@ -497,12 +497,12 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  return (*tk->driver.getkey)(tk, key, 0);
+  return (*tk->driver.getkey)(tk, tk->driver_info, key, 0);
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
-  return (*tk->driver.getkey)(tk, key, 1);
+  return (*tk->driver.getkey)(tk, tk->driver_info, key, 1);
 }
 
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
