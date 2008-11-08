@@ -130,9 +130,9 @@ abort_free_csi:
   return NULL;
 }
 
-static void free_driver(void *private)
+static void free_driver(void *info)
 {
-  termkey_csi *csi = private;
+  termkey_csi *csi = info;
 
   free(csi->csifuncs); csi->csifuncs = NULL;
 
@@ -286,12 +286,12 @@ static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introle
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
+static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int force)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
 
-  termkey_csi *csi = tk->driver_info;
+  termkey_csi *csi = info;
 
   // Now we're sure at least 1 byte is valid
   unsigned char b0 = CHARAT(0);
