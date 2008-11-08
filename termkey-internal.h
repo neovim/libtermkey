@@ -8,6 +8,7 @@
 
 struct termkey_driver
 {
+  const char      *name;
   void          *(*new_driver)(termkey_t *tk, const char *term);
   void           (*free_driver)(void *info);
   void           (*start_driver)(termkey_t *tk, void *info);

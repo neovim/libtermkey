@@ -255,6 +255,8 @@ static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, ter
 }
 
 struct termkey_driver termkey_driver_ti = {
+  .name        = "terminfo",
+
   .new_driver  = new_driver,
   .free_driver = free_driver,
 

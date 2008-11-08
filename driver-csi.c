@@ -390,6 +390,8 @@ static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type,
 }
 
 struct termkey_driver termkey_driver_csi = {
+  .name        = "CSI",
+
   .new_driver  = new_driver,
   .free_driver = free_driver,
 
