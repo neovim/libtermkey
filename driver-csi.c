@@ -141,10 +141,8 @@ static void free_driver(void *private)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *key, int force)
+static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force)
 {
-  termkey_csi *csi = tk->driver_info;
-
   size_t csi_end = introlen;
 
   while(csi_end < tk->buffcount) {
@@ -242,10 +240,8 @@ static termkey_result getkey_csi(termkey_t *tk, size_t introlen, termkey_key *ke
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result getkey_ss3(termkey_t *tk, size_t introlen, termkey_key *key, int force)
+static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force)
 {
-  termkey_csi *csi = tk->driver_info;
-
   if(tk->buffcount < introlen + 1) {
     if(!force)
       return TERMKEY_RES_AGAIN;
@@ -295,20 +291,22 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
 
+  termkey_csi *csi = tk->driver_info;
+
   // Now we're sure at least 1 byte is valid
   unsigned char b0 = CHARAT(0);
 
   if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == '[') {
-    return getkey_csi(tk, 2, key, force);
+    return getkey_csi(tk, csi, 2, key, force);
   }
   else if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == 'O') {
-    return getkey_ss3(tk, 2, key, force);
+    return getkey_ss3(tk, csi, 2, key, force);
   }
   else if(b0 == 0x8f) {
-    return getkey_ss3(tk, 1, key, force);
+    return getkey_ss3(tk, csi, 1, key, force);
   }
   else if(b0 == 0x9b) {
-    return getkey_csi(tk, 1, key, force);
+    return getkey_csi(tk, csi, 1, key, force);
   }
   else
     return (*tk->method.getkey_simple)(tk, key, force);
