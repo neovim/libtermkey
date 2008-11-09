@@ -506,9 +506,46 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
   }
 }
 
+#ifdef DEBUG
+static void print_buffer(termkey_t *tk)
+{
+  int i;
+  for(i = 0; i < tk->buffcount && i < 20; i++)
+    fprintf(stderr, "%02x ", CHARAT(i));
+  if(tk->buffcount > 20)
+    fprintf(stderr, "...");
+}
+
+static const char *res2str(termkey_result res)
+{
+  switch(res) {
+  case TERMKEY_RES_KEY:
+    return "TERMKEY_RES_KEY";
+  case TERMKEY_RES_EOF:
+    return "TERMKEY_RES_EOF";
+  case TERMKEY_RES_AGAIN:
+    return "TERMKEY_RES_AGAIN";
+  case TERMKEY_RES_NONE:
+    return "TERMKEY_RES_NONE";
+  }
+
+  return "unknown";
+}
+#endif
+
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
+#ifdef DEBUG
+  fprintf(stderr, "getkey(): buffer ");
+  print_buffer(tk);
+  fprintf(stderr, "\n");
+#endif
+
   termkey_result ret = (*tk->driver.getkey)(tk, tk->driver_info, key, 0);
+
+#ifdef DEBUG
+  fprintf(stderr, "Driver %s yields %s\n", tk->driver.name, res2str(ret));
+#endif
 
   switch(ret) {
   case TERMKEY_RES_KEY:
@@ -520,12 +557,28 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
     break;
   }
 
-  return getkey_simple(tk, key, 0);
+  ret = getkey_simple(tk, key, 0);
+
+#ifdef DEBUG
+  fprintf(stderr, "getkey_simple(force=0) yields %s\n", res2str(ret));
+#endif
+
+  return ret;
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
+#ifdef DEBUG
+  fprintf(stderr, "getkey_force(): buffer ");
+  print_buffer(tk);
+  fprintf(stderr, "\n");
+#endif
+
   termkey_result ret = (*tk->driver.getkey)(tk, tk->driver_info, key, 1);
+
+#ifdef DEBUG
+  fprintf(stderr, "Driver %s yields %s\n", tk->driver.name, res2str(ret));
+#endif
 
   switch(ret) {
   case TERMKEY_RES_KEY:
@@ -537,7 +590,13 @@ termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
     break;
   }
 
-  return getkey_simple(tk, key, 1);
+  ret = getkey_simple(tk, key, 1);
+
+#ifdef DEBUG
+  fprintf(stderr, "getkey_simple(force=1) yields %s\n", res2str(ret));
+#endif
+
+  return ret;
 }
 
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
