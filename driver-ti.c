@@ -98,6 +98,11 @@ static void stop_driver(termkey_t *tk, void *info)
 
 static void free_driver(void *info)
 {
+  termkey_ti *ti = info;
+
+  free(ti->seqs);
+
+  free(ti);
 }
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
