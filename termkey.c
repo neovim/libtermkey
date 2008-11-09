@@ -359,6 +359,9 @@ static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 
 static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
 {
+  if(tk->buffcount == 0)
+    return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
+
   unsigned char b0 = CHARAT(0);
 
   if(b0 == 0x1b) {
