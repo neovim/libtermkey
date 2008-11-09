@@ -135,8 +135,7 @@ static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int fo
     }
   }
 
-  // No special seq. Must be a simple key then
-  return (*tk->method.getkey_simple)(tk, key, force);
+  return TERMKEY_RES_NONE;
 }
 
 static struct {

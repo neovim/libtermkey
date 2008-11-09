@@ -382,7 +382,11 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     tk->buffcount--;
 
     // Run the full driver
-    termkey_result metakey_result = (*tk->driver.getkey)(tk, tk->driver_info, key, force);
+    termkey_result metakey_result;
+    if(force)
+      metakey_result = termkey_getkey_force(tk, key);
+    else
+      metakey_result = termkey_getkey(tk, key);
 
     tk->buffstart--;
     tk->buffcount++;
@@ -504,12 +508,36 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  return (*tk->driver.getkey)(tk, tk->driver_info, key, 0);
+  termkey_result ret = (*tk->driver.getkey)(tk, tk->driver_info, key, 0);
+
+  switch(ret) {
+  case TERMKEY_RES_KEY:
+  case TERMKEY_RES_EOF:
+  case TERMKEY_RES_AGAIN:
+    return ret;
+
+  case TERMKEY_RES_NONE:
+    break;
+  }
+
+  return getkey_simple(tk, key, 0);
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
-  return (*tk->driver.getkey)(tk, tk->driver_info, key, 1);
+  termkey_result ret = (*tk->driver.getkey)(tk, tk->driver_info, key, 1);
+
+  switch(ret) {
+  case TERMKEY_RES_KEY:
+  case TERMKEY_RES_EOF:
+    return ret;
+
+  case TERMKEY_RES_AGAIN:
+  case TERMKEY_RES_NONE:
+    break;
+  }
+
+  return getkey_simple(tk, key, 1);
 }
 
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)

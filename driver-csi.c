@@ -309,7 +309,7 @@ static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int fo
     return getkey_csi(tk, csi, 1, key, force);
   }
   else
-    return (*tk->method.getkey_simple)(tk, key, force);
+    return TERMKEY_RES_NONE;
 }
 
 static termkey_keysym register_csi_ss3(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name)
