@@ -9,8 +9,8 @@
 #include <stdio.h>
 
 static struct termkey_driver *drivers[] = {
-  &termkey_driver_csi,
   &termkey_driver_ti,
+  &termkey_driver_csi,
   NULL,
 };
 
