@@ -26,12 +26,19 @@ static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type,
 
 static void *new_driver(termkey_t *tk, const char *term)
 {
-  // Only care about term types beginning "xterm"
-  if(strncmp(term, "xterm", 5) != 0)
-    return NULL;
-
-  // We want "xterm" or "xtermc" or "xterm-..."
-  if(term[5] != 0 && term[5] != '-' && term[5] != 'c')
+  if(strncmp(term, "xterm", 5) == 0) {
+    // We want "xterm" or "xtermc" or "xterm-..."
+    if(term[5] != 0 && term[5] != '-' && term[5] != 'c')
+      return NULL;
+  }
+  else if(strcmp(term, "screen") == 0) {
+    /* Also apply for screen, because it might be transporting xterm-like
+     * sequences. Yes, this sucks. We shouldn't need to rely on this behaviour
+     * but there's no other way to know, and if we don't then we won't
+     * recognise its sequences.
+     */
+  }
+  else
     return NULL;
 
   // Excellent - we'll continue
