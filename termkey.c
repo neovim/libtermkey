@@ -546,6 +546,28 @@ static void print_buffer(termkey_t *tk)
     fprintf(stderr, "...");
 }
 
+static void print_key(termkey_t *tk, termkey_key *key)
+{
+  switch(key->type) {
+  case TERMKEY_TYPE_UNICODE:
+    fprintf(stderr, "Unicode codepoint=U+%04lx utf8='%s'", key->code.codepoint, key->utf8);
+    break;
+  case TERMKEY_TYPE_FUNCTION:
+    fprintf(stderr, "Function F%d", key->code.number);
+    break;
+  case TERMKEY_TYPE_KEYSYM:
+    fprintf(stderr, "Keysym sym=%d(%s)", key->code.sym, termkey_get_keyname(tk, key->code.sym));
+    break;
+  }
+
+  int m = key->modifiers;
+  fprintf(stderr, " mod=%s%s%s+%02x",
+      (m & TERMKEY_KEYMOD_CTRL  ? "C" : ""),
+      (m & TERMKEY_KEYMOD_ALT   ? "A" : ""),
+      (m & TERMKEY_KEYMOD_SHIFT ? "S" : ""),
+      m & ~(TERMKEY_KEYMOD_CTRL|TERMKEY_KEYMOD_ALT|TERMKEY_KEYMOD_SHIFT));
+}
+
 static const char *res2str(termkey_result res)
 {
   switch(res) {
@@ -584,6 +606,10 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
     switch(ret) {
     case TERMKEY_RES_KEY:
+#ifdef DEBUG
+      print_key(tk, key); fprintf(stderr, "\n");
+#endif
+      /* fallthrough */
     case TERMKEY_RES_EOF:
       return ret;
 
@@ -602,6 +628,9 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 
 #ifdef DEBUG
   fprintf(stderr, "getkey_simple(force=0) yields %s\n", res2str(ret));
+  if(ret == TERMKEY_RES_KEY) {
+    print_key(tk, key); fprintf(stderr, "\n");
+  }
 #endif
 
   return ret;
@@ -626,6 +655,10 @@ termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 
     switch(ret) {
     case TERMKEY_RES_KEY:
+#ifdef DEBUG
+      print_key(tk, key); fprintf(stderr, "\n");
+#endif
+      /* fallthrough */
     case TERMKEY_RES_EOF:
       return ret;
 
@@ -639,6 +672,9 @@ termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 
 #ifdef DEBUG
   fprintf(stderr, "getkey_simple(force=1) yields %s\n", res2str(ret));
+  if(ret == TERMKEY_RES_KEY) {
+    print_key(tk, key); fprintf(stderr, "\n");
+  }
 #endif
 
   return ret;
