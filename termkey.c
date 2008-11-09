@@ -157,24 +157,37 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 
   const char *term = getenv("TERM");
 
+  struct termkey_drivernode *tail = NULL;
+
   for(i = 0; drivers[i]; i++) {
-    void *driver_info = (*drivers[i]->new_driver)(tk, term);
-    if(!driver_info)
+    void *info = (*drivers[i]->new_driver)(tk, term);
+    if(!info)
       continue;
 
-    tk->driver = *(drivers[i]);
-    tk->driver_info = driver_info;
-    break;
+#ifdef DEBUG
+    fprintf(stderr, "Loading the %s driver\n", drivers[i]->name);
+#endif
+
+    struct termkey_drivernode *thisdrv = malloc(sizeof(*thisdrv));
+    if(!thisdrv)
+      goto abort_free_drivers;
+
+    thisdrv->driver = drivers[i];
+    thisdrv->info = info;
+    thisdrv->next = NULL;
+
+    if(!tail)
+      tk->drivers = thisdrv;
+    else
+      tail->next = thisdrv;
+
+    tail = thisdrv;
   }
 
-  if(!tk->driver_info) {
+  if(!tk->drivers) {
     fprintf(stderr, "Unable to find a terminal driver\n");
     goto abort_free_keynames;
   }
-
-#ifdef DEBUG
-  fprintf(stderr, "Using the %s driver\n", tk->driver.name);
-#endif
 
   if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
@@ -189,10 +202,20 @@ termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
     }
   }
 
-  if(tk->driver.start_driver)
-    (*tk->driver.start_driver)(tk, tk->driver_info);
+  struct termkey_drivernode *p;
+  for(p = tk->drivers; p; p = p->next)
+    if(p->driver->start_driver)
+      (*p->driver->start_driver)(tk, p->info);
 
   return tk;
+
+abort_free_drivers:
+  for(p = tk->drivers; p; ) {
+    (*p->driver->free_driver)(p->info);
+    struct termkey_drivernode *next = p->next;
+    free(p);
+    p = next;
+  }
 
 abort_free_keynames:
   free(tk->keynames);
@@ -216,16 +239,23 @@ void termkey_free(termkey_t *tk)
   free(tk->buffer); tk->buffer = NULL;
   free(tk->keynames); tk->keynames = NULL;
 
-  (*tk->driver.free_driver)(tk->driver_info);
-  tk->driver_info = NULL; /* Be nice to GC'ers, etc */
+  struct termkey_drivernode *p;
+  for(p = tk->drivers; p; ) {
+    (*p->driver->free_driver)(p->info);
+    struct termkey_drivernode *next = p->next;
+    free(p);
+    p = next;
+  }
 
   free(tk);
 }
 
 void termkey_destroy(termkey_t *tk)
 {
-  if(tk->driver.stop_driver)
-    (*tk->driver.stop_driver)(tk, tk->driver_info);
+  struct termkey_drivernode *p;
+  for(p = tk->drivers; p; p = p->next)
+    if(p->driver->stop_driver)
+      (*p->driver->stop_driver)(tk, p->info);
 
   if(tk->restore_termios_valid)
     tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
@@ -535,27 +565,38 @@ static const char *res2str(termkey_result res)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
+  int again = 0;
+
 #ifdef DEBUG
   fprintf(stderr, "getkey(): buffer ");
   print_buffer(tk);
   fprintf(stderr, "\n");
 #endif
 
-  termkey_result ret = (*tk->driver.getkey)(tk, tk->driver_info, key, 0);
+  termkey_result ret;
+  struct termkey_drivernode *p;
+  for(p = tk->drivers; p; p = p->next) {
+    ret = (p->driver->getkey)(tk, p->info, key, 0);
 
 #ifdef DEBUG
-  fprintf(stderr, "Driver %s yields %s\n", tk->driver.name, res2str(ret));
+    fprintf(stderr, "Driver %s yields %s\n", p->driver->name, res2str(ret));
 #endif
 
-  switch(ret) {
-  case TERMKEY_RES_KEY:
-  case TERMKEY_RES_EOF:
-  case TERMKEY_RES_AGAIN:
-    return ret;
+    switch(ret) {
+    case TERMKEY_RES_KEY:
+    case TERMKEY_RES_EOF:
+      return ret;
 
-  case TERMKEY_RES_NONE:
-    break;
+    case TERMKEY_RES_AGAIN:
+      again = 1;
+      /* fallthrough */
+    case TERMKEY_RES_NONE:
+      break;
+    }
   }
+
+  if(again)
+    return TERMKEY_RES_AGAIN;
 
   ret = getkey_simple(tk, key, 0);
 
@@ -574,20 +615,24 @@ termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
   fprintf(stderr, "\n");
 #endif
 
-  termkey_result ret = (*tk->driver.getkey)(tk, tk->driver_info, key, 1);
+  termkey_result ret;
+  struct termkey_drivernode *p;
+  for(p = tk->drivers; p; p = p->next) {
+    ret = (p->driver->getkey)(tk, p->info, key, 1);
 
 #ifdef DEBUG
-  fprintf(stderr, "Driver %s yields %s\n", tk->driver.name, res2str(ret));
+    fprintf(stderr, "Driver %s yields %s\n", p->driver->name, res2str(ret));
 #endif
 
-  switch(ret) {
-  case TERMKEY_RES_KEY:
-  case TERMKEY_RES_EOF:
-    return ret;
+    switch(ret) {
+    case TERMKEY_RES_KEY:
+    case TERMKEY_RES_EOF:
+      return ret;
 
-  case TERMKEY_RES_AGAIN:
-  case TERMKEY_RES_NONE:
-    break;
+    case TERMKEY_RES_AGAIN:
+    case TERMKEY_RES_NONE:
+      break;
+    }
   }
 
   ret = getkey_simple(tk, key, 1);

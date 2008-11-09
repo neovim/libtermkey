@@ -23,6 +23,13 @@ struct keyinfo {
   int modifier_set;
 };
 
+struct termkey_drivernode;
+struct termkey_drivernode {
+  struct termkey_driver     *driver;
+  void                      *info;
+  struct termkey_drivernode *next;
+};
+
 struct termkey {
   int    fd;
   int    flags;
@@ -44,8 +51,7 @@ struct termkey {
   // There are 32 C0 codes
   struct keyinfo c0[32];
 
-  struct termkey_driver driver;
-  void *driver_info;
+  struct termkey_drivernode *drivers;
 
   // Now some "protected" methods for the driver to call but which we don't
   // want exported as real symbols in the library
