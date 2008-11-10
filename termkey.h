@@ -129,6 +129,9 @@ termkey_t *termkey_new(int fd, int flags);
 void       termkey_free(termkey_t *tk);
 void       termkey_destroy(termkey_t *tk);
 
+int        termkey_get_flags(termkey_t *tk);
+void       termkey_set_flags(termkey_t *tk, int newflags);
+
 void       termkey_set_waittime(termkey_t *tk, int msec);
 int        termkey_get_waittime(termkey_t *tk);
 

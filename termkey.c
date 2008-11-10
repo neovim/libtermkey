@@ -263,6 +263,16 @@ void termkey_destroy(termkey_t *tk)
   termkey_free(tk);
 }
 
+int termkey_get_flags(termkey_t *tk)
+{
+  return tk->flags;
+}
+
+void termkey_set_flags(termkey_t *tk, int newflags)
+{
+  tk->flags = newflags;
+}
+
 void termkey_set_waittime(termkey_t *tk, int msec)
 {
   tk->waittime = msec;
