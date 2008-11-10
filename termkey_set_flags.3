@@ -1,0 +1,23 @@
+.TH TERMKEY_SET_FLAGS 3
+.SH NAME
+termkey_set_flags, termkey_get_flags \- control the operational flags
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "void termkey_set_flags(termkey_t *" tk ", int " newflags );
+.br
+.BI "int termkey_get_flags(termkey_t *" tk );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_set_flags\fP changes the set of operation flags in the termkey instance to those given by \fInewflags\fP.
+.PP
+\fBtermkey_get_flags\fP returns the value set by the last call to \fBtermkey_set_flags\fP(), or the value given to the constructor.
+.PP
+When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be returned by \fBtermkey_get_flags\fP().
+.SH "RETURN VALUE"
+\fBtermkey_set_flags\fP() returns no value. \fBtermkey_get_flags\fP() returns the current operational flags.
+.SH "SEE ALSO"
+.BR termkey_new (3),

@@ -36,9 +36,12 @@ Ignore locale settings; force UTF-8 recombining on. This flag overrides \fBTERMK
 Even if the terminal file descriptor \fIfd\fP represents a
 .SM TTY
 device, do not call the \fBtcsetattr\fP() \fBtermios\fP function on it to set it to canonical input mode.
+.PP
+When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP().
 .SH "RETURN VALUE"
 If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On failure, \fBNULL\fP is returned. \fBtermkey_destroy\fP() returns no value.
 .SH "SEE ALSO"
 .BR termkey_waitkey (3),
 .BR termkey_advisereadable (3),
-.BR termkey_getkey (3)
+.BR termkey_getkey (3),
+.BR termkey_get_flags (3)
