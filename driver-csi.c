@@ -206,8 +206,6 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
 
   args++;
 
-  (*tk->method.eat_bytes)(tk, csi_end + 1);
-
   if(args > 1 && arg[1] != -1)
     key->modifiers = arg[1] - 1;
   else
@@ -230,8 +228,10 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
     else
       key->code.sym = TERMKEY_SYM_UNKNOWN;
 
-    if(key->code.sym == TERMKEY_SYM_UNKNOWN)
+    if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
       fprintf(stderr, "CSI function key %ld\n", arg[0]);
+      return TERMKEY_RES_NONE;
+    }
   }
   else {
     // We know from the logic above that cmd must be >= 0x40 and < 0x80
@@ -255,8 +255,11 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
         fprintf(stderr, "CSI arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, cmd);
         break;
       }
+      return TERMKEY_RES_NONE;
     }
   }
+
+  (*tk->method.eat_bytes)(tk, csi_end + 1);
 
   return TERMKEY_RES_KEY;
 }
@@ -275,10 +278,8 @@ static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introle
 
   unsigned char cmd = CHARAT(introlen);
 
-  (*tk->method.eat_bytes)(tk, introlen + 1);
-
   if(cmd < 0x40 || cmd >= 0x80)
-    return TERMKEY_SYM_UNKNOWN;
+    return TERMKEY_RES_NONE;
 
   key->type = csi->csi_ss3s[cmd - 0x40].type;
   key->code.sym = csi->csi_ss3s[cmd - 0x40].sym;
@@ -292,17 +293,20 @@ static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introle
 
       key->utf8[0] = key->code.codepoint;
       key->utf8[1] = 0;
-
-      return TERMKEY_RES_KEY;
     }
-
-    key->type = csi->ss3s[cmd - 0x40].type;
-    key->code.sym = csi->ss3s[cmd - 0x40].sym;
-    key->modifiers = csi->ss3s[cmd - 0x40].modifier_set;
+    else {
+      key->type = csi->ss3s[cmd - 0x40].type;
+      key->code.sym = csi->ss3s[cmd - 0x40].sym;
+      key->modifiers = csi->ss3s[cmd - 0x40].modifier_set;
+    }
   }
 
-  if(key->code.sym == TERMKEY_SYM_UNKNOWN)
+  if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
     fprintf(stderr, "SS3 %c (0x%02x)\n", cmd, cmd);
+    return TERMKEY_RES_NONE;
+  }
+
+  (*tk->method.eat_bytes)(tk, introlen + 1);
 
   return TERMKEY_RES_KEY;
 }
