@@ -229,7 +229,9 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
       key->code.sym = TERMKEY_SYM_UNKNOWN;
 
     if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
-      fprintf(stderr, "CSI function key %ld\n", arg[0]);
+#ifdef DEBUG
+      fprintf(stderr, "CSI: Unknown function key %ld\n", arg[0]);
+#endif
       return TERMKEY_RES_NONE;
     }
   }
@@ -241,20 +243,22 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
     key->modifiers |= csi->csi_ss3s[cmd - 0x40].modifier_set;
 
     if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
+#ifdef DEBUG
       switch(args) {
       case 1:
-        fprintf(stderr, "CSI arg1=%ld cmd=%c\n", arg[0], cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld cmd=%c\n", arg[0], cmd);
         break;
       case 2:
-        fprintf(stderr, "CSI arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], cmd);
         break;
       case 3:
-        fprintf(stderr, "CSI arg1=%ld arg2=%ld arg3=%ld cmd=%c\n", arg[0], arg[1], arg[2], cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld cmd=%c\n", arg[0], arg[1], arg[2], cmd);
         break;
       default:
-        fprintf(stderr, "CSI arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, cmd);
         break;
       }
+#endif
       return TERMKEY_RES_NONE;
     }
   }
@@ -302,7 +306,9 @@ static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introle
   }
 
   if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
-    fprintf(stderr, "SS3 %c (0x%02x)\n", cmd, cmd);
+#ifdef DEBUG
+    fprintf(stderr, "CSI: Unknown SS3 %c (0x%02x)\n", cmd, cmd);
+#endif
     return TERMKEY_RES_NONE;
   }
 
