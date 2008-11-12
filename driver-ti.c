@@ -24,7 +24,7 @@ typedef struct {
 } termkey_ti;
 
 static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmask, int *modsetp);
-static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset);
+static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset);
 
 static void *new_driver(termkey_t *tk, const char *term)
 {
@@ -66,10 +66,14 @@ static void *new_driver(termkey_t *tk, const char *term)
       continue;
 
     if(sym != TERMKEY_SYM_NONE)
-      register_seq(ti, value, type, sym, mask, set);
+      if(!register_seq(ti, value, type, sym, mask, set))
+        goto abort_free_seqs;
   }
 
   return ti;
+
+abort_free_seqs:
+  free(ti->seqs);
 
 abort_free_ti:
   free(ti);
@@ -240,12 +244,13 @@ static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_ke
   return 0;
 }
 
-static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset)
+static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset)
 {
   if(ti->nseqs == ti->alloced_seqs) {
     ti->alloced_seqs *= 2;
     void *newseqs = realloc(ti->seqs, ti->alloced_seqs * sizeof(ti->seqs[9]));
-    // TODO: Handle realloc() failure
+    if(!newseqs)
+      return 0;
     ti->seqs = newseqs;
   }
 
@@ -256,6 +261,8 @@ static void register_seq(termkey_ti *ti, const char *seq, termkey_type type, ter
   ti->seqs[i].key.sym = sym;
   ti->seqs[i].key.modifier_mask = modmask;
   ti->seqs[i].key.modifier_set  = modset;
+
+  return 1;
 }
 
 struct termkey_driver termkey_driver_ti = {
