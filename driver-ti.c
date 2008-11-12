@@ -9,22 +9,103 @@
 #include <string.h>
 #include <unistd.h>
 
-struct ti_keyinfo {
-  const char *seq;
-  size_t seqlen; // cached strlen of seq since we'll use it lots
+/* To be efficient at lookups, we store the byte sequence => keyinfo mapping
+ * in a trie. This avoids a slow linear search though a flat list of sequences
+ */
+
+typedef enum {
+  TYPE_KEY,
+  TYPE_ARR
+} trie_nodetype;
+
+struct trie_node {
+  trie_nodetype type;
+};
+
+struct trie_node_key {
+  trie_nodetype type;
   struct keyinfo key;
+};
+
+struct trie_node_arr {
+  trie_nodetype type;
+  struct trie_node *arr[256];
 };
 
 typedef struct {
   termkey_t *tk;
 
-  int nseqs;
-  int alloced_seqs;
-  struct ti_keyinfo *seqs;
+  struct trie_node *root;
 } termkey_ti;
 
 static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmask, int *modsetp);
 static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset);
+
+static struct trie_node *new_node_key(termkey_type type, termkey_keysym sym, int modmask, int modset)
+{
+  struct trie_node_key *n = malloc(sizeof(struct trie_node_key));
+  if(!n)
+    return NULL;
+
+  n->type = TYPE_KEY;
+
+  n->key.type = type;
+  n->key.sym  = sym;
+  n->key.modifier_mask = modmask;
+  n->key.modifier_set  = modset;
+
+  return (struct trie_node*)n;
+}
+
+static struct trie_node *new_node_arr(void)
+{
+  struct trie_node_arr *n = malloc(sizeof(struct trie_node_arr));
+  if(!n)
+    return NULL;
+
+  n->type = TYPE_ARR;
+
+  unsigned char b;
+  for(b = 0; b < 255; b++)
+    n->arr[b] = NULL;
+
+  return (struct trie_node*)n;
+}
+
+static struct trie_node *lookup_next(struct trie_node *n, unsigned char b)
+{
+  switch(n->type) {
+  case TYPE_KEY:
+    fprintf(stderr, "ABORT: lookup_next within a TYPE_KEY node\n");
+    abort();
+  case TYPE_ARR:
+    {
+      struct trie_node_arr *nar = (struct trie_node_arr*)n;
+      return nar->arr[b];
+    }
+  }
+
+  return NULL; // Never reached but keeps compiler happy
+}
+
+static void free_trie(struct trie_node *n)
+{
+  switch(n->type) {
+  case TYPE_KEY:
+    break;
+  case TYPE_ARR:
+    {
+      struct trie_node_arr *nar = (struct trie_node_arr*)n;
+      unsigned char b;
+      for(b = 0; b < 255; b++)
+        if(nar->arr[b])
+          free_trie(nar->arr[b]);
+      break;
+    }
+  }
+
+  free(n);
+}
 
 static void *new_driver(termkey_t *tk, const char *term)
 {
@@ -39,11 +120,8 @@ static void *new_driver(termkey_t *tk, const char *term)
 
   ti->tk = tk;
 
-  ti->alloced_seqs = 32; // We'll allocate more space if we need
-  ti->nseqs = 0;
-
-  ti->seqs = malloc(ti->alloced_seqs * sizeof(ti->seqs[0]));
-  if(!ti->seqs)
+  ti->root = new_node_arr();
+  if(!ti->root)
     goto abort_free_ti;
 
   int i;
@@ -67,13 +145,13 @@ static void *new_driver(termkey_t *tk, const char *term)
 
     if(sym != TERMKEY_SYM_NONE)
       if(!register_seq(ti, value, type, sym, mask, set))
-        goto abort_free_seqs;
+        goto abort_free_trie;
   }
 
   return ti;
 
-abort_free_seqs:
-  free(ti->seqs);
+abort_free_trie:
+  free_trie(ti->root);
 
 abort_free_ti:
   free(ti);
@@ -104,7 +182,7 @@ static void free_driver(void *info)
 {
   termkey_ti *ti = info;
 
-  free(ti->seqs);
+  free_trie(ti->root);
 
   free(ti);
 }
@@ -118,31 +196,30 @@ static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int fo
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
 
-  // Now we're sure at least 1 byte is valid
-  unsigned char b0 = CHARAT(0);
+  struct trie_node *p = ti->root;
 
-  int i;
-  for(i = 0; i < ti->nseqs; i++) {
-    struct ti_keyinfo *s = &(ti->seqs[i]);
+  int pos = 0;
+  while(pos < tk->buffcount) {
+    p = lookup_next(p, CHARAT(pos));
+    if(!p)
+      break;
 
-    if(s->seq[0] != b0)
-      continue;
+    pos++;
 
-    if(tk->buffcount >= s->seqlen) {
-      if(strncmp(s->seq, (const char*)tk->buffer + tk->buffstart, s->seqlen) == 0) {
-        key->type      = s->key.type;
-        key->code.sym  = s->key.sym;
-        key->modifiers = s->key.modifier_set;
-        (*tk->method.eat_bytes)(tk, s->seqlen);
-        return TERMKEY_RES_KEY;
-      }
-    }
-    else if(!force) {
-      // Maybe we'd get a partial match
-      if(strncmp(s->seq, (const char*)tk->buffer + tk->buffstart, tk->buffcount) == 0)
-        return TERMKEY_RES_AGAIN;
+    if(p->type == TYPE_KEY) {
+      struct trie_node_key *nk = (struct trie_node_key*)p;
+      key->type      = nk->key.type;
+      key->code.sym  = nk->key.sym;
+      key->modifiers = nk->key.modifier_set;
+      (*tk->method.eat_bytes)(tk, pos);
+      return TERMKEY_RES_KEY;
     }
   }
+
+  // If p is not NULL then we hadn't walked off the end yet, so we have a
+  // partial match
+  if(p && !force)
+    return TERMKEY_RES_AGAIN;
 
   return TERMKEY_RES_NONE;
 }
@@ -246,21 +323,47 @@ static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_ke
 
 static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset)
 {
-  if(ti->nseqs == ti->alloced_seqs) {
-    ti->alloced_seqs *= 2;
-    void *newseqs = realloc(ti->seqs, ti->alloced_seqs * sizeof(ti->seqs[9]));
-    if(!newseqs)
-      return 0;
-    ti->seqs = newseqs;
+  int pos = 0;
+  struct trie_node *p = ti->root;
+
+  // Unsigned because we'll be using it as an array subscript
+  unsigned char b;
+
+  while((b = seq[pos])) {
+    struct trie_node *next = lookup_next(p, b);
+    if(!next)
+      break;
+    p = next;
+    pos++;
   }
 
-  int i = ti->nseqs++;
-  ti->seqs[i].seq = seq;
-  ti->seqs[i].seqlen = strlen(seq);
-  ti->seqs[i].key.type = type;
-  ti->seqs[i].key.sym = sym;
-  ti->seqs[i].key.modifier_mask = modmask;
-  ti->seqs[i].key.modifier_set  = modset;
+  while((b = seq[pos])) {
+    struct trie_node *next;
+    if(seq[pos+1])
+      // Intermediate node
+      next = new_node_arr();
+    else
+      // Final key node
+      next = new_node_key(type, sym, modmask, modset);
+
+    if(!next)
+      return 0;
+
+    switch(p->type) {
+    case TYPE_ARR:
+      {
+        struct trie_node_arr *nar = (struct trie_node_arr*)p;
+        nar->arr[b] = next;
+        p = next;
+        break;
+      }
+    case TYPE_KEY:
+      fprintf(stderr, "ASSERT FAIL: Tried to insert child node in TYPE_KEY\n");
+      abort();
+    }
+
+    pos++;
+  }
 
   return 1;
 }
