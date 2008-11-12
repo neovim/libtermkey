@@ -10,7 +10,9 @@
 #include <unistd.h>
 
 /* To be efficient at lookups, we store the byte sequence => keyinfo mapping
- * in a trie. This avoids a slow linear search though a flat list of sequences
+ * in a trie. This avoids a slow linear search through a flat list of
+ * sequences. Because it is likely most nodes will be very sparse, we optimise
+ * vector to store an extent map after the database is loaded.
  */
 
 typedef enum {
@@ -29,7 +31,8 @@ struct trie_node_key {
 
 struct trie_node_arr {
   trie_nodetype type;
-  struct trie_node *arr[256];
+  unsigned char min, max; /* INCLUSIVE endpoints of the extent range */
+  struct trie_node *arr[0];
 };
 
 typedef struct {
@@ -57,17 +60,18 @@ static struct trie_node *new_node_key(termkey_type type, termkey_keysym sym, int
   return (struct trie_node*)n;
 }
 
-static struct trie_node *new_node_arr(void)
+static struct trie_node *new_node_arr(unsigned char min, unsigned char max)
 {
-  struct trie_node_arr *n = malloc(sizeof(struct trie_node_arr));
+  struct trie_node_arr *n = malloc(sizeof(struct trie_node_arr) + ((int)max-min+1) * sizeof(void*));
   if(!n)
     return NULL;
 
   n->type = TYPE_ARR;
+  n->min = min; n->max = max;
 
-  unsigned char b;
-  for(b = 0; b < 255; b++)
-    n->arr[b] = NULL;
+  int i;
+  for(i = min; i <= max; i++)
+    n->arr[i-min] = NULL;
 
   return (struct trie_node*)n;
 }
@@ -81,7 +85,9 @@ static struct trie_node *lookup_next(struct trie_node *n, unsigned char b)
   case TYPE_ARR:
     {
       struct trie_node_arr *nar = (struct trie_node_arr*)n;
-      return nar->arr[b];
+      if(b < nar->min || b > nar->max)
+        return NULL;
+      return nar->arr[b - nar->min];
     }
   }
 
@@ -96,15 +102,46 @@ static void free_trie(struct trie_node *n)
   case TYPE_ARR:
     {
       struct trie_node_arr *nar = (struct trie_node_arr*)n;
-      unsigned char b;
-      for(b = 0; b < 255; b++)
-        if(nar->arr[b])
-          free_trie(nar->arr[b]);
+      int i;
+      for(i = nar->min; i <= nar->max; i++)
+        if(nar->arr[i - nar->min])
+          free_trie(nar->arr[i - nar->min]);
       break;
     }
   }
 
   free(n);
+}
+
+static struct trie_node *compress_trie(struct trie_node *n)
+{
+  if(!n)
+    return NULL;
+
+  switch(n->type) {
+  case TYPE_KEY:
+    return n;
+  case TYPE_ARR:
+    {
+      struct trie_node_arr *nar = (struct trie_node_arr*)n;
+      unsigned char min, max;
+      // Find the real bounds
+      for(min = 0; !nar->arr[min]; min++)
+        ;
+      for(max = 0xff; !nar->arr[max]; max--)
+        ;
+
+      struct trie_node_arr *new = (struct trie_node_arr*)new_node_arr(min, max);
+      int i;
+      for(i = min; i <= max; i++)
+        new->arr[i - min] = compress_trie(nar->arr[i]);
+
+      free(nar);
+      return (struct trie_node*)new;
+    }
+  }
+
+  return n;
 }
 
 static void *new_driver(termkey_t *tk, const char *term)
@@ -120,7 +157,7 @@ static void *new_driver(termkey_t *tk, const char *term)
 
   ti->tk = tk;
 
-  ti->root = new_node_arr();
+  ti->root = new_node_arr(0, 0xff);
   if(!ti->root)
     goto abort_free_ti;
 
@@ -147,6 +184,8 @@ static void *new_driver(termkey_t *tk, const char *term)
       if(!register_seq(ti, value, type, sym, mask, set))
         goto abort_free_trie;
   }
+
+  ti->root = compress_trie(ti->root);
 
   return ti;
 
@@ -341,7 +380,7 @@ static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, term
     struct trie_node *next;
     if(seq[pos+1])
       // Intermediate node
-      next = new_node_arr();
+      next = new_node_arr(0, 0xff);
     else
       // Final key node
       next = new_node_key(type, sym, modmask, modset);
@@ -353,7 +392,12 @@ static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, term
     case TYPE_ARR:
       {
         struct trie_node_arr *nar = (struct trie_node_arr*)p;
-        nar->arr[b] = next;
+        if(b < nar->min || b > nar->max) {
+          fprintf(stderr, "ASSERT FAIL: Trie insert at 0x%02x is outside of extent bounds (0x%02x..0x%02x)\n",
+              b, nar->min, nar->max);
+          abort();
+        }
+        nar->arr[b - nar->min] = next;
         p = next;
         break;
       }
