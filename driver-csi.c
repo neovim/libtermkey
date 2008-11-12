@@ -240,8 +240,22 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
     key->modifiers &= ~(csi->csi_ss3s[cmd - 0x40].modifier_mask);
     key->modifiers |= csi->csi_ss3s[cmd - 0x40].modifier_set;
 
-    if(key->code.sym == TERMKEY_SYM_UNKNOWN)
-      fprintf(stderr, "CSI arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], cmd);
+    if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
+      switch(args) {
+      case 1:
+        fprintf(stderr, "CSI arg1=%ld cmd=%c\n", arg[0], cmd);
+        break;
+      case 2:
+        fprintf(stderr, "CSI arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], cmd);
+        break;
+      case 3:
+        fprintf(stderr, "CSI arg1=%ld arg2=%ld arg3=%ld cmd=%c\n", arg[0], arg[1], arg[2], cmd);
+        break;
+      default:
+        fprintf(stderr, "CSI arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, cmd);
+        break;
+      }
+    }
   }
 
   return TERMKEY_RES_KEY;
