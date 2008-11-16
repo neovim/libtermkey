@@ -8,6 +8,23 @@
 
 #include <stdio.h>
 
+void termkey_check_version(int major, int minor)
+{
+  if(major != TERMKEY_VERSION_MAJOR) {
+    fprintf(stderr, "libtermkey major version mismatch; %d (wants) != %d (library)\n",
+        major, TERMKEY_VERSION_MAJOR);
+    exit(1);
+  }
+
+  if(minor > TERMKEY_VERSION_MINOR) {
+    fprintf(stderr, "libtermkey minor version mismatch; %d (wants) > %d (library)\n",
+        minor, TERMKEY_VERSION_MINOR);
+    exit(1);
+  }
+
+  // Happy
+}
+
 static struct termkey_driver *drivers[] = {
   &termkey_driver_ti,
   &termkey_driver_csi,
