@@ -3,6 +3,8 @@
 #include "termkey.h"
 
 int main(int argc, char *argv[]) {
+  TERMKEY_CHECK_VERSION;
+
   char buffer[50];
   termkey_t *tk = termkey_new(0, 0);
 
