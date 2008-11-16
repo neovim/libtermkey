@@ -7,6 +7,9 @@
 #define TERMKEY_VERSION_MAJOR @@VERSION_MAJOR@@
 #define TERMKEY_VERSION_MINOR @@VERSION_MINOR@@
 
+#define TERMKEY_CHECK_VERSION \
+        termkey_check_version(TERMKEY_VERSION_MAJOR, TERMKEY_VERSION_MINOR)
+
 typedef enum {
   TERMKEY_SYM_UNKNOWN = -1,
   TERMKEY_SYM_NONE = 0,
@@ -127,6 +130,8 @@ enum {
   TERMKEY_FLAG_UTF8        = 1 << 3, // Input is definitely UTF-8
   TERMKEY_FLAG_NOTERMIOS   = 1 << 4, // Do not make initial termios calls on construction
 };
+
+void termkey_check_version(int major, int minor);
 
 termkey_t *termkey_new(int fd, int flags);
 void       termkey_free(termkey_t *tk);
