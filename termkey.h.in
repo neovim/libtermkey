@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define TERMKEY_VERSION_MAJOR @@VERSION_MAJOR@@
+#define TERMKEY_VERSION_MINOR @@VERSION_MINOR@@
+
 typedef enum {
   TERMKEY_SYM_UNKNOWN = -1,
   TERMKEY_SYM_NONE = 0,
