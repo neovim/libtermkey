@@ -3,7 +3,10 @@ CFLAGS?=
 
 CFLAGS_DEBUG=
 
-SONAME=libtermkey.so.0
+VERSION_MAJOR=0
+VERSION_MINOR=0
+
+SONAME=libtermkey.so.$(VERSION_MAJOR)
 
 PREFIX=/usr/local
 LIBDIR=$(PREFIX)/lib
@@ -15,7 +18,12 @@ ifeq ($(DEBUG),1)
   CFLAGS_DEBUG=-ggdb -DDEBUG
 endif
 
-all: demo demo-async doc
+all: termkey.h demo demo-async doc
+
+termkey.h: termkey.h.in Makefile
+	sed -e 's/@@VERSION_MAJOR@@/$(VERSION_MAJOR)/g' \
+	    -e 's/@@VERSION_MINOR@@/$(VERSION_MINOR)/g' \
+	    $< >$@
 
 demo: libtermkey.so demo.c
 	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
