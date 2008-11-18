@@ -88,3 +88,9 @@ distdir: all
 	cp *.c *.h *.3 $(DISTDIR)
 	cp *.pc.in $(DISTDIR)
 	sed "/^# DIST CUT/Q" <Makefile >$(DISTDIR)/Makefile
+
+TARBALL=$(DISTDIR).tar.bz2
+
+dist: distdir
+	tar -cjf $(TARBALL) $(DISTDIR)
+	rm -rf $(DISTDIR)
