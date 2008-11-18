@@ -34,7 +34,7 @@ libtermkey.so: termkey.o driver-csi.o driver-ti.o
 
 .PHONY: clean
 clean:
-	rm -f *.o demo demo-async
+	rm -f *.o libtermkey.so demo demo-async
 
 .PHONY: install
 install: install-inc install-lib install-man
