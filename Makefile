@@ -14,19 +14,11 @@ INCDIR=$(PREFIX)/include
 MANDIR=$(PREFIX)/share/man
 MAN3DIR=$(MANDIR)/man3
 
-MANSOURCE=$(wildcard *.3.sh)
-BUILTMAN=$(MANSOURCE:.3.sh=.3)
-
 ifeq ($(DEBUG),1)
   CFLAGS_DEBUG=-ggdb -DDEBUG
 endif
 
-all: termkey.h demo demo-async doc
-
-termkey.h: termkey.h.in Makefile
-	sed -e 's/@@VERSION_MAJOR@@/$(VERSION_MAJOR)/g' \
-	    -e 's/@@VERSION_MINOR@@/$(VERSION_MINOR)/g' \
-	    $< >$@
+all: termkey.h demo demo-async
 
 demo: libtermkey.so demo.c
 	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
@@ -40,14 +32,9 @@ libtermkey.so: termkey.o driver-csi.o driver-ti.o
 %.o: %.c termkey.h termkey-internal.h
 	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -fPIC -o $@ -c $<
 
-doc: $(BUILTMAN)
-
-%.3: %.3.sh
-	sh $< >$@
-
 .PHONY: clean
 clean:
-	rm -f *.o demo $(BUILTMAN) termkey.h
+	rm -f *.o demo demo-async
 
 .PHONY: install
 install: install-inc install-lib install-man
@@ -71,3 +58,33 @@ install-man:
 	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_destroy.3.gz
 	ln -sf termkey_getkey.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getkey_force.3.gz
 	ln -sf termkey_set_waittime.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_waittime.3.gz
+
+# DIST CUT
+
+MANSOURCE=$(wildcard *.3.sh)
+BUILTMAN=$(MANSOURCE:.3.sh=.3)
+
+all: doc
+
+doc: $(BUILTMAN)
+
+%.3: %.3.sh
+	sh $< >$@
+
+clean: clean-built
+
+clean-built:
+	rm -f $(BUILTMAN) termkey.h
+
+termkey.h: termkey.h.in Makefile
+	sed -e 's/@@VERSION_MAJOR@@/$(VERSION_MAJOR)/g' \
+	    -e 's/@@VERSION_MINOR@@/$(VERSION_MINOR)/g' \
+	    $< >$@
+
+DISTDIR=libtermkey-$(VERSION_MAJOR).$(VERSION_MINOR)
+
+distdir: all
+	mkdir $(DISTDIR)
+	cp *.c *.h *.3 $(DISTDIR)
+	cp *.pc.in $(DISTDIR)
+	sed "/^# DIST CUT/Q" <Makefile >$(DISTDIR)/Makefile
