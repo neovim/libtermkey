@@ -47,7 +47,8 @@ install-inc:
 
 install-lib:
 	install -d $(DESTDIR)$(LIBDIR)
-	install libtermkey.so $(DESTDIR)$(LIBDIR)/$(SONAME)
+	install libtermkey.so $(DESTDIR)$(LIBDIR)/$(SONAME).$(VERSION_MINOR)
+	ln -sf $(SONAME).$(VERSION_MINOR) $(DESTDIR)$(LIBDIR)/$(SONAME)
 	ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libtermkey.so
 
 install-man:
