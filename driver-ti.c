@@ -356,7 +356,10 @@ static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_ke
     return 1;
   }
 
-  printf("TODO: Need to convert funcname %s to a type/sym\n", funcname);
+#ifdef DEBUG
+  fprintf(stderr, "TODO: Need to convert funcname %s to a type/sym\n", funcname);
+#endif
+
   return 0;
 }
 
