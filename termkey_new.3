@@ -5,6 +5,8 @@ termkey_new, termkey_destroy \- create or destroy new termkey instance
 .nf
 .B #include <termkey.h>
 .sp
+.BI "TERMKEY_CHECK_VERSION;"
+.br
 .BI "termkey_tk *termkey_new(int " fd ", int " flags );
 .br
 .BI "void termkey_destroy(termkey_t *" tk );
@@ -38,6 +40,8 @@ Even if the terminal file descriptor \fIfd\fP represents a
 device, do not call the \fBtcsetattr\fP() \fBtermios\fP function on it to set it to canonical input mode.
 .PP
 When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP().
+.SH VERSION CHECK MACRO
+Before calling any functions in the \fItermkey\fP library, an application should use the \fBTERMKEY_CHECK_VERSION\fP macro to check that the loaded version of the library is compatible with the version it was compiled against. This should be done early on, ideally just after entering its \fBmain()\fP function.
 .SH "RETURN VALUE"
 If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On failure, \fBNULL\fP is returned. \fBtermkey_destroy\fP() returns no value.
 .SH "SEE ALSO"
