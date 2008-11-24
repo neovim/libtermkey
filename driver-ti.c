@@ -46,7 +46,7 @@ static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, term
 
 static struct trie_node *new_node_key(termkey_type type, termkey_keysym sym, int modmask, int modset)
 {
-  struct trie_node_key *n = malloc(sizeof(struct trie_node_key));
+  struct trie_node_key *n = malloc(sizeof(*n));
   if(!n)
     return NULL;
 
@@ -62,7 +62,7 @@ static struct trie_node *new_node_key(termkey_type type, termkey_keysym sym, int
 
 static struct trie_node *new_node_arr(unsigned char min, unsigned char max)
 {
-  struct trie_node_arr *n = malloc(sizeof(struct trie_node_arr) + ((int)max-min+1) * sizeof(void*));
+  struct trie_node_arr *n = malloc(sizeof(*n) + ((int)max-min+1) * sizeof(n->arr[0]));
   if(!n)
     return NULL;
 
