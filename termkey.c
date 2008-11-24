@@ -844,7 +844,7 @@ static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int mo
 size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format)
 {
   size_t pos = 0;
-  size_t l;
+  size_t l = 0;
 
   int longmod = format & TERMKEY_FORMAT_LONGMOD;
 
