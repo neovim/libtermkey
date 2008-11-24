@@ -106,7 +106,10 @@ static struct {
   { 0, NULL },
 };
 
-termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
+/* We might expose this as public API one day, when the ideas are finalised.
+ * As yet it isn't public, so keep it static
+ */
+static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
   termkey_t *tk = malloc(sizeof(*tk));
   if(!tk)
