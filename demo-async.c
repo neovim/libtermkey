@@ -3,7 +3,7 @@
 
 #include "termkey.h"
 
-void on_key(termkey_t *tk, termkey_key *key)
+static void on_key(termkey_t *tk, termkey_key *key)
 {
   char buffer[50];
   termkey_snprint_key(tk, buffer, sizeof buffer, key, TERMKEY_FORMAT_VIM);
