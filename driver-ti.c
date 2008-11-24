@@ -237,7 +237,7 @@ static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int fo
 
   struct trie_node *p = ti->root;
 
-  int pos = 0;
+  unsigned int pos = 0;
   while(pos < tk->buffcount) {
     p = lookup_next(p, CHARAT(pos));
     if(!p)
