@@ -319,7 +319,7 @@ static void eat_bytes(termkey_t *tk, size_t count)
   }
 }
 
-static inline int utf8_seqlen(long codepoint)
+static inline unsigned int utf8_seqlen(long codepoint)
 {
   if(codepoint < 0x0000080) return 1;
   if(codepoint < 0x0000800) return 2;
@@ -470,7 +470,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
   }
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
     // Some UTF-8
-    int nbytes;
+    unsigned int nbytes;
     long codepoint;
 
     key->type = TERMKEY_TYPE_UNICODE;
@@ -522,7 +522,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
       return TERMKEY_RES_KEY;
     }
 
-    for(int b = 1; b < nbytes; b++) {
+    for(unsigned int b = 1; b < nbytes; b++) {
       unsigned char cb = CHARAT(b);
       if(cb < 0x80 || cb >= 0xc0) {
         (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
@@ -769,7 +769,7 @@ void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
 termkey_result termkey_advisereadable(termkey_t *tk)
 {
   unsigned char buffer[64]; // Smaller than the default size
-  size_t len = read(tk->fd, buffer, sizeof buffer);
+  ssize_t len = read(tk->fd, buffer, sizeof buffer);
 
   if(len == -1 && errno == EAGAIN)
     return TERMKEY_RES_NONE;
