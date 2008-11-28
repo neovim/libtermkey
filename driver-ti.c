@@ -148,7 +148,9 @@ static void *new_driver(termkey_t *tk, const char *term)
 {
   int err;
 
-  if(setupterm(term, 1, &err) != OK)
+  /* Have to cast away the const. But it's OK - we know terminfo won't really
+   * modify term */
+  if(setupterm((char*)term, 1, &err) != OK)
     return NULL;
 
   termkey_ti *ti = malloc(sizeof *ti);
