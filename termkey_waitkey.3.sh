@@ -29,7 +29,7 @@ No key events are ready and the terminal has been closed, so no more will arrive
 The following example program prints details of every keypress until the user presses "Ctrl-C".
 .PP
 .in +4n
-`sed i.br demo.c`
+`while read LINE; do echo ".br"; echo "$LINE"; done <demo.c`
 .in
 .nf
 .fi

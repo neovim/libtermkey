@@ -71,7 +71,7 @@ No key event is ready yet, but a partial one has been found. This is only return
 The following example program prints details of every keypress until the user presses "Ctrl-C". It demonstrates how to use the termkey instance in a typical \fBpoll\fP()-driven asynchronous program, which may include mixed IO with other file handles.
 .PP
 .in +4n
-`sed i.br demo-async.c`
+`while read LINE; do echo ".br"; echo "$LINE"; done <demo-async.c`
 .in
 .nf
 .fi
