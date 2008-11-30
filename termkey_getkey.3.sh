@@ -40,13 +40,13 @@ typedef struct {
 The \fItype\fP field indicates the type of event, and determines which of the members of the \fIcode\fP union is valid. It will be one of the following constants:
 .TP
 .B TERMKEY_TYPE_UNICODE
-a Unicode codepoint
+a Unicode codepoint. This value indicates that \fIcode.codepoint\fP is valid, and will contain the codepoint number of the keypress. In Unicode mode (if the \fBTERMKEY_FLAG_UTF8\fP bit is set) this will be its Unicode character number. In raw byte mode, this will contain a single 8-bit byte.
 .TP
 .B TERMKEY_TYPE_FUNCTION
-a numbered function key
+a numbered function key. This value indicates that \fIcode.number\fP is valid, and contains the number of the numbered function key.
 .TP
 .B TERMKEY_TYPE_KEYSYM
-a symbolic key
+a symbolic key. This value indicates that \fIcode.sym\fP is valid, and contains the symbolic key value. This is an opaque value which may be passed to \fBtermkey_get_keyname\fP(3).
 .PP
 The \fImodifiers\fP bitmask is composed of a bitwise-or of the constants \fBTERMKEY_KEYMOD_SHIFT\fP, \fBTERMKEY_KEYMOD_CTRL\fP and \fBTERMKEY_KEYMOD_ALT\fP.
 .PP
