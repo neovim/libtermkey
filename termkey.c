@@ -283,6 +283,11 @@ void termkey_destroy(termkey_t *tk)
   termkey_free(tk);
 }
 
+int termkey_get_fd(termkey_t *tk)
+{
+  return tk->fd;
+}
+
 int termkey_get_flags(termkey_t *tk)
 {
   return tk->flags;
