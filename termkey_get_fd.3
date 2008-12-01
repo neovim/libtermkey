@@ -1,0 +1,18 @@
+.TH TERMKEY_GET_FD 3
+.SH NAME
+termkey_get_fd \- obtain the file descriptor for the terminal
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "void termkey_get_fd(termkey_t *" tk );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_get_fd\fP returns the file descriptor that was passed as the \fIfd\fP argument to \fBtermkey_new\fP(3).
+.SH "RETURN VALUE"
+\fBtermkey_get_fd\fP() returns the current file descriptor.
+.SH "SEE ALSO"
+.BR termkey_new (3),
+.BR termkey_get_flags (3)
