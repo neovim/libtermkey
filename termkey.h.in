@@ -156,6 +156,8 @@ termkey_result termkey_advisereadable(termkey_t *tk);
 termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const char *name);
 const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym);
 
+termkey_keysym termkey_keyname2sym(termkey_t *tk, const char *keyname); 
+
 typedef enum {
   TERMKEY_FORMAT_LONGMOD     = 1 << 0, // Shift-... instead of S-...
   TERMKEY_FORMAT_CARETCTRL   = 1 << 1, // ^X instead of C-X
