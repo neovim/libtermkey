@@ -32,7 +32,7 @@ struct trie_node_key {
 struct trie_node_arr {
   trie_nodetype type;
   unsigned char min, max; /* INCLUSIVE endpoints of the extent range */
-  struct trie_node *arr[0];
+  struct trie_node *arr[]; /* dynamic size at allocation time */
 };
 
 typedef struct {
