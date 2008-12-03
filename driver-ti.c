@@ -1,3 +1,6 @@
+// we want strdup()
+#define _XOPEN_SOURCE 500
+
 #include "termkey.h"
 #include "termkey-internal.h"
 
@@ -39,6 +42,9 @@ typedef struct {
   termkey_t *tk;
 
   struct trie_node *root;
+
+  char *start_string;
+  char *stop_string;
 } termkey_ti;
 
 static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmask, int *modsetp);
@@ -189,6 +195,20 @@ static void *new_driver(termkey_t *tk, const char *term)
 
   ti->root = compress_trie(ti->root);
 
+  /* Take copies of these terminfo strings, in case we build multiple termkey
+   * instances for multiple different termtypes, and it's different by the
+   * time we want to use it
+   */
+  if(keypad_xmit)
+    ti->start_string = strdup(keypad_xmit);
+  else
+    ti->start_string = NULL;
+
+  if(keypad_local)
+    ti->stop_string = strdup(keypad_local);
+  else
+    ti->stop_string = NULL;
+
   return ti;
 
 abort_free_trie:
@@ -202,20 +222,24 @@ abort_free_ti:
 
 static void start_driver(termkey_t *tk, void *info)
 {
+  termkey_ti *ti = info;
+
   /* The terminfo database will contain keys in application cursor key mode.
    * We may need to enable that mode
    */
-  if(keypad_xmit) {
+  if(ti->start_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
-    write(tk->fd, keypad_xmit, strlen(keypad_xmit));
+    write(tk->fd, ti->start_string, strlen(ti->start_string));
   }
 }
 
 static void stop_driver(termkey_t *tk, void *info)
 {
-  if(keypad_local) {
+  termkey_ti *ti = info;
+
+  if(ti->stop_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
-    write(tk->fd, keypad_local, strlen(keypad_local));
+    write(tk->fd, ti->stop_string, strlen(ti->stop_string));
   }
 }
 
@@ -224,6 +248,12 @@ static void free_driver(void *info)
   termkey_ti *ti = info;
 
   free_trie(ti->root);
+
+  if(ti->start_string)
+    free(ti->start_string);
+
+  if(ti->stop_string)
+    free(ti->stop_string);
 
   free(ti);
 }
