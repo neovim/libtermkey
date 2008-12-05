@@ -420,6 +420,59 @@ static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 
 #define UTF8_INVALID 0xFFFD
 
+static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
+{
+  int again = 0;
+
+#ifdef DEBUG
+  fprintf(stderr, "getkey(force=%d): buffer ", force);
+  print_buffer(tk);
+  fprintf(stderr, "\n");
+#endif
+
+  termkey_result ret;
+  struct termkey_drivernode *p;
+  for(p = tk->drivers; p; p = p->next) {
+    ret = (p->driver->getkey)(tk, p->info, key, force);
+
+#ifdef DEBUG
+    fprintf(stderr, "Driver %s yields %s\n", p->driver->name, res2str(ret));
+#endif
+
+    switch(ret) {
+    case TERMKEY_RES_KEY:
+#ifdef DEBUG
+      print_key(tk, key); fprintf(stderr, "\n");
+#endif
+      /* fallthrough */
+    case TERMKEY_RES_EOF:
+      return ret;
+
+    case TERMKEY_RES_AGAIN:
+      if(!force)
+        again = 1;
+
+      /* fallthrough */
+    case TERMKEY_RES_NONE:
+      break;
+    }
+  }
+
+  if(again)
+    return TERMKEY_RES_AGAIN;
+
+  ret = getkey_simple(tk, key, force);
+
+#ifdef DEBUG
+  fprintf(stderr, "getkey_simple(force=%d) yields %s\n", force, res2str(ret));
+  if(ret == TERMKEY_RES_KEY) {
+    print_key(tk, key); fprintf(stderr, "\n");
+  }
+#endif
+
+  return ret;
+}
+
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
 static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
@@ -447,11 +500,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     tk->buffcount--;
 
     // Run the full driver
-    termkey_result metakey_result;
-    if(force)
-      metakey_result = termkey_getkey_force(tk, key);
-    else
-      metakey_result = termkey_getkey(tk, key);
+    termkey_result metakey_result = getkey(tk, key, force);
 
     tk->buffstart--;
     tk->buffcount++;
@@ -622,97 +671,12 @@ static const char *res2str(termkey_result res)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  int again = 0;
-
-#ifdef DEBUG
-  fprintf(stderr, "getkey(): buffer ");
-  print_buffer(tk);
-  fprintf(stderr, "\n");
-#endif
-
-  termkey_result ret;
-  struct termkey_drivernode *p;
-  for(p = tk->drivers; p; p = p->next) {
-    ret = (p->driver->getkey)(tk, p->info, key, 0);
-
-#ifdef DEBUG
-    fprintf(stderr, "Driver %s yields %s\n", p->driver->name, res2str(ret));
-#endif
-
-    switch(ret) {
-    case TERMKEY_RES_KEY:
-#ifdef DEBUG
-      print_key(tk, key); fprintf(stderr, "\n");
-#endif
-      /* fallthrough */
-    case TERMKEY_RES_EOF:
-      return ret;
-
-    case TERMKEY_RES_AGAIN:
-      again = 1;
-      /* fallthrough */
-    case TERMKEY_RES_NONE:
-      break;
-    }
-  }
-
-  if(again)
-    return TERMKEY_RES_AGAIN;
-
-  ret = getkey_simple(tk, key, 0);
-
-#ifdef DEBUG
-  fprintf(stderr, "getkey_simple(force=0) yields %s\n", res2str(ret));
-  if(ret == TERMKEY_RES_KEY) {
-    print_key(tk, key); fprintf(stderr, "\n");
-  }
-#endif
-
-  return ret;
+  return getkey(tk, key, 0);
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
-#ifdef DEBUG
-  fprintf(stderr, "getkey_force(): buffer ");
-  print_buffer(tk);
-  fprintf(stderr, "\n");
-#endif
-
-  termkey_result ret;
-  struct termkey_drivernode *p;
-  for(p = tk->drivers; p; p = p->next) {
-    ret = (p->driver->getkey)(tk, p->info, key, 1);
-
-#ifdef DEBUG
-    fprintf(stderr, "Driver %s yields %s\n", p->driver->name, res2str(ret));
-#endif
-
-    switch(ret) {
-    case TERMKEY_RES_KEY:
-#ifdef DEBUG
-      print_key(tk, key); fprintf(stderr, "\n");
-#endif
-      /* fallthrough */
-    case TERMKEY_RES_EOF:
-      return ret;
-
-    case TERMKEY_RES_AGAIN:
-    case TERMKEY_RES_NONE:
-      break;
-    }
-  }
-
-  ret = getkey_simple(tk, key, 1);
-
-#ifdef DEBUG
-  fprintf(stderr, "getkey_simple(force=1) yields %s\n", res2str(ret));
-  if(ret == TERMKEY_RES_KEY) {
-    print_key(tk, key); fprintf(stderr, "\n");
-  }
-#endif
-
-  return ret;
+  return getkey(tk, key, 1);
 }
 
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
