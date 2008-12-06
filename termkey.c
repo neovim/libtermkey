@@ -318,13 +318,6 @@ static void eat_bytes(termkey_t *tk, size_t count)
 
   tk->buffstart += count;
   tk->buffcount -= count;
-
-  size_t halfsize = tk->buffsize / 2;
-
-  if(tk->buffstart > halfsize) {
-    memcpy(tk->buffer, tk->buffer + halfsize, halfsize);
-    tk->buffstart -= halfsize;
-  }
 }
 
 static inline unsigned int utf8_seqlen(long codepoint)
@@ -444,6 +437,16 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
 #ifdef DEBUG
       print_key(tk, key); fprintf(stderr, "\n");
 #endif
+      // Slide the data down to stop it running away
+      {
+        size_t halfsize = tk->buffsize / 2;
+
+        if(tk->buffstart > halfsize) {
+          memcpy(tk->buffer, tk->buffer + halfsize, halfsize);
+          tk->buffstart -= halfsize;
+        }
+      }
+
       /* fallthrough */
     case TERMKEY_RES_EOF:
       return ret;
