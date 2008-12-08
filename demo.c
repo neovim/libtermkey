@@ -2,7 +2,8 @@
 
 #include "termkey.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   TERMKEY_CHECK_VERSION;
 
   char buffer[50];
