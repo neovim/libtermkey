@@ -10,7 +10,8 @@ static void on_key(termkey_t *tk, termkey_key *key)
   printf("%s\n", buffer);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   TERMKEY_CHECK_VERSION;
 
   termkey_t *tk = termkey_new(0, 0);
