@@ -260,7 +260,7 @@ static void free_driver(void *info)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int force)
+static termkey_result peekkey(termkey_t *tk, void *info, termkey_key *key, int force, size_t *nbytep)
 {
   termkey_ti *ti = info;
 
@@ -282,7 +282,7 @@ static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int fo
       key->type      = nk->key.type;
       key->code.sym  = nk->key.sym;
       key->modifiers = nk->key.modifier_set;
-      (*tk->method.eat_bytes)(tk, pos);
+      *nbytep = pos;
       return TERMKEY_RES_KEY;
     }
   }
@@ -456,5 +456,5 @@ struct termkey_driver termkey_driver_ti = {
   .start_driver = start_driver,
   .stop_driver  = stop_driver,
 
-  .getkey = getkey,
+  .peekkey = peekkey,
 };
