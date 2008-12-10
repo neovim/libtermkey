@@ -14,7 +14,20 @@ termkey_getkey, termkey_getkey_force \- retrieve the next key event
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_getkey\fP attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. If successful it will return \fBTERMKEY_RES_KEY\fP to indicate that the structure now contains a new keypress event. If nothing is in the buffer it will return \fBTERMKEY_RES_NONE\fP. If the buffer contains a partial keypress event which does not yet contain all the bytes required, it will return \fBTERMKEY_RES_AGAIN\fP. If no events are ready and the input stream is now closed, will return \fBTERMKEY_RES_EOF\fP.
+\fBtermkey_getkey\fP attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. It returns one of the following values:
+.in
+.TP
+.B TERMKEY_RES_KEY
+a complete keypress was removed from the buffer, and has been placed in the \fIkey\fP structure.
+.TP
+.B TERMKEY_RES_AGAIN
+a partial keypress event was found in the buffer, but it does not yet contain all the bytes required. An indication of what \fBtermkey_getkey_force(3)\fP would return has been placed in the \fIKey\fP structure.
+.TP
+.B TERMKEY_RES_NONE
+no bytes are waiting in the buffer.
+.TP
+.B TERMKEY_RES_EOF
+ no bytes are ready and the input stream is now closed.
 .PP
 \fBtermkey_getkey_force\fP is similar to \fBtermkey_getkey\fP but will not return \fBTERMKEY_RES_AGAIN\fP if a partial match is found. Instead, it will force an interpretation of the bytes, even if this means interpreting the start of an Escape-prefixed multi-byte sequence as a literal "Escape" key followed by normal letters.
 .PP
@@ -54,19 +67,7 @@ The \fIutf8\fP field is only set on events whose \fItype\fP is \fBTERMKEY_TYPE_U
 .PP
 To convert the \fIsym\fP to a symbolic name, see \fBtermkey_get_keyname\fP(3) function. It may instead be easier to convert the entire key event structure to a string, using \fBtermkey_snprint_key\fP(3).
 .SH "RETURN VALUE"
-\fBtermkey_getkey\fP() and \fBtermkey_getkey_force\fP() return one of the following constants:
-.TP
-.B TERMKEY_RES_NONE
-No key event is ready.
-.TP
-.B TERMKEY_RES_KEY
-A key event as been provided.
-.TP
-.B TERMKEY_RES_EOF
-No key events are ready and the terminal has been closed, so no more will arrive.
-.TP
-.B TERMKEY_RES_AGAIN
-No key event is ready yet, but a partial one has been found. This is only returned by \fBtermkey_getkey\fP(). To obtain the partial result even if it never completes, use \fBtermkey_getkey_force\fP().
+\fBtermkey_getkey\fP() returns an enumeration of one of \fBTERMKEY_RES_KEY\fP, \fBTEMRKEY_RES_AGAIN\fP, \fBTERMKEY_RES_NONE\fP or \fBTERMKEY_RES_EOF\fP. \fBtermkey_getkey_force\fP() returns one of the above, except for \fBTERMKEY_RES_AGAIN\fP.
 .SH EXAMPLE
 The following example program prints details of every keypress until the user presses "Ctrl-C". It demonstrates how to use the termkey instance in a typical \fBpoll\fP()-driven asynchronous program, which may include mixed IO with other file handles.
 .PP
