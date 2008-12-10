@@ -679,6 +679,11 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
   if(ret == TERMKEY_RES_KEY)
     eat_bytes(tk, nbytes);
 
+  if(ret == TERMKEY_RES_AGAIN)
+    /* Call peekkey() again in force mode to obtain whatever it can */
+    (void)peekkey(tk, key, 1, &nbytes);
+    /* Don't eat it yet though */
+
   return ret;
 }
 
