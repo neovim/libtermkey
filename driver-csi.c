@@ -148,7 +148,7 @@ static void free_driver(void *info)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force)
+static termkey_result peekkey_csi(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force, size_t *nbytep)
 {
   size_t csi_end = introlen;
 
@@ -164,7 +164,7 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
 
     (*tk->method.emit_codepoint)(tk, '[', key);
     key->modifiers |= TERMKEY_KEYMOD_ALT;
-    (*tk->method.eat_bytes)(tk, introlen);
+    *nbytep = introlen;
     return TERMKEY_RES_KEY;
   }
 
@@ -263,12 +263,12 @@ static termkey_result getkey_csi(termkey_t *tk, termkey_csi *csi, size_t introle
     }
   }
 
-  (*tk->method.eat_bytes)(tk, csi_end + 1);
+  *nbytep = csi_end + 1;
 
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force)
+static termkey_result peekkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force, size_t *nbytep)
 {
   if(tk->buffcount < introlen + 1) {
     if(!force)
@@ -276,7 +276,7 @@ static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introle
 
     (*tk->method.emit_codepoint)(tk, 'O', key);
     key->modifiers |= TERMKEY_KEYMOD_ALT;
-    (*tk->method.eat_bytes)(tk, tk->buffcount);
+    *nbytep = tk->buffcount;
     return TERMKEY_RES_KEY;
   }
 
@@ -312,12 +312,12 @@ static termkey_result getkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introle
     return TERMKEY_RES_NONE;
   }
 
-  (*tk->method.eat_bytes)(tk, introlen + 1);
+  *nbytep = introlen + 1;
 
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int force)
+static termkey_result peekkey(termkey_t *tk, void *info, termkey_key *key, int force, size_t *nbytep)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
@@ -328,16 +328,16 @@ static termkey_result getkey(termkey_t *tk, void *info, termkey_key *key, int fo
   unsigned char b0 = CHARAT(0);
 
   if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == '[') {
-    return getkey_csi(tk, csi, 2, key, force);
+    return peekkey_csi(tk, csi, 2, key, force, nbytep);
   }
   else if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == 'O') {
-    return getkey_ss3(tk, csi, 2, key, force);
+    return peekkey_ss3(tk, csi, 2, key, force, nbytep);
   }
   else if(b0 == 0x8f) {
-    return getkey_ss3(tk, csi, 1, key, force);
+    return peekkey_ss3(tk, csi, 1, key, force, nbytep);
   }
   else if(b0 == 0x9b) {
-    return getkey_csi(tk, csi, 1, key, force);
+    return peekkey_csi(tk, csi, 1, key, force, nbytep);
   }
   else
     return TERMKEY_RES_NONE;
@@ -426,5 +426,5 @@ struct termkey_driver termkey_driver_csi = {
   .new_driver  = new_driver,
   .free_driver = free_driver,
 
-  .getkey = getkey,
+  .peekkey = peekkey,
 };

@@ -13,7 +13,7 @@ struct termkey_driver
   void           (*free_driver)(void *info);
   void           (*start_driver)(termkey_t *tk, void *info);
   void           (*stop_driver)(termkey_t *tk, void *info);
-  termkey_result (*getkey)(termkey_t *tk, void *info, termkey_key *key, int force);
+  termkey_result (*peekkey)(termkey_t *tk, void *info, termkey_key *key, int force, size_t *nbytes);
 };
 
 struct keyinfo {
@@ -56,9 +56,8 @@ struct termkey {
   // Now some "protected" methods for the driver to call but which we don't
   // want exported as real symbols in the library
   struct {
-    void (*eat_bytes)(termkey_t *tk, size_t count);
     void (*emit_codepoint)(termkey_t *tk, long codepoint, termkey_key *key);
-    termkey_result (*getkey_simple)(termkey_t *tk, termkey_key *key, int force);
+    termkey_result (*peekkey_simple)(termkey_t *tk, termkey_key *key, int force, size_t *nbytes);
   } method;
 };
 

@@ -32,9 +32,9 @@ static struct termkey_driver *drivers[] = {
 };
 
 // Forwards for the "protected" methods
-static void eat_bytes(termkey_t *tk, size_t count);
+// static void eat_bytes(termkey_t *tk, size_t count);
 static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key);
-static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force);
+static termkey_result peekkey_simple(termkey_t *tk, termkey_key *key, int force, size_t *nbytes);
 
 static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
 static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
@@ -163,9 +163,8 @@ static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waitt
   for(i = 0; i < 32; i++)
     tk->c0[i].sym = TERMKEY_SYM_NONE;
 
-  tk->method.eat_bytes      = &eat_bytes;
   tk->method.emit_codepoint = &emit_codepoint;
-  tk->method.getkey_simple  = &getkey_simple;
+  tk->method.peekkey_simple = &peekkey_simple;
 
   for(i = 0; keynames[i].name; i++)
     termkey_register_keyname(tk, keynames[i].sym, keynames[i].name);
@@ -413,7 +412,7 @@ static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 
 #define UTF8_INVALID 0xFFFD
 
-static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
+static termkey_result peekkey(termkey_t *tk, termkey_key *key, int force, size_t *nbytep)
 {
   int again = 0;
 
@@ -426,7 +425,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
   termkey_result ret;
   struct termkey_drivernode *p;
   for(p = tk->drivers; p; p = p->next) {
-    ret = (p->driver->getkey)(tk, p->info, key, force);
+    ret = (p->driver->peekkey)(tk, p->info, key, force, nbytep);
 
 #ifdef DEBUG
     fprintf(stderr, "Driver %s yields %s\n", p->driver->name, res2str(ret));
@@ -464,7 +463,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
   if(again)
     return TERMKEY_RES_AGAIN;
 
-  ret = getkey_simple(tk, key, force);
+  ret = peekkey_simple(tk, key, force, nbytep);
 
 #ifdef DEBUG
   fprintf(stderr, "getkey_simple(force=%d) yields %s\n", force, res2str(ret));
@@ -478,7 +477,7 @@ static termkey_result getkey(termkey_t *tk, termkey_key *key, int force)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
+static termkey_result peekkey_simple(termkey_t *tk, termkey_key *key, int force, size_t *nbytep)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
@@ -494,7 +493,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
         return TERMKEY_RES_AGAIN;
 
       (*tk->method.emit_codepoint)(tk, b0, key);
-      (*tk->method.eat_bytes)(tk, 1);
+      *nbytep = 1;
       return TERMKEY_RES_KEY;
     }
 
@@ -503,7 +502,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     tk->buffcount--;
 
     // Run the full driver
-    termkey_result metakey_result = getkey(tk, key, force);
+    termkey_result metakey_result = peekkey(tk, key, force, nbytep);
 
     tk->buffstart--;
     tk->buffcount++;
@@ -511,7 +510,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     switch(metakey_result) {
       case TERMKEY_RES_KEY:
         key->modifiers |= TERMKEY_KEYMOD_ALT;
-        (*tk->method.eat_bytes)(tk, 1);
+        (*nbytep)++;
         break;
 
       case TERMKEY_RES_NONE:
@@ -525,7 +524,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
   else if(b0 < 0xa0) {
     // Single byte C0, G0 or C1 - C1 is never UTF-8 initial byte
     (*tk->method.emit_codepoint)(tk, b0, key);
-    (*tk->method.eat_bytes)(tk, 1);
+    *nbytep = 1;
     return TERMKEY_RES_KEY;
   }
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
@@ -539,7 +538,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     if(b0 < 0xc0) {
       // Starts with a continuation byte - that's not right
       (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      (*tk->method.eat_bytes)(tk, 1);
+      *nbytep = 1;
       return TERMKEY_RES_KEY;
     }
     else if(b0 < 0xe0) {
@@ -564,7 +563,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     }
     else {
       (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      (*tk->method.eat_bytes)(tk, 1);
+      *nbytep = 1;
       return TERMKEY_RES_KEY;
     }
 
@@ -578,7 +577,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
        * arrive later, they'll be invalid too.
        */
       (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      (*tk->method.eat_bytes)(tk, tk->buffcount);
+      *nbytep = tk->buffcount;
       return TERMKEY_RES_KEY;
     }
 
@@ -586,7 +585,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
       unsigned char cb = CHARAT(b);
       if(cb < 0x80 || cb >= 0xc0) {
         (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-        (*tk->method.eat_bytes)(tk, b - 1);
+        *nbytep = b - 1;
         return TERMKEY_RES_KEY;
       }
 
@@ -605,7 +604,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
       codepoint = UTF8_INVALID;
 
     (*tk->method.emit_codepoint)(tk, codepoint, key);
-    (*tk->method.eat_bytes)(tk, nbytes);
+    *nbytep = nbytes;
     return TERMKEY_RES_KEY;
   }
   else {
@@ -617,7 +616,7 @@ static termkey_result getkey_simple(termkey_t *tk, termkey_key *key, int force)
     key->utf8[0] = key->code.codepoint;
     key->utf8[1] = 0;
 
-    (*tk->method.eat_bytes)(tk, 1);
+    *nbytep = 1;
 
     return TERMKEY_RES_KEY;
   }
@@ -674,12 +673,24 @@ static const char *res2str(termkey_result res)
 
 termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
 {
-  return getkey(tk, key, 0);
+  size_t nbytes = 0;
+  termkey_result ret = peekkey(tk, key, 0, &nbytes);
+
+  if(ret == TERMKEY_RES_KEY)
+    eat_bytes(tk, nbytes);
+
+  return ret;
 }
 
 termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
 {
-  return getkey(tk, key, 1);
+  size_t nbytes = 0;
+  termkey_result ret = peekkey(tk, key, 1, &nbytes);
+
+  if(ret == TERMKEY_RES_KEY)
+    eat_bytes(tk, nbytes);
+
+  return ret;
 }
 
 termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
