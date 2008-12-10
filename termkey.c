@@ -368,7 +368,16 @@ static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 
     if(!key->code.sym) {
       key->type = TERMKEY_TYPE_UNICODE;
-      key->code.codepoint = codepoint + 0x40;
+      /* Generically modified Unicode ought not report the SHIFT state, or else
+       * we get into complicationg trying to report Shift-; vs : and so on...
+       * In order to be able to represent Ctrl-Shift-A as CTRL modified 
+       * unicode A, we need to call Ctrl-A simply 'a', lowercase
+       */
+      if(codepoint+0x40 >= 'A' && codepoint+0x40 <= 'Z')
+        // it's a letter - use lowecase instead
+        key->code.codepoint = codepoint + 0x60;
+      else
+        key->code.codepoint = codepoint + 0x40;
       key->modifiers = TERMKEY_KEYMOD_CTRL;
     }
     else {
@@ -853,22 +862,31 @@ size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key 
   int wrapbracket = (format & TERMKEY_FORMAT_WRAPBRACKET) &&
                     (key->type != TERMKEY_TYPE_UNICODE || key->modifiers != 0);
 
+  if(format & TERMKEY_FORMAT_CARETCTRL && 
+     key->type == TERMKEY_TYPE_UNICODE &&
+     key->modifiers == TERMKEY_KEYMOD_CTRL) {
+    long codepoint = key->code.codepoint;
+
+    // Handle some of the special casesfirst
+    if(codepoint >= 'a' && codepoint <= 'z') {
+      l = snprintf(buffer + pos, len - pos, wrapbracket ? "<^%c>" : "^%c", (char)codepoint - 0x20);
+      if(l <= 0) return pos;
+      pos += len;
+      return pos;
+    }
+    else if((codepoint >= '@' && codepoint < 'A') ||
+            (codepoint > 'Z' && codepoint <= '_')) {
+      l = snprintf(buffer + pos, len - pos, wrapbracket ? "<^%c>" : "^%c", (char)codepoint);
+      if(l <= 0) return pos;
+      pos += len;
+      return pos;
+    }
+  }
+
   if(wrapbracket) {
     l = snprintf(buffer + pos, len - pos, "<");
     if(l <= 0) return pos;
     pos += l;
-  }
-
-  if(format & TERMKEY_FORMAT_CARETCTRL) {
-    if(key->type == TERMKEY_TYPE_UNICODE &&
-       key->modifiers == TERMKEY_KEYMOD_CTRL &&
-       key->code.number >= '@' &&
-       key->code.number <= '_') {
-      l = snprintf(buffer + pos, len - pos, "^");
-      if(l <= 0) return pos;
-      pos += l;
-      goto do_codepoint;
-    }
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_ALT) {
@@ -891,8 +909,6 @@ size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key 
     if(l <= 0) return pos;
     pos += l;
   }
-
-do_codepoint:
 
   switch(key->type) {
   case TERMKEY_TYPE_UNICODE:
