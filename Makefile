@@ -65,6 +65,8 @@ install-man:
 MANSOURCE=$(wildcard *.3.sh)
 BUILTMAN=$(MANSOURCE:.3.sh=.3)
 
+VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
+
 all: doc
 
 doc: $(BUILTMAN)
@@ -87,7 +89,7 @@ DISTDIR=libtermkey-$(VERSION_MAJOR).$(VERSION_MINOR)
 distdir: all
 	mkdir $(DISTDIR)
 	cp *.c *.h *.3 $(DISTDIR)
-	cp *.pc.in $(DISTDIR)
+	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >$(DISTDIR)/termkey.pc.in
 	sed "/^# DIST CUT/Q" <Makefile >$(DISTDIR)/Makefile
 
 TARBALL=$(DISTDIR).tar.gz
