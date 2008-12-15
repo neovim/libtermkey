@@ -4,6 +4,6 @@ includedir=${prefix}/include
 
 Name: termkey
 Description: Abstract terminal key input library
-Version: 0.1
+Version: @VERSION@
 Libs: -L${libdir} -ltermkey
 Cflags: -I${includedir}
