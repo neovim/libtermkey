@@ -25,22 +25,22 @@ void termkey_check_version(int major, int minor)
   // Happy
 }
 
-static struct termkey_driver *drivers[] = {
+static struct TermKeyDriver *drivers[] = {
   &termkey_driver_ti,
   &termkey_driver_csi,
   NULL,
 };
 
 // Forwards for the "protected" methods
-// static void eat_bytes(termkey_t *tk, size_t count);
-static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key);
-static termkey_result peekkey_simple(termkey_t *tk, termkey_key *key, int force, size_t *nbytes);
+// static void eat_bytes(TermKey *tk, size_t count);
+static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key);
+static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, size_t *nbytes);
 
-static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name);
-static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
+static TermKeySym register_c0(TermKey *tk, TermKeySym sym, unsigned char ctrl, const char *name);
+static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
 
 static struct {
-  termkey_keysym sym;
+  TermKeySym sym;
   const char *name;
 } keynames[] = {
   { TERMKEY_SYM_NONE,      "NONE" },
@@ -109,9 +109,9 @@ static struct {
 /* We might expose this as public API one day, when the ideas are finalised.
  * As yet it isn't public, so keep it static
  */
-static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
+static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
 {
-  termkey_t *tk = malloc(sizeof(*tk));
+  TermKey *tk = malloc(sizeof(*tk));
   if(!tk)
     return NULL;
 
@@ -176,7 +176,7 @@ static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waitt
 
   const char *term = getenv("TERM");
 
-  struct termkey_drivernode *tail = NULL;
+  struct TermKeyDriverNode *tail = NULL;
 
   for(i = 0; drivers[i]; i++) {
     void *info = (*drivers[i]->new_driver)(tk, term);
@@ -187,7 +187,7 @@ static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waitt
     fprintf(stderr, "Loading the %s driver\n", drivers[i]->name);
 #endif
 
-    struct termkey_drivernode *thisdrv = malloc(sizeof(*thisdrv));
+    struct TermKeyDriverNode *thisdrv = malloc(sizeof(*thisdrv));
     if(!thisdrv)
       goto abort_free_drivers;
 
@@ -221,7 +221,7 @@ static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waitt
     }
   }
 
-  struct termkey_drivernode *p;
+  struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next)
     if(p->driver->start_driver)
       (*p->driver->start_driver)(tk, p->info);
@@ -231,7 +231,7 @@ static termkey_t *termkey_new_full(int fd, int flags, size_t buffsize, int waitt
 abort_free_drivers:
   for(p = tk->drivers; p; ) {
     (*p->driver->free_driver)(p->info);
-    struct termkey_drivernode *next = p->next;
+    struct TermKeyDriverNode *next = p->next;
     free(p);
     p = next;
   }
@@ -248,20 +248,20 @@ abort_free_tk:
   return NULL;
 }
 
-termkey_t *termkey_new(int fd, int flags)
+TermKey *termkey_new(int fd, int flags)
 {
   return termkey_new_full(fd, flags, 256, 50);
 }
 
-void termkey_free(termkey_t *tk)
+void termkey_free(TermKey *tk)
 {
   free(tk->buffer); tk->buffer = NULL;
   free(tk->keynames); tk->keynames = NULL;
 
-  struct termkey_drivernode *p;
+  struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; ) {
     (*p->driver->free_driver)(p->info);
-    struct termkey_drivernode *next = p->next;
+    struct TermKeyDriverNode *next = p->next;
     free(p);
     p = next;
   }
@@ -269,9 +269,9 @@ void termkey_free(termkey_t *tk)
   free(tk);
 }
 
-void termkey_destroy(termkey_t *tk)
+void termkey_destroy(TermKey *tk)
 {
-  struct termkey_drivernode *p;
+  struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next)
     if(p->driver->stop_driver)
       (*p->driver->stop_driver)(tk, p->info);
@@ -282,32 +282,32 @@ void termkey_destroy(termkey_t *tk)
   termkey_free(tk);
 }
 
-int termkey_get_fd(termkey_t *tk)
+int termkey_get_fd(TermKey *tk)
 {
   return tk->fd;
 }
 
-int termkey_get_flags(termkey_t *tk)
+int termkey_get_flags(TermKey *tk)
 {
   return tk->flags;
 }
 
-void termkey_set_flags(termkey_t *tk, int newflags)
+void termkey_set_flags(TermKey *tk, int newflags)
 {
   tk->flags = newflags;
 }
 
-void termkey_set_waittime(termkey_t *tk, int msec)
+void termkey_set_waittime(TermKey *tk, int msec)
 {
   tk->waittime = msec;
 }
 
-int termkey_get_waittime(termkey_t *tk)
+int termkey_get_waittime(TermKey *tk)
 {
   return tk->waittime;
 }
 
-static void eat_bytes(termkey_t *tk, size_t count)
+static void eat_bytes(TermKey *tk, size_t count)
 {
   if(count >= tk->buffcount) {
     tk->buffstart = 0;
@@ -329,7 +329,7 @@ static inline unsigned int utf8_seqlen(long codepoint)
   return 6;
 }
 
-static void fill_utf8(termkey_key *key)
+static void fill_utf8(TermKeyKey *key)
 {
   long codepoint = key->code.codepoint;
   int nbytes = utf8_seqlen(codepoint);
@@ -354,7 +354,7 @@ static void fill_utf8(termkey_key *key)
   }
 }
 
-static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
+static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
 {
   if(codepoint < 0x20) {
     // C0 range
@@ -421,7 +421,7 @@ static void emit_codepoint(termkey_t *tk, long codepoint, termkey_key *key)
 
 #define UTF8_INVALID 0xFFFD
 
-static termkey_result peekkey(termkey_t *tk, termkey_key *key, int force, size_t *nbytep)
+static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)
 {
   int again = 0;
 
@@ -431,8 +431,8 @@ static termkey_result peekkey(termkey_t *tk, termkey_key *key, int force, size_t
   fprintf(stderr, "\n");
 #endif
 
-  termkey_result ret;
-  struct termkey_drivernode *p;
+  TermKeyResult ret;
+  struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next) {
     ret = (p->driver->peekkey)(tk, p->info, key, force, nbytep);
 
@@ -486,7 +486,7 @@ static termkey_result peekkey(termkey_t *tk, termkey_key *key, int force, size_t
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result peekkey_simple(termkey_t *tk, termkey_key *key, int force, size_t *nbytep)
+static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
@@ -511,7 +511,7 @@ static termkey_result peekkey_simple(termkey_t *tk, termkey_key *key, int force,
     tk->buffcount--;
 
     // Run the full driver
-    termkey_result metakey_result = peekkey(tk, key, force, nbytep);
+    TermKeyResult metakey_result = peekkey(tk, key, force, nbytep);
 
     tk->buffstart--;
     tk->buffcount++;
@@ -632,7 +632,7 @@ static termkey_result peekkey_simple(termkey_t *tk, termkey_key *key, int force,
 }
 
 #ifdef DEBUG
-static void print_buffer(termkey_t *tk)
+static void print_buffer(TermKey *tk)
 {
   int i;
   for(i = 0; i < tk->buffcount && i < 20; i++)
@@ -641,7 +641,7 @@ static void print_buffer(termkey_t *tk)
     fprintf(stderr, "...");
 }
 
-static void print_key(termkey_t *tk, termkey_key *key)
+static void print_key(TermKey *tk, TermKeyKey *key)
 {
   switch(key->type) {
   case TERMKEY_TYPE_UNICODE:
@@ -663,7 +663,7 @@ static void print_key(termkey_t *tk, termkey_key *key)
       m & ~(TERMKEY_KEYMOD_CTRL|TERMKEY_KEYMOD_ALT|TERMKEY_KEYMOD_SHIFT));
 }
 
-static const char *res2str(termkey_result res)
+static const char *res2str(TermKeyResult res)
 {
   switch(res) {
   case TERMKEY_RES_KEY:
@@ -680,10 +680,10 @@ static const char *res2str(termkey_result res)
 }
 #endif
 
-termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
+TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key)
 {
   size_t nbytes = 0;
-  termkey_result ret = peekkey(tk, key, 0, &nbytes);
+  TermKeyResult ret = peekkey(tk, key, 0, &nbytes);
 
   if(ret == TERMKEY_RES_KEY)
     eat_bytes(tk, nbytes);
@@ -696,10 +696,10 @@ termkey_result termkey_getkey(termkey_t *tk, termkey_key *key)
   return ret;
 }
 
-termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
+TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key)
 {
   size_t nbytes = 0;
-  termkey_result ret = peekkey(tk, key, 1, &nbytes);
+  TermKeyResult ret = peekkey(tk, key, 1, &nbytes);
 
   if(ret == TERMKEY_RES_KEY)
     eat_bytes(tk, nbytes);
@@ -707,10 +707,10 @@ termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key)
   return ret;
 }
 
-termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
+TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
 {
   while(1) {
-    termkey_result ret = termkey_getkey(tk, key);
+    TermKeyResult ret = termkey_getkey(tk, key);
 
     switch(ret) {
       case TERMKEY_RES_KEY:
@@ -750,7 +750,7 @@ termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key)
   /* UNREACHABLE */
 }
 
-void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
+void termkey_pushinput(TermKey *tk, unsigned char *input, size_t inputlen)
 {
   if(tk->buffstart + tk->buffcount + inputlen > tk->buffsize) {
     while(tk->buffstart + tk->buffcount + inputlen > tk->buffsize)
@@ -766,7 +766,7 @@ void termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen)
   tk->buffcount += inputlen;
 }
 
-termkey_result termkey_advisereadable(termkey_t *tk)
+TermKeyResult termkey_advisereadable(TermKey *tk)
 {
   unsigned char buffer[64]; // Smaller than the default size
   ssize_t len = read(tk->fd, buffer, sizeof buffer);
@@ -783,7 +783,7 @@ termkey_result termkey_advisereadable(termkey_t *tk)
   }
 }
 
-termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const char *name)
+TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name)
 {
   if(!sym)
     sym = tk->nkeynames;
@@ -805,7 +805,7 @@ termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const
   return sym;
 }
 
-const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym)
+const char *termkey_get_keyname(TermKey *tk, TermKeySym sym)
 {
   if(sym == TERMKEY_SYM_UNKNOWN)
     return "UNKNOWN";
@@ -816,12 +816,12 @@ const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym)
   return "UNKNOWN";
 }
 
-termkey_keysym termkey_keyname2sym(termkey_t *tk, const char *keyname)
+TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname)
 {
   /* We store an array, so we can't do better than a linear search. Doesn't
    * matter because user won't be calling this too often */
 
-  termkey_keysym sym;
+  TermKeySym sym;
 
   for(sym = 0; sym < tk->nkeynames; sym++)
     if(tk->keynames[sym] && strcmp(keyname, tk->keynames[sym]) == 0)
@@ -830,12 +830,12 @@ termkey_keysym termkey_keyname2sym(termkey_t *tk, const char *keyname)
   return TERMKEY_SYM_UNKNOWN;
 }
 
-static termkey_keysym register_c0(termkey_t *tk, termkey_keysym sym, unsigned char ctrl, const char *name)
+static TermKeySym register_c0(TermKey *tk, TermKeySym sym, unsigned char ctrl, const char *name)
 {
   return register_c0_full(tk, sym, 0, 0, ctrl, name);
 }
 
-static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name)
+static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name)
 {
   if(ctrl >= 0x20) {
     fprintf(stderr, "Cannot register C0 key at ctrl 0x%02x - out of bounds\n", ctrl);
@@ -852,7 +852,7 @@ static termkey_keysym register_c0_full(termkey_t *tk, termkey_keysym sym, int mo
   return sym;
 }
 
-size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format)
+size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
 {
   size_t pos = 0;
   size_t l = 0;
