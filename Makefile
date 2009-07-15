@@ -87,10 +87,11 @@ termkey.h: termkey.h.in Makefile
 DISTDIR=libtermkey-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 distdir: all
-	mkdir $(DISTDIR)
-	cp *.c *.h *.3 $(DISTDIR)
-	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >$(DISTDIR)/termkey.pc.in
-	sed "/^# DIST CUT/Q" <Makefile >$(DISTDIR)/Makefile
+	mkdir __distdir
+	cp *.c *.h *.3 __distdir
+	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >__distdir/termkey.pc.in
+	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
+	mv __distdir $(DISTDIR)
 
 TARBALL=$(DISTDIR).tar.gz
 
