@@ -5,8 +5,8 @@ termkey_snprint_key \- format a string representing a key event
 .nf
 .B #include <termkey.h>
 .sp
-.BI "size_t termkey_snprint_key(termkey_t *" tk ", char *" buffer ", size_t " len ",
-.BI "            termkey_key " key ", termkey_format " format );
+.BI "size_t termkey_snprint_key(TermKey *" tk ", char *" buffer ", size_t " len ",
+.BI "            TermKeyKey " key ", TermKeyFormat " format );
 .fi
 .sp
 Link with \fI-ltermkey\fP.

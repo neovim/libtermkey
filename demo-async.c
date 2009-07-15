@@ -3,7 +3,7 @@
 
 #include "termkey.h"
 
-static void on_key(termkey_t *tk, termkey_key *key)
+static void on_key(TermKey *tk, TermKeyKey *key)
 {
   char buffer[50];
   termkey_snprint_key(tk, buffer, sizeof buffer, key, TERMKEY_FORMAT_VIM);
@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
   TERMKEY_CHECK_VERSION;
 
-  termkey_t *tk = termkey_new(0, 0);
+  TermKey *tk = termkey_new(0, 0);
 
   if(!tk) {
     fprintf(stderr, "Cannot allocate termkey instance\n");
@@ -26,8 +26,8 @@ int main(int argc, char *argv[])
   fd.fd = 0; /* the file descriptor we passed to termkey_new() */
   fd.events = POLLIN;
 
-  termkey_result ret;
-  termkey_key key;
+  TermKeyResult ret;
+  TermKeyKey key;
 
   int running = 1;
   int nextwait = -1;

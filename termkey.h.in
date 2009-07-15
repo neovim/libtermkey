@@ -84,20 +84,20 @@ typedef enum {
   TERMKEY_SYM_KPEQUALS,
 
   // et cetera ad nauseum
-} termkey_sym;
+} TermKeySym;
 
 typedef enum {
   TERMKEY_TYPE_UNICODE,
   TERMKEY_TYPE_FUNCTION,
   TERMKEY_TYPE_KEYSYM
-} termkey_type;
+} TermKeyType;
 
 typedef enum {
   TERMKEY_RES_NONE,
   TERMKEY_RES_KEY,
   TERMKEY_RES_EOF,
   TERMKEY_RES_AGAIN,
-} termkey_result;
+} TermKeyResult;
 
 enum {
   TERMKEY_KEYMOD_SHIFT = 1 << 0,
@@ -105,23 +105,21 @@ enum {
   TERMKEY_KEYMOD_CTRL  = 1 << 2,
 };
 
-typedef int termkey_keysym;
-
 typedef struct {
-  termkey_type type;
+  TermKeyType type;
   union {
-    long           codepoint; // TERMKEY_TYPE_UNICODE
-    int            number;    // TERMKEY_TYPE_FUNCTION
-    termkey_keysym sym;       // TERMKEY_TYPE_KEYSYM
+    long       codepoint; // TERMKEY_TYPE_UNICODE
+    int        number;    // TERMKEY_TYPE_FUNCTION
+    TermKeySym sym;       // TERMKEY_TYPE_KEYSYM
   } code;
   int modifiers;
 
   /* Any Unicode character can be UTF-8 encoded in no more than 6 bytes, plus
    * terminating NUL */
   char utf8[7];
-} termkey_key;
+} TermKeyKey;
 
-typedef struct termkey termkey_t;
+typedef struct _TermKey TermKey;
 
 enum {
   TERMKEY_FLAG_NOINTERPRET = 1 << 0, // Do not interpret C0//G1 codes if possible
@@ -133,42 +131,51 @@ enum {
 
 void termkey_check_version(int major, int minor);
 
-termkey_t *termkey_new(int fd, int flags);
-void       termkey_free(termkey_t *tk);
-void       termkey_destroy(termkey_t *tk);
+TermKey *termkey_new(int fd, int flags);
+void       termkey_free(TermKey *tk);
+void       termkey_destroy(TermKey *tk);
 
-int        termkey_get_fd(termkey_t *tk);
+int        termkey_get_fd(TermKey *tk);
 
-int        termkey_get_flags(termkey_t *tk);
-void       termkey_set_flags(termkey_t *tk, int newflags);
+int        termkey_get_flags(TermKey *tk);
+void       termkey_set_flags(TermKey *tk, int newflags);
 
-void       termkey_set_waittime(termkey_t *tk, int msec);
-int        termkey_get_waittime(termkey_t *tk);
+void       termkey_set_waittime(TermKey *tk, int msec);
+int        termkey_get_waittime(TermKey *tk);
 
-termkey_result termkey_getkey(termkey_t *tk, termkey_key *key);
-termkey_result termkey_getkey_force(termkey_t *tk, termkey_key *key);
-termkey_result termkey_waitkey(termkey_t *tk, termkey_key *key);
+TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
+TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key);
+TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
 
-void       termkey_pushinput(termkey_t *tk, unsigned char *input, size_t inputlen);
+void       termkey_pushinput(TermKey *tk, unsigned char *input, size_t inputlen);
 
-termkey_result termkey_advisereadable(termkey_t *tk);
+TermKeyResult termkey_advisereadable(TermKey *tk);
 
-termkey_keysym termkey_register_keyname(termkey_t *tk, termkey_keysym sym, const char *name);
-const char *termkey_get_keyname(termkey_t *tk, termkey_keysym sym);
+TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name);
+const char *termkey_get_keyname(TermKey *tk, TermKeySym sym);
 
-termkey_keysym termkey_keyname2sym(termkey_t *tk, const char *keyname); 
+TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname); 
 
 typedef enum {
   TERMKEY_FORMAT_LONGMOD     = 1 << 0, // Shift-... instead of S-...
   TERMKEY_FORMAT_CARETCTRL   = 1 << 1, // ^X instead of C-X
   TERMKEY_FORMAT_ALTISMETA   = 1 << 2, // Meta- or M- instead of Alt- or A-
   TERMKEY_FORMAT_WRAPBRACKET = 1 << 3, // Wrap special keys in brackets like <Escape>
-} termkey_format;
+} TermKeyFormat;
 
 // Some useful combinations
 
 #define TERMKEY_FORMAT_VIM (TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_WRAPBRACKET)
 
-size_t termkey_snprint_key(termkey_t *tk, char *buffer, size_t len, termkey_key *key, termkey_format format);
+size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
+
+// Legacy name typedefs
+
+typedef TermKeySym    termkey_keysym;
+typedef TermKeyType   termkey_type;
+typedef TermKeyResult termkey_result;
+typedef TermKeyKey    termkey_key;
+
+typedef TermKey termkey_t;
 
 #endif

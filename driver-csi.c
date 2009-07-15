@@ -5,7 +5,7 @@
 #include <string.h>
 
 typedef struct {
-  termkey_t *tk;
+  TermKey *tk;
 
   // There are 64 codes 0x40 - 0x7F
   struct keyinfo csi_ss3s[64];
@@ -14,17 +14,17 @@ typedef struct {
 
   int ncsifuncs;
   struct keyinfo *csifuncs;
-} termkey_csi;
+} TermKeyCsi;
 
-static termkey_keysym register_csi_ss3(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name);
-static termkey_keysym register_ss3kpalt(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name, char kpalt);
-static termkey_keysym register_csifunc(termkey_csi *csi, termkey_type type, termkey_keysym sym, int number, const char *name);
+static TermKeySym register_csi_ss3(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name);
+static TermKeySym register_ss3kpalt(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name, char kpalt);
+static TermKeySym register_csifunc(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int number, const char *name);
 
-static termkey_keysym register_csi_ss3_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name);
-static termkey_keysym register_ss3kpalt_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
-static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, int number, const char *name);
+static TermKeySym register_csi_ss3_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name);
+static TermKeySym register_ss3kpalt_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
+static TermKeySym register_csifunc_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, int number, const char *name);
 
-static void *new_driver(termkey_t *tk, const char *term)
+static void *new_driver(TermKey *tk, const char *term)
 {
   if(strncmp(term, "xterm", 5) == 0) {
     // We want "xterm" or "xtermc" or "xterm-..."
@@ -43,7 +43,7 @@ static void *new_driver(termkey_t *tk, const char *term)
 
   // Excellent - we'll continue
 
-  termkey_csi *csi = malloc(sizeof *csi);
+  TermKeyCsi *csi = malloc(sizeof *csi);
   if(!csi)
     return NULL;
 
@@ -139,7 +139,7 @@ abort_free_csi:
 
 static void free_driver(void *info)
 {
-  termkey_csi *csi = info;
+  TermKeyCsi *csi = info;
 
   free(csi->csifuncs); csi->csifuncs = NULL;
 
@@ -148,7 +148,7 @@ static void free_driver(void *info)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result peekkey_csi(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force, size_t *nbytep)
+static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)
 {
   size_t csi_end = introlen;
 
@@ -268,7 +268,7 @@ static termkey_result peekkey_csi(termkey_t *tk, termkey_csi *csi, size_t introl
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result peekkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introlen, termkey_key *key, int force, size_t *nbytep)
+static TermKeyResult peekkey_ss3(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)
 {
   if(tk->buffcount < introlen + 1) {
     if(!force)
@@ -317,12 +317,12 @@ static termkey_result peekkey_ss3(termkey_t *tk, termkey_csi *csi, size_t introl
   return TERMKEY_RES_KEY;
 }
 
-static termkey_result peekkey(termkey_t *tk, void *info, termkey_key *key, int force, size_t *nbytep)
+static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytep)
 {
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
 
-  termkey_csi *csi = info;
+  TermKeyCsi *csi = info;
 
   // Now we're sure at least 1 byte is valid
   unsigned char b0 = CHARAT(0);
@@ -343,12 +343,12 @@ static termkey_result peekkey(termkey_t *tk, void *info, termkey_key *key, int f
     return TERMKEY_RES_NONE;
 }
 
-static termkey_keysym register_csi_ss3(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name)
+static TermKeySym register_csi_ss3(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name)
 {
   return register_csi_ss3_full(csi, type, sym, 0, 0, cmd, name);
 }
 
-static termkey_keysym register_csi_ss3_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name)
+static TermKeySym register_csi_ss3_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name)
 {
   if(cmd < 0x40 || cmd >= 0x80) {
     fprintf(stderr, "Cannot register CSI/SS3 key at cmd 0x%02x - out of bounds\n", cmd);
@@ -366,12 +366,12 @@ static termkey_keysym register_csi_ss3_full(termkey_csi *csi, termkey_type type,
   return sym;
 }
 
-static termkey_keysym register_ss3kpalt(termkey_csi *csi, termkey_type type, termkey_keysym sym, unsigned char cmd, const char *name, char kpalt)
+static TermKeySym register_ss3kpalt(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name, char kpalt)
 {
   return register_ss3kpalt_full(csi, type, sym, 0, 0, cmd, name, kpalt);
 }
 
-static termkey_keysym register_ss3kpalt_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt)
+static TermKeySym register_ss3kpalt_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt)
 {
   if(cmd < 0x40 || cmd >= 0x80) {
     fprintf(stderr, "Cannot register SS3 key at cmd 0x%02x - out of bounds\n", cmd);
@@ -390,12 +390,12 @@ static termkey_keysym register_ss3kpalt_full(termkey_csi *csi, termkey_type type
   return sym;
 }
 
-static termkey_keysym register_csifunc(termkey_csi *csi, termkey_type type, termkey_keysym sym, int number, const char *name)
+static TermKeySym register_csifunc(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int number, const char *name)
 {
   return register_csifunc_full(csi, type, sym, 0, 0, number, name);
 }
 
-static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type, termkey_keysym sym, int modifier_set, int modifier_mask, int number, const char *name)
+static TermKeySym register_csifunc_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, int number, const char *name)
 {
   if(name)
     sym = termkey_register_keyname(csi->tk, sym, name);
@@ -420,7 +420,7 @@ static termkey_keysym register_csifunc_full(termkey_csi *csi, termkey_type type,
   return sym;
 }
 
-struct termkey_driver termkey_driver_csi = {
+struct TermKeyDriver termkey_driver_csi = {
   .name        = "CSI",
 
   .new_driver  = new_driver,

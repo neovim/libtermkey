@@ -39,18 +39,18 @@ struct trie_node_arr {
 };
 
 typedef struct {
-  termkey_t *tk;
+  TermKey *tk;
 
   struct trie_node *root;
 
   char *start_string;
   char *stop_string;
-} termkey_ti;
+} TermKeyTI;
 
-static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmask, int *modsetp);
-static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset);
+static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym *symp, int *modmask, int *modsetp);
+static int register_seq(TermKeyTI *ti, const char *seq, TermKeyType type, TermKeySym sym, int modmask, int modset);
 
-static struct trie_node *new_node_key(termkey_type type, termkey_keysym sym, int modmask, int modset)
+static struct trie_node *new_node_key(TermKeyType type, TermKeySym sym, int modmask, int modset)
 {
   struct trie_node_key *n = malloc(sizeof(*n));
   if(!n)
@@ -150,7 +150,7 @@ static struct trie_node *compress_trie(struct trie_node *n)
   return n;
 }
 
-static void *new_driver(termkey_t *tk, const char *term)
+static void *new_driver(TermKey *tk, const char *term)
 {
   int err;
 
@@ -159,7 +159,7 @@ static void *new_driver(termkey_t *tk, const char *term)
   if(setupterm((char*)term, 1, &err) != OK)
     return NULL;
 
-  termkey_ti *ti = malloc(sizeof *ti);
+  TermKeyTI *ti = malloc(sizeof *ti);
   if(!ti)
     return NULL;
 
@@ -180,8 +180,8 @@ static void *new_driver(termkey_t *tk, const char *term)
     if(!value || value == (char*)-1)
       continue;
 
-    termkey_type type;
-    termkey_keysym sym;
+    TermKeyType type;
+    TermKeySym sym;
     int mask = 0;
     int set  = 0;
 
@@ -220,9 +220,9 @@ abort_free_ti:
   return NULL;
 }
 
-static void start_driver(termkey_t *tk, void *info)
+static void start_driver(TermKey *tk, void *info)
 {
-  termkey_ti *ti = info;
+  TermKeyTI *ti = info;
 
   /* The terminfo database will contain keys in application cursor key mode.
    * We may need to enable that mode
@@ -233,9 +233,9 @@ static void start_driver(termkey_t *tk, void *info)
   }
 }
 
-static void stop_driver(termkey_t *tk, void *info)
+static void stop_driver(TermKey *tk, void *info)
 {
-  termkey_ti *ti = info;
+  TermKeyTI *ti = info;
 
   if(ti->stop_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
@@ -245,7 +245,7 @@ static void stop_driver(termkey_t *tk, void *info)
 
 static void free_driver(void *info)
 {
-  termkey_ti *ti = info;
+  TermKeyTI *ti = info;
 
   free_trie(ti->root);
 
@@ -260,9 +260,9 @@ static void free_driver(void *info)
 
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
-static termkey_result peekkey(termkey_t *tk, void *info, termkey_key *key, int force, size_t *nbytep)
+static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytep)
 {
-  termkey_ti *ti = info;
+  TermKeyTI *ti = info;
 
   if(tk->buffcount == 0)
     return tk->is_closed ? TERMKEY_RES_EOF : TERMKEY_RES_NONE;
@@ -297,8 +297,8 @@ static termkey_result peekkey(termkey_t *tk, void *info, termkey_key *key, int f
 
 static struct {
   const char *funcname;
-  termkey_type type;
-  termkey_keysym sym;
+  TermKeyType type;
+  TermKeySym sym;
   int mods;
 } funcs[] =
 {
@@ -348,7 +348,7 @@ static struct {
   { NULL },
 };
 
-static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_keysym *symp, int *modmaskp, int *modsetp)
+static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym *symp, int *modmaskp, int *modsetp)
 {
   // Binary search
 
@@ -395,7 +395,7 @@ static int funcname2keysym(const char *funcname, termkey_type *typep, termkey_ke
   return 0;
 }
 
-static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, termkey_keysym sym, int modmask, int modset)
+static int register_seq(TermKeyTI *ti, const char *seq, TermKeyType type, TermKeySym sym, int modmask, int modset)
 {
   int pos = 0;
   struct trie_node *p = ti->root;
@@ -447,7 +447,7 @@ static int register_seq(termkey_ti *ti, const char *seq, termkey_type type, term
   return 1;
 }
 
-struct termkey_driver termkey_driver_ti = {
+struct TermKeyDriver termkey_driver_ti = {
   .name        = "terminfo",
 
   .new_driver  = new_driver,
