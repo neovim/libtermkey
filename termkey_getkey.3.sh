@@ -7,9 +7,9 @@ termkey_getkey, termkey_getkey_force \- retrieve the next key event
 .nf
 .B #include <termkey.h>
 .sp
-.BI "termkey_result termkey_getkey(termkey_t *" tk ", termkey_key *" key );
+.BI "TermKeyResult termkey_getkey(TermKey *" tk ", TermKeyKey *" key );
 .br
-.BI "termkey_result termkey_getkey_force(termkey_t *" tk ", termkey_key *" key );
+.BI "TermKeyResult termkey_getkey_force(TermKey *" tk ", TermKeyKey *" key );
 .fi
 .sp
 Link with \fI-ltermkey\fP.
@@ -33,20 +33,20 @@ no bytes are waiting in the buffer.
 .PP
 Neither of these functions will block or perform any IO operations on the underlying filehandle. To use the instance in an asynchronous program, see \fBtermkey_advisereadable\fP(3). For a blocking call suitable for use in a synchronous program, use \fBtermkey_waitkey\fP(3) instead of \fBtermkey_getkey\fP().
 .PP
-The \fItermkey_key\fP structure is defined as follows:
+The \fITermKeyKey\fP structure is defined as follows:
 .PP
 .in +4n
 .nf
 typedef struct {
-    termkey_type type;
+    TermKeyType type;
     union {
         long           codepoint; /* TERMKEY_TYPE_UNICODE  */
         int            number;    /* TERMKEY_TYPE_FUNCTION */
-        termkey_keysym sym;       /* TERMKEY_TYPE_KEYSYM   */
+        TermKeySym sym;       /* TERMKEY_TYPE_KEYSYM   */
     } code;
     int modifiers;
     char utf8[7];
-} termkey_key;
+} TermKeyKey;
 .fi
 .in
 .PP
