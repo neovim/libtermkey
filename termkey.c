@@ -871,14 +871,14 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
     if(codepoint >= 'a' && codepoint <= 'z') {
       l = snprintf(buffer + pos, len - pos, wrapbracket ? "<^%c>" : "^%c", (char)codepoint - 0x20);
       if(l <= 0) return pos;
-      pos += len;
+      pos += l;
       return pos;
     }
     else if((codepoint >= '@' && codepoint < 'A') ||
             (codepoint > 'Z' && codepoint <= '_')) {
       l = snprintf(buffer + pos, len - pos, wrapbracket ? "<^%c>" : "^%c", (char)codepoint);
       if(l <= 0) return pos;
-      pos += len;
+      pos += l;
       return pos;
     }
   }
