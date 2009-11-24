@@ -42,7 +42,11 @@ typedef struct {
     union {
         long           codepoint; /* TERMKEY_TYPE_UNICODE  */
         int            number;    /* TERMKEY_TYPE_FUNCTION */
-        TermKeySym sym;       /* TERMKEY_TYPE_KEYSYM   */
+        TermKeySym sym;           /* TERMKEY_TYPE_KEYSYM   */
+        struct {
+           short     buttons;
+           short     line, col;
+        }              mouse;     /* TERMKEY_TYPE_MOUSE    */
     } code;
     int modifiers;
     char utf8[7];
@@ -60,6 +64,9 @@ a numbered function key. This value indicates that \fIcode.number\fP is valid, a
 .TP
 .B TERMKEY_TYPE_KEYSYM
 a symbolic key. This value indicates that \fIcode.sym\fP is valid, and contains the symbolic key value. This is an opaque value which may be passed to \fBtermkey_get_keyname\fP(3).
+.TP
+.B TERMKEY_TYPE_MOUSE
+a mouse button press, release, or movement. This value indicates that \fIcode.mouse\fP is valid. The structure will contain the button and cursor co-ordinates information from the terminal mouse event. The \fIbuttons\fP value will depend on the terminal's current mouse mode, which is beyond \fIlibtermkey\fP's control.
 .PP
 The \fImodifiers\fP bitmask is composed of a bitwise-or of the constants \fBTERMKEY_KEYMOD_SHIFT\fP, \fBTERMKEY_KEYMOD_CTRL\fP and \fBTERMKEY_KEYMOD_ALT\fP.
 .PP
