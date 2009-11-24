@@ -7,6 +7,9 @@
 #include <term.h>
 #include <curses.h>
 
+/* curses.h has just poluted our namespace. We want this back */
+#undef buttons
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +23,8 @@
 
 typedef enum {
   TYPE_KEY,
-  TYPE_ARR
+  TYPE_ARR,
+  TYPE_MOUSE,
 } trie_nodetype;
 
 struct trie_node {
@@ -48,7 +52,7 @@ typedef struct {
 } TermKeyTI;
 
 static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym *symp, int *modmask, int *modsetp);
-static int register_seq(TermKeyTI *ti, const char *seq, TermKeyType type, TermKeySym sym, int modmask, int modset);
+static int insert_seq(TermKeyTI *ti, const char *seq, struct trie_node *node);
 
 static struct trie_node *new_node_key(TermKeyType type, TermKeySym sym, int modmask, int modset)
 {
@@ -86,6 +90,7 @@ static struct trie_node *lookup_next(struct trie_node *n, unsigned char b)
 {
   switch(n->type) {
   case TYPE_KEY:
+  case TYPE_MOUSE:
     fprintf(stderr, "ABORT: lookup_next within a TYPE_KEY node\n");
     abort();
   case TYPE_ARR:
@@ -104,6 +109,7 @@ static void free_trie(struct trie_node *n)
 {
   switch(n->type) {
   case TYPE_KEY:
+  case TYPE_MOUSE:
     break;
   case TYPE_ARR:
     {
@@ -126,6 +132,7 @@ static struct trie_node *compress_trie(struct trie_node *n)
 
   switch(n->type) {
   case TYPE_KEY:
+  case TYPE_MOUSE:
     return n;
   case TYPE_ARR:
     {
@@ -180,17 +187,35 @@ static void *new_driver(TermKey *tk, const char *term)
     if(!value || value == (char*)-1)
       continue;
 
-    TermKeyType type;
-    TermKeySym sym;
-    int mask = 0;
-    int set  = 0;
+    struct trie_node *node = NULL;
 
-    if(!funcname2keysym(strfnames[i] + 4, &type, &sym, &mask, &set))
-      continue;
-
-    if(sym != TERMKEY_SYM_NONE)
-      if(!register_seq(ti, value, type, sym, mask, set))
+    if(strcmp(strfnames[i] + 4, "mouse") == 0) {
+      node = malloc(sizeof(*node));
+      if(!node)
         goto abort_free_trie;
+
+      node->type = TYPE_MOUSE;
+    }
+    else {
+      TermKeyType type;
+      TermKeySym sym;
+      int mask = 0;
+      int set  = 0;
+
+      if(!funcname2keysym(strfnames[i] + 4, &type, &sym, &mask, &set))
+        continue;
+
+      if(sym == TERMKEY_SYM_NONE)
+        continue;
+
+      node = new_node_key(type, sym, mask, set);
+    }
+
+    if(node)
+      if(!insert_seq(ti, value, node)) {
+        free(node);
+        goto abort_free_trie;
+      }
   }
 
   ti->root = compress_trie(ti->root);
@@ -283,6 +308,17 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
       key->code.sym  = nk->key.sym;
       key->modifiers = nk->key.modifier_set;
       *nbytep = pos;
+      return TERMKEY_RES_KEY;
+    }
+    else if(p->type == TYPE_MOUSE) {
+      if(tk->buffcount - pos < 3)
+        return TERMKEY_RES_AGAIN;
+
+      key->type = TERMKEY_TYPE_MOUSE;
+      key->code.mouse.buttons = CHARAT(pos+0) - 0x20;
+      key->code.mouse.col     = CHARAT(pos+1) - 0x20;
+      key->code.mouse.line    = CHARAT(pos+2) - 0x20;
+      *nbytep = pos+3;
       return TERMKEY_RES_KEY;
     }
   }
@@ -395,7 +431,7 @@ static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym 
   return 0;
 }
 
-static int register_seq(TermKeyTI *ti, const char *seq, TermKeyType type, TermKeySym sym, int modmask, int modset)
+static int insert_seq(TermKeyTI *ti, const char *seq, struct trie_node *node)
 {
   int pos = 0;
   struct trie_node *p = ti->root;
@@ -418,7 +454,7 @@ static int register_seq(TermKeyTI *ti, const char *seq, TermKeyType type, TermKe
       next = new_node_arr(0, 0xff);
     else
       // Final key node
-      next = new_node_key(type, sym, modmask, modset);
+      next = node;
 
     if(!next)
       return 0;
@@ -437,6 +473,7 @@ static int register_seq(TermKeyTI *ti, const char *seq, TermKeyType type, TermKe
         break;
       }
     case TYPE_KEY:
+    case TYPE_MOUSE:
       fprintf(stderr, "ASSERT FAIL: Tried to insert child node in TYPE_KEY\n");
       abort();
     }
