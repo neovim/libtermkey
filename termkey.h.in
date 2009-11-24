@@ -89,7 +89,8 @@ typedef enum {
 typedef enum {
   TERMKEY_TYPE_UNICODE,
   TERMKEY_TYPE_FUNCTION,
-  TERMKEY_TYPE_KEYSYM
+  TERMKEY_TYPE_KEYSYM,
+  TERMKEY_TYPE_MOUSE,
 } TermKeyType;
 
 typedef enum {
@@ -111,6 +112,10 @@ typedef struct {
     long       codepoint; // TERMKEY_TYPE_UNICODE
     int        number;    // TERMKEY_TYPE_FUNCTION
     TermKeySym sym;       // TERMKEY_TYPE_KEYSYM
+    struct {
+      short    buttons;
+      short    col, line;
+    }          mouse;     // TERMKEY_TYPE_MOUSE
   } code;
   int modifiers;
 

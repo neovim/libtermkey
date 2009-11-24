@@ -920,6 +920,10 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
   case TERMKEY_TYPE_FUNCTION:
     l = snprintf(buffer + pos, len - pos, "F%d", key->code.number);
     break;
+  case TERMKEY_TYPE_MOUSE:
+    l = snprintf(buffer + pos, len - pos, "MOUSE(0x%02x,%d,%d)", 
+        key->code.mouse.buttons, key->code.mouse.line, key->code.mouse.col);
+    break;
   }
 
   if(l <= 0) return pos;
