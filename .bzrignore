@@ -3,3 +3,6 @@ demo
 demo-async
 termkey_getkey.3
 termkey_waitkey.3
+*.lo
+*.la
+.libs

@@ -1,4 +1,5 @@
-CC?=gcc
+LIBTOOL=libtool
+
 CFLAGS?=
 
 CFLAGS_DEBUG=
@@ -6,7 +7,9 @@ CFLAGS_DEBUG=
 VERSION_MAJOR=0
 VERSION_MINOR=3
 
-SONAME=libtermkey.so.$(VERSION_MAJOR)
+VERSION_CURRENT=0
+VERSION_REVISION=0
+VERSION_AGE=0
 
 PREFIX=/usr/local
 LIBDIR=$(PREFIX)/lib
@@ -20,24 +23,30 @@ endif
 
 all: termkey.h demo demo-async
 
-demo: libtermkey.so demo.c
-	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
+OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
+LIBRARY=libtermkey.la
 
-demo-async: libtermkey.so demo-async.c
-	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $^
+%.lo: %.c termkey.h termkey-internal.h
+	$(LIBTOOL) --mode=compile gcc $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $<
 
-libtermkey.so: termkey.o driver-csi.o driver-ti.o
-	$(LD) -shared -soname=$(SONAME) -o $@ $^ -lncurses
+$(LIBRARY): $(OBJECTS)
+	$(LIBTOOL) --mode=link gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -lncurses -o $@ $^
 
-%.o: %.c termkey.h termkey-internal.h
-	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -fPIC -o $@ -c $<
+demo: $(LIBRARY) demo.lo
+	$(LIBTOOL) --mode=link gcc -o $@ $^
+
+demo-async: $(LIBRARY) demo-async.lo
+	$(LIBTOOL) --mode=link gcc -o $@ $^
 
 .PHONY: clean
 clean:
-	rm -f *.o libtermkey.so demo demo-async
+	$(LIBTOOL) --mode=clean rm -f $(OBJECTS) demo.lo demo-async.lo
+	$(LIBTOOL) --mode=clean rm -f $(LIBRARY)
+	$(LIBTOOL) --mode=clean rm -rf demo demo-async
 
 .PHONY: install
 install: install-inc install-lib install-man
+	$(LIBTOOL) --mode=finish $(DESTDIR)$(LIBDIR)
 
 install-inc:
 	install -d $(DESTDIR)$(INCDIR)
@@ -47,9 +56,7 @@ install-inc:
 
 install-lib:
 	install -d $(DESTDIR)$(LIBDIR)
-	install libtermkey.so $(DESTDIR)$(LIBDIR)/$(SONAME).$(VERSION_MINOR)
-	ln -sf $(SONAME).$(VERSION_MINOR) $(DESTDIR)$(LIBDIR)/$(SONAME)
-	ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/libtermkey.so
+	$(LIBTOOL) --mode=install cp libtermkey.la $(DESTDIR)$(LIBDIR)/libtermkey.la
 
 install-man:
 	install -d $(DESTDIR)$(MAN3DIR)
