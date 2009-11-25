@@ -27,16 +27,16 @@ OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
 LIBRARY=libtermkey.la
 
 %.lo: %.c termkey.h termkey-internal.h
-	$(LIBTOOL) --mode=compile gcc $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $<
+	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $<
 
 $(LIBRARY): $(OBJECTS)
-	$(LIBTOOL) --mode=link gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -lncurses -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -lncurses -o $@ $^
 
 demo: $(LIBRARY) demo.lo
-	$(LIBTOOL) --mode=link gcc -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
 
 demo-async: $(LIBRARY) demo-async.lo
-	$(LIBTOOL) --mode=link gcc -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
 
 .PHONY: clean
 clean:
