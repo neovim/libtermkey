@@ -318,6 +318,7 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
       key->code.mouse.buttons = CHARAT(pos+0) - 0x20;
       key->code.mouse.col     = CHARAT(pos+1) - 0x20;
       key->code.mouse.line    = CHARAT(pos+2) - 0x20;
+      key->modifiers          = 0;
       *nbytep = pos+3;
       return TERMKEY_RES_KEY;
     }
