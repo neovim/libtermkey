@@ -35,6 +35,7 @@ static struct TermKeyDriver *drivers[] = {
 // static void eat_bytes(TermKey *tk, size_t count);
 static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key);
 static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, size_t *nbytes);
+static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytes);
 
 static TermKeySym register_c0(TermKey *tk, TermKeySym sym, unsigned char ctrl, const char *name);
 static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name);
@@ -165,6 +166,7 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
 
   tk->method.emit_codepoint = &emit_codepoint;
   tk->method.peekkey_simple = &peekkey_simple;
+  tk->method.peekkey_mouse  = &peekkey_mouse;
 
   for(i = 0; keynames[i].name; i++)
     termkey_register_keyname(tk, keynames[i].sym, keynames[i].name);
@@ -629,6 +631,20 @@ static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, siz
 
     return TERMKEY_RES_KEY;
   }
+}
+
+static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)
+{
+  if(tk->buffcount < 3)
+    return TERMKEY_RES_AGAIN;
+
+  key->type = TERMKEY_TYPE_MOUSE;
+  key->code.mouse.buttons = CHARAT(0) - 0x20;
+  key->code.mouse.col     = CHARAT(1) - 0x20;
+  key->code.mouse.line    = CHARAT(2) - 0x20;
+  key->modifiers          = 0;
+  *nbytep = 3;
+  return TERMKEY_RES_KEY;
 }
 
 #ifdef DEBUG
