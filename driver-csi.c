@@ -235,6 +235,22 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
       return TERMKEY_RES_NONE;
     }
   }
+  else if(cmd == 'M') {
+    size_t csi_len = csi_end + 1;
+
+    tk->buffstart += csi_len;
+    tk->buffcount -= csi_len;
+
+    TermKeyResult mouse_result = (*tk->method.peekkey_mouse)(tk, key, nbytep);
+
+    tk->buffstart -= csi_len;
+    tk->buffcount += csi_len;
+
+    if(mouse_result == TERMKEY_RES_KEY)
+      *nbytep += csi_len;
+
+    return mouse_result;
+  }
   else {
     // We know from the logic above that cmd must be >= 0x40 and < 0x80
     key->type = csi->csi_ss3s[cmd - 0x40].type;
