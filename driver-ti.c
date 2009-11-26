@@ -311,16 +311,18 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
       return TERMKEY_RES_KEY;
     }
     else if(p->type == TYPE_MOUSE) {
-      if(tk->buffcount - pos < 3)
-        return TERMKEY_RES_AGAIN;
+      tk->buffstart += pos;
+      tk->buffcount -= pos;
 
-      key->type = TERMKEY_TYPE_MOUSE;
-      key->code.mouse.buttons = CHARAT(pos+0) - 0x20;
-      key->code.mouse.col     = CHARAT(pos+1) - 0x20;
-      key->code.mouse.line    = CHARAT(pos+2) - 0x20;
-      key->modifiers          = 0;
-      *nbytep = pos+3;
-      return TERMKEY_RES_KEY;
+      TermKeyResult mouse_result = (*tk->method.peekkey_mouse)(tk, key, nbytep);
+
+      tk->buffstart -= pos;
+      tk->buffcount += pos;
+
+      if(mouse_result == TERMKEY_RES_KEY)
+        *nbytep += pos;
+
+      return mouse_result;
     }
   }
 

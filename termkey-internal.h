@@ -58,6 +58,7 @@ struct _TermKey {
   struct {
     void (*emit_codepoint)(TermKey *tk, long codepoint, TermKeyKey *key);
     TermKeyResult (*peekkey_simple)(TermKey *tk, TermKeyKey *key, int force, size_t *nbytes);
+    TermKeyResult (*peekkey_mouse)(TermKey *tk, TermKeyKey *key, size_t *nbytes);
   } method;
 };
 
