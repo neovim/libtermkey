@@ -1002,12 +1002,20 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
     {
       TermKeyMouseEvent ev;
       int button;
-      termkey_interpret_mouse(tk, key, &ev, &button, NULL, NULL);
+      int line, col;
+      termkey_interpret_mouse(tk, key, &ev, &button, &line, &col);
 
       static char *evnames[] = { "Unknown", "Press", "Drag", "Release" };
 
       l = snprintf(buffer + pos, len - pos, "Mouse%s(%d)",
           evnames[ev], button);
+
+      if(format & TERMKEY_FORMAT_MOUSE_POS) {
+        if(l <= 0) return pos;
+        pos += l;
+
+        l = snprintf(buffer + pos, len - pos, " @ (%d,%d)", col, line);
+      }
     }
     break;
   }
