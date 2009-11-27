@@ -133,6 +133,14 @@ static void print_key(TermKey *tk, TermKeyKey *key)
   case TERMKEY_TYPE_KEYSYM:
     fprintf(stderr, "Keysym sym=%d(%s)", key->code.sym, termkey_get_keyname(tk, key->code.sym));
     break;
+  case TERMKEY_TYPE_MOUSE:
+    {
+      TermKeyMouseEvent ev;
+      int button, line, col;
+      termkey_interpret_mouse(tk, key, &ev, &button, &line, &col);
+      fprintf(stderr, "Mouse ev=%d button=%d pos=(%d,%d)\n", ev, button, line, col);
+    }
+    break;
   }
 
   int m = key->modifiers;
