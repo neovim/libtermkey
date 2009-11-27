@@ -107,6 +107,59 @@ static struct {
   { 0, NULL },
 };
 
+#define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
+
+#ifdef DEBUG
+/* Some internal deubgging functions */
+
+static void print_buffer(TermKey *tk)
+{
+  int i;
+  for(i = 0; i < tk->buffcount && i < 20; i++)
+    fprintf(stderr, "%02x ", CHARAT(i));
+  if(tk->buffcount > 20)
+    fprintf(stderr, "...");
+}
+
+static void print_key(TermKey *tk, TermKeyKey *key)
+{
+  switch(key->type) {
+  case TERMKEY_TYPE_UNICODE:
+    fprintf(stderr, "Unicode codepoint=U+%04lx utf8='%s'", key->code.codepoint, key->utf8);
+    break;
+  case TERMKEY_TYPE_FUNCTION:
+    fprintf(stderr, "Function F%d", key->code.number);
+    break;
+  case TERMKEY_TYPE_KEYSYM:
+    fprintf(stderr, "Keysym sym=%d(%s)", key->code.sym, termkey_get_keyname(tk, key->code.sym));
+    break;
+  }
+
+  int m = key->modifiers;
+  fprintf(stderr, " mod=%s%s%s+%02x",
+      (m & TERMKEY_KEYMOD_CTRL  ? "C" : ""),
+      (m & TERMKEY_KEYMOD_ALT   ? "A" : ""),
+      (m & TERMKEY_KEYMOD_SHIFT ? "S" : ""),
+      m & ~(TERMKEY_KEYMOD_CTRL|TERMKEY_KEYMOD_ALT|TERMKEY_KEYMOD_SHIFT));
+}
+
+static const char *res2str(TermKeyResult res)
+{
+  switch(res) {
+  case TERMKEY_RES_KEY:
+    return "TERMKEY_RES_KEY";
+  case TERMKEY_RES_EOF:
+    return "TERMKEY_RES_EOF";
+  case TERMKEY_RES_AGAIN:
+    return "TERMKEY_RES_AGAIN";
+  case TERMKEY_RES_NONE:
+    return "TERMKEY_RES_NONE";
+  }
+
+  return "unknown";
+}
+#endif
+
 /* We might expose this as public API one day, when the ideas are finalised.
  * As yet it isn't public, so keep it static
  */
@@ -486,8 +539,6 @@ static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nb
   return ret;
 }
 
-#define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
-
 static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)
 {
   if(tk->buffcount == 0)
@@ -698,55 +749,6 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, TermKeyKey *key, TermKeyMouse
 
   return TERMKEY_RES_KEY;
 }
-
-#ifdef DEBUG
-static void print_buffer(TermKey *tk)
-{
-  int i;
-  for(i = 0; i < tk->buffcount && i < 20; i++)
-    fprintf(stderr, "%02x ", CHARAT(i));
-  if(tk->buffcount > 20)
-    fprintf(stderr, "...");
-}
-
-static void print_key(TermKey *tk, TermKeyKey *key)
-{
-  switch(key->type) {
-  case TERMKEY_TYPE_UNICODE:
-    fprintf(stderr, "Unicode codepoint=U+%04lx utf8='%s'", key->code.codepoint, key->utf8);
-    break;
-  case TERMKEY_TYPE_FUNCTION:
-    fprintf(stderr, "Function F%d", key->code.number);
-    break;
-  case TERMKEY_TYPE_KEYSYM:
-    fprintf(stderr, "Keysym sym=%d(%s)", key->code.sym, termkey_get_keyname(tk, key->code.sym));
-    break;
-  }
-
-  int m = key->modifiers;
-  fprintf(stderr, " mod=%s%s%s+%02x",
-      (m & TERMKEY_KEYMOD_CTRL  ? "C" : ""),
-      (m & TERMKEY_KEYMOD_ALT   ? "A" : ""),
-      (m & TERMKEY_KEYMOD_SHIFT ? "S" : ""),
-      m & ~(TERMKEY_KEYMOD_CTRL|TERMKEY_KEYMOD_ALT|TERMKEY_KEYMOD_SHIFT));
-}
-
-static const char *res2str(TermKeyResult res)
-{
-  switch(res) {
-  case TERMKEY_RES_KEY:
-    return "TERMKEY_RES_KEY";
-  case TERMKEY_RES_EOF:
-    return "TERMKEY_RES_EOF";
-  case TERMKEY_RES_AGAIN:
-    return "TERMKEY_RES_AGAIN";
-  case TERMKEY_RES_NONE:
-    return "TERMKEY_RES_NONE";
-  }
-
-  return "unknown";
-}
-#endif
 
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key)
 {
