@@ -1,0 +1,43 @@
+.TH TERMKEY_INTERPRET_MOUSE 3
+.SH NAME
+termkey_interpret_mouse \- interpret opaque mouse event data
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "TermKeyResult termkey_interpret_mouse(TermKey *" tk ", TermKeyKey *" key ", "
+.BI "    TermKeyMouseEvent *" ev ", int *" button ", int *" line ", int *" col );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_interpret_mouse\fP fills in variables in the passed pointers according to the mouse event found in \fIkey\fP. It should be called if \fBtermkey_getkey(3)\fP or similar have returned a key event with the type of \fBTERMKEY_TYPE_MOUSE\fP.
+.PP
+Any pointer may instead be given as \fBNULL\fP to not return that value.
+.PP
+The \fIev\fP variable will take one of the following values:
+.in
+.TP
+.B TERMKEY_MOUSE_UNKNOWN
+an unknown mouse event.
+.TP
+.B TERMKEY_MOUSE_PRESS
+a mouse button was pressed; \fIbutton\fP will contain its number.
+.TP
+.B TERMKEY_MOUSE_DRAG
+the mouse was moved while holding a button; \fIbutton\fP will contain its number.
+.TP
+.B TERMKEY_MOUSE_RELEASE
+a mouse button was released, or the mouse was moved while no button was pressed. If known, \fIbutton\fP will contain the number of the button released. Not all terminals can report this, so it may be 0 instead.
+.PP
+The \fIline\fP and \fIcol\fP variables will be filled in with the mouse position, indexed from 1.
+.PP
+After calling this function, it is possible that the \fImodifiers\fP field of the \fIkey\fP structure will have been set according to the modifiers reported by the terminal. This function will not otherwise alter either the \fIkey\fP or the containing \fItk\fP structure, and will be safe to call again on the same event if required.
+.SH "RETURN VALUE"
+If passed a \fIkey\fP event of the type \fBTERMKEY_TYPE_MOUSE\fP, this function will return \fBTERMKEY_RES_KEY\fP and will affect the variables whose pointers were passed in, as described above.
+.PP
+For other event types it will return \fBTERMKEY_RES_NONE\fP, and its effects on any variables whose pointers were passed in, are undefined.
+.SH "SEE ALSO"
+.BR termkey_new (3),
+.BR termkey_waitkey (3),
+.BR termkey_getkey (3),
