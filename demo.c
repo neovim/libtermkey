@@ -8,6 +8,7 @@ int main(int argc, char *argv[])
   TERMKEY_CHECK_VERSION;
 
   int mouse = 0;
+  TermKeyFormat format = TERMKEY_FORMAT_VIM;
 
   char buffer[50];
   TermKey *tk;
@@ -20,6 +21,8 @@ int main(int argc, char *argv[])
         mouse = atoi(optarg);
       else
         mouse = 1000;
+      format |= TERMKEY_FORMAT_MOUSE_POS;
+
       break;
     default:
       fprintf(stderr, "Usage: %s [-m]\n", argv[0]);
@@ -41,7 +44,7 @@ int main(int argc, char *argv[])
     printf("\e[?%dhMouse mode active\n", mouse);
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
-    termkey_snprint_key(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_VIM);
+    termkey_snprint_key(tk, buffer, sizeof buffer, &key, format);
     printf("%s\n", buffer);
 
     if(key.type == TERMKEY_TYPE_UNICODE && 
