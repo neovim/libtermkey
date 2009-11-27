@@ -639,11 +639,63 @@ static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)
     return TERMKEY_RES_AGAIN;
 
   key->type = TERMKEY_TYPE_MOUSE;
-  key->code.mouse.buttons = CHARAT(0) - 0x20;
-  key->code.mouse.col     = CHARAT(1) - 0x20;
-  key->code.mouse.line    = CHARAT(2) - 0x20;
-  key->modifiers          = 0;
+  key->code.mouse[0] = CHARAT(0) - 0x20;
+  key->code.mouse[1] = CHARAT(1) - 0x20;
+  key->code.mouse[2] = CHARAT(2) - 0x20;
+  key->modifiers     = 0;
   *nbytep = 3;
+  return TERMKEY_RES_KEY;
+}
+
+TermKeyResult termkey_interpret_mouse(TermKey *tk, TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col)
+{
+  if(key->type != TERMKEY_TYPE_MOUSE)
+    return TERMKEY_RES_NONE;
+
+  if(button)
+    *button = 0;
+
+  if(col)
+    *col  = key->code.mouse[1];
+
+  if(line)
+    *line = key->code.mouse[2];
+
+  if(!event)
+    return TERMKEY_RES_KEY;
+
+  int btn = 0;
+
+  int code = key->code.mouse[0];
+
+  int drag = code & 0x20;
+
+  switch(code & ~0x20) {
+  case 0:
+  case 1:
+  case 2:
+    *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
+    btn = (code & ~0x20) + 1;
+    break;
+
+  case 3:
+    *event = TERMKEY_MOUSE_RELEASE;
+    // no button hint
+    break;
+
+  case 64:
+  case 65:
+    *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
+    btn = (code & ~0x20) + 4 - 64;
+    break;
+
+  default:
+    *event = TERMKEY_MOUSE_UNKNOWN;
+  }
+
+  if(button)
+    *button = btn;
+
   return TERMKEY_RES_KEY;
 }
 
@@ -937,8 +989,16 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
     l = snprintf(buffer + pos, len - pos, "F%d", key->code.number);
     break;
   case TERMKEY_TYPE_MOUSE:
-    l = snprintf(buffer + pos, len - pos, "Mouse(0x%02x,%d,%d)", 
-        key->code.mouse.buttons, key->code.mouse.line, key->code.mouse.col);
+    {
+      TermKeyMouseEvent ev;
+      int button;
+      termkey_interpret_mouse(tk, key, &ev, &button, NULL, NULL);
+
+      static char *evnames[] = { "Unknown", "Press", "Drag", "Release" };
+
+      l = snprintf(buffer + pos, len - pos, "Mouse%s(%d)",
+          evnames[ev], button);
+    }
     break;
   }
 

@@ -100,6 +100,13 @@ typedef enum {
   TERMKEY_RES_AGAIN,
 } TermKeyResult;
 
+typedef enum {
+  TERMKEY_MOUSE_UNKNOWN,
+  TERMKEY_MOUSE_PRESS,
+  TERMKEY_MOUSE_DRAG,
+  TERMKEY_MOUSE_RELEASE,
+} TermKeyMouseEvent;
+
 enum {
   TERMKEY_KEYMOD_SHIFT = 1 << 0,
   TERMKEY_KEYMOD_ALT   = 1 << 1,
@@ -112,11 +119,10 @@ typedef struct {
     long       codepoint; // TERMKEY_TYPE_UNICODE
     int        number;    // TERMKEY_TYPE_FUNCTION
     TermKeySym sym;       // TERMKEY_TYPE_KEYSYM
-    struct {
-      short    buttons;
-      short    col, line;
-    }          mouse;     // TERMKEY_TYPE_MOUSE
+    char       mouse[4];  // TERMKEY_TYPE_MOUSE
+                          // opaque. see termkey_interpret_mouse
   } code;
+
   int modifiers;
 
   /* Any Unicode character can be UTF-8 encoded in no more than 6 bytes, plus
@@ -158,6 +164,8 @@ TermKeyResult termkey_advisereadable(TermKey *tk);
 
 TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name);
 const char *termkey_get_keyname(TermKey *tk, TermKeySym sym);
+
+TermKeyResult termkey_interpret_mouse(TermKey *tk, TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col);
 
 TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname); 
 
