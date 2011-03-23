@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  tk = termkey_new(0, 0);
+  tk = termkey_new(0, TERMKEY_FLAG_SPACESYMBOL);
 
   if(!tk) {
     fprintf(stderr, "Cannot allocate termkey instance\n");
