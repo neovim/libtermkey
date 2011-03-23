@@ -278,7 +278,12 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
       tk->restore_termios_valid = 1;
 
       termios.c_iflag &= ~(IXON|INLCR|ICRNL);
-      termios.c_lflag &= ~(ICANON|ECHO|ISIG);
+      termios.c_lflag &= ~(ICANON|ECHO);
+
+      termios.c_cc[VQUIT] = 0;
+      termios.c_cc[VSUSP] = 0;
+      if(flags & TERMKEY_FLAG_CTRLC)
+        termios.c_cc[VINTR] = 0;
 
       tcsetattr(fd, TCSANOW, &termios);
     }
