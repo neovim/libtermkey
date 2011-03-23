@@ -447,7 +447,7 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
       key->type = TERMKEY_TYPE_KEYSYM;
     }
   }
-  else if(codepoint == 0x20 && !(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
+  else if(codepoint == 0x20 && (tk->flags & TERMKEY_FLAG_SPACESYMBOL)) {
     // ASCII space
     key->type = TERMKEY_TYPE_KEYSYM;
     key->code.sym = TERMKEY_SYM_SPACE;
