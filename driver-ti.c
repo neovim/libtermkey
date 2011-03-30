@@ -4,8 +4,8 @@
 #include "termkey.h"
 #include "termkey-internal.h"
 
-#include <term.h>
 #include <curses.h>
+#include <term.h>
 
 /* curses.h has just poluted our namespace. We want this back */
 #undef buttons
