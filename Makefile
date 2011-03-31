@@ -81,6 +81,15 @@ doc: $(BUILTMAN)
 %.3: %.3.sh
 	sh $< >$@
 
+TESTSOURCES=$(wildcard t/*.c)
+TESTFILES=$(TESTSOURCES:.c=.t)
+
+t/%.t: t/%.c $(LIBRARY)
+	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+
+test: $(TESTFILES)
+	prove -e ""
+
 clean: clean-built
 
 clean-built:
