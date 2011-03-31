@@ -422,6 +422,76 @@ static void fill_utf8(TermKeyKey *key)
   }
 }
 
+#define UTF8_INVALID 0xFFFD
+static TermKeyResult parse_utf8(const unsigned char *bytes, size_t len, long *cp, size_t *nbytep)
+{
+  unsigned int nbytes;
+
+  unsigned char b0 = bytes[0];
+
+  if(b0 < 0xc0) {
+    // Starts with a continuation byte - that's not right
+    *cp = UTF8_INVALID;
+    *nbytep = 1;
+    return TERMKEY_RES_KEY;
+  }
+  else if(b0 < 0xe0) {
+    nbytes = 2;
+    *cp = b0 & 0x1f;
+  }
+  else if(b0 < 0xf0) {
+    nbytes = 3;
+    *cp = b0 & 0x0f;
+  }
+  else if(b0 < 0xf8) {
+    nbytes = 4;
+    *cp = b0 & 0x07;
+  }
+  else if(b0 < 0xfc) {
+    nbytes = 5;
+    *cp = b0 & 0x03;
+  }
+  else if(b0 < 0xfe) {
+    nbytes = 6;
+    *cp = b0 & 0x01;
+  }
+  else {
+    *cp = UTF8_INVALID;
+    *nbytep = 1;
+    return TERMKEY_RES_KEY;
+  }
+
+  for(unsigned int b = 1; b < nbytes; b++) {
+    unsigned char cb;
+
+    if(b >= len)
+      return TERMKEY_RES_AGAIN;
+
+    cb = bytes[b];
+    if(cb < 0x80 || cb >= 0xc0) {
+      *cp = UTF8_INVALID;
+      *nbytep = b;
+      return TERMKEY_RES_KEY;
+    }
+
+    *cp <<= 6;
+    *cp |= cb & 0x3f;
+  }
+
+  // Check for overlong sequences
+  if(nbytes > utf8_seqlen(*cp))
+    *cp = UTF8_INVALID;
+
+  // Check for UTF-16 surrogates or invalid *cps
+  if((*cp >= 0xD800 && *cp <= 0xDFFF) ||
+     *cp == 0xFFFE ||
+     *cp == 0xFFFF)
+    *cp = UTF8_INVALID;
+
+  *nbytep = nbytes;
+  return TERMKEY_RES_KEY;
+}
+
 static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
 {
   if(codepoint < 0x20) {
@@ -486,8 +556,6 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
   if(key->type == TERMKEY_TYPE_UNICODE)
     fill_utf8(key);
 }
-
-#define UTF8_INVALID 0xFFFD
 
 static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)
 {
@@ -604,83 +672,24 @@ static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, siz
   }
   else if(tk->flags & TERMKEY_FLAG_UTF8) {
     // Some UTF-8
-    unsigned int nbytes;
     long codepoint;
+    TermKeyResult res = parse_utf8(tk->buffer + tk->buffstart, tk->buffcount, &codepoint, nbytep);
 
-    key->type = TERMKEY_TYPE_UNICODE;
-    key->modifiers = 0;
-
-    if(b0 < 0xc0) {
-      // Starts with a continuation byte - that's not right
-      (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      *nbytep = 1;
-      return TERMKEY_RES_KEY;
-    }
-    else if(b0 < 0xe0) {
-      nbytes = 2;
-      codepoint = b0 & 0x1f;
-    }
-    else if(b0 < 0xf0) {
-      nbytes = 3;
-      codepoint = b0 & 0x0f;
-    }
-    else if(b0 < 0xf8) {
-      nbytes = 4;
-      codepoint = b0 & 0x07;
-    }
-    else if(b0 < 0xfc) {
-      nbytes = 5;
-      codepoint = b0 & 0x03;
-    }
-    else if(b0 < 0xfe) {
-      nbytes = 6;
-      codepoint = b0 & 0x01;
-    }
-    else {
-      (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-      *nbytep = 1;
-      return TERMKEY_RES_KEY;
-    }
-
-    if(tk->buffcount < nbytes) {
-      if(!force)
-        return TERMKEY_RES_AGAIN;
-
+    if(res == TERMKEY_RES_AGAIN && force) {
       /* There weren't enough bytes for a complete UTF-8 sequence but caller
        * demands an answer. About the best thing we can do here is eat as many
        * bytes as we have, and emit a UTF8_INVALID. If the remaining bytes
        * arrive later, they'll be invalid too.
        */
-      (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
+      codepoint = UTF8_INVALID;
       *nbytep = tk->buffcount;
-      return TERMKEY_RES_KEY;
+      res = TERMKEY_RES_KEY;
     }
 
-    for(unsigned int b = 1; b < nbytes; b++) {
-      unsigned char cb = CHARAT(b);
-      if(cb < 0x80 || cb >= 0xc0) {
-        (*tk->method.emit_codepoint)(tk, UTF8_INVALID, key);
-        *nbytep = b - 1;
-        return TERMKEY_RES_KEY;
-      }
-
-      codepoint <<= 6;
-      codepoint |= cb & 0x3f;
-    }
-
-    // Check for overlong sequences
-    if(nbytes > utf8_seqlen(codepoint))
-      codepoint = UTF8_INVALID;
-
-    // Check for UTF-16 surrogates or invalid codepoints
-    if((codepoint >= 0xD800 && codepoint <= 0xDFFF) ||
-       codepoint == 0xFFFE ||
-       codepoint == 0xFFFF)
-      codepoint = UTF8_INVALID;
-
+    key->type = TERMKEY_TYPE_UNICODE;
+    key->modifiers = 0;
     (*tk->method.emit_codepoint)(tk, codepoint, key);
-    *nbytep = nbytes;
-    return TERMKEY_RES_KEY;
+    return res;
   }
   else {
     // Non UTF-8 case - just report the raw byte
