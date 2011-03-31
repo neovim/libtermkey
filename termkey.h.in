@@ -150,22 +150,22 @@ enum {
 void termkey_check_version(int major, int minor);
 
 TermKey *termkey_new(int fd, int flags);
-void       termkey_free(TermKey *tk);
-void       termkey_destroy(TermKey *tk);
+void     termkey_free(TermKey *tk);
+void     termkey_destroy(TermKey *tk);
 
-int        termkey_get_fd(TermKey *tk);
+int termkey_get_fd(TermKey *tk);
 
-int        termkey_get_flags(TermKey *tk);
-void       termkey_set_flags(TermKey *tk, int newflags);
+int  termkey_get_flags(TermKey *tk);
+void termkey_set_flags(TermKey *tk, int newflags);
 
-void       termkey_set_waittime(TermKey *tk, int msec);
-int        termkey_get_waittime(TermKey *tk);
+int  termkey_get_waittime(TermKey *tk);
+void termkey_set_waittime(TermKey *tk, int msec);
 
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
 
-void       termkey_pushinput(TermKey *tk, unsigned char *input, size_t inputlen);
+void termkey_pushinput(TermKey *tk, unsigned char *input, size_t inputlen);
 
 TermKeyResult termkey_advisereadable(TermKey *tk);
 
