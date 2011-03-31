@@ -189,7 +189,8 @@ typedef enum {
 
 #define TERMKEY_FORMAT_VIM (TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_WRAPBRACKET)
 
-size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
+size_t        termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
+TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format);
 
 // Old name for termkey_strfkey()
 size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
