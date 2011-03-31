@@ -1001,6 +1001,8 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
 
   switch(key->type) {
   case TERMKEY_TYPE_UNICODE:
+    if(!key->utf8[0]) // In case of user-supplied key structures
+      fill_utf8(key);
     l = snprintf(buffer + pos, len - pos, "%s", key->utf8);
     break;
   case TERMKEY_TYPE_KEYSYM:
