@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     printf("\e[?%dhMouse mode active\n", mouse);
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
-    termkey_snprint_key(tk, buffer, sizeof buffer, &key, format);
+    termkey_strfkey(tk, buffer, sizeof buffer, &key, format);
     printf("%s\n", buffer);
 
     if(key.type == TERMKEY_TYPE_UNICODE && 

@@ -6,7 +6,7 @@
 static void on_key(TermKey *tk, TermKeyKey *key)
 {
   char buffer[50];
-  termkey_snprint_key(tk, buffer, sizeof buffer, key, TERMKEY_FORMAT_VIM);
+  termkey_strfkey(tk, buffer, sizeof buffer, key, TERMKEY_FORMAT_VIM);
   printf("%s\n", buffer);
 }
 

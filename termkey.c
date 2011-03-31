@@ -935,7 +935,13 @@ static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set
   return sym;
 }
 
+/* Previous name for this function */
 size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
+{
+  return termkey_strfkey(tk, buffer, len, key, format);
+}
+
+size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
 {
   size_t pos = 0;
   size_t l = 0;
