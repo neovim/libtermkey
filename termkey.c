@@ -950,12 +950,23 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
   return termkey_strfkey(tk, buffer, len, key, format);
 }
 
+struct modnames {
+  const char *shift, *alt, *ctrl;
+}
+modnames[] = {
+  { "S",     "A",    "C" },    // 0
+  { "Shift", "Alt",  "Ctrl" }, // LONGMOD
+  { "S",     "M",    "C" },    // ALTISMETA
+  { "Shift", "Meta", "Ctrl" }, // ALTISMETA+LONGMOD
+};
+
 size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
 {
   size_t pos = 0;
   size_t l = 0;
 
-  int longmod = format & TERMKEY_FORMAT_LONGMOD;
+  struct modnames *mods = &modnames[!!(format & TERMKEY_FORMAT_LONGMOD) +
+                                    !!(format & TERMKEY_FORMAT_ALTISMETA) * 2];
 
   int wrapbracket = (format & TERMKEY_FORMAT_WRAPBRACKET) &&
                     (key->type != TERMKEY_TYPE_UNICODE || key->modifiers != 0);
@@ -988,22 +999,19 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_ALT) {
-    int altismeta = format & TERMKEY_FORMAT_ALTISMETA;
-
-    l = snprintf(buffer + pos, len - pos, longmod ? ( altismeta ? "Meta-" : "Alt-" )
-                                                  : ( altismeta ? "M-"    : "A-" ));
+    l = snprintf(buffer + pos, len - pos, "%s-", mods->alt);
     if(l <= 0) return pos;
     pos += l;
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_CTRL) {
-    l = snprintf(buffer + pos, len - pos, longmod ? "Ctrl-" : "C-");
+    l = snprintf(buffer + pos, len - pos, "%s-", mods->ctrl);
     if(l <= 0) return pos;
     pos += l;
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_SHIFT) {
-    l = snprintf(buffer + pos, len - pos, longmod ? "Shift-" : "S-");
+    l = snprintf(buffer + pos, len - pos, "%s-", mods->shift);
     if(l <= 0) return pos;
     pos += l;
   }
