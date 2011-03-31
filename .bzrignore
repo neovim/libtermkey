@@ -6,3 +6,4 @@ termkey_waitkey.3
 *.lo
 *.la
 .libs
+t/*.t
