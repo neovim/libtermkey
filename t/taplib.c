@@ -41,7 +41,7 @@ void is_int(int got, int expect, char *name)
   }
 }
 
-void is_str(char *got, char *expect, char *name)
+void is_str(const char *got, const char *expect, char *name)
 {
   if(strcmp(got, expect) == 0)
     ok(1, name);
