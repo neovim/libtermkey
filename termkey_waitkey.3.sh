@@ -40,5 +40,5 @@ cat <<EOF
 .BR termkey_getkey (3),
 .BR termkey_set_waittime (3),
 .BR termkey_get_keyname (3),
-.BR termkey_snprint_key (3)
+.BR termkey_strfkey (3)
 EOF
