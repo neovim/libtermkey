@@ -81,11 +81,14 @@ doc: $(BUILTMAN)
 %.3: %.3.sh
 	sh $< >$@
 
-TESTSOURCES=$(wildcard t/*.c)
+TESTSOURCES=$(wildcard t/[0-9]*.c)
 TESTFILES=$(TESTSOURCES:.c=.t)
 
-t/%.t: t/%.c $(LIBRARY)
+t/%.t: t/%.c $(LIBRARY) t/taplib.lo
 	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+
+t/taplib.lo: t/taplib.c
+	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $^
 
 test: $(TESTFILES)
 	prove -e ""

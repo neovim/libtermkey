@@ -1,20 +1,20 @@
 #include <stdio.h>
 #include "termkey.h"
+#include "taplib.h"
 
 int main(int argc, char *argv[])
 {
   TermKey   *tk;
 
-  printf("1..2\n");
+  plan_tests(2);
 
   tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
 
-  printf(tk ? "" : "not ");
-  printf("ok 1 - termkey_new\n");
+  ok(!!tk, "termkey_new");
 
   termkey_destroy(tk);
 
-  printf("ok 2 - termkey_free\n");
+  ok(1, "termkey_free");
 
   return 0;
 }
