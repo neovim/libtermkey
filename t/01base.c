@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "termkey.h"
+#include "../termkey.h"
 #include "taplib.h"
 
 int main(int argc, char *argv[])
