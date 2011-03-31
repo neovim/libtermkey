@@ -429,7 +429,13 @@ static TermKeyResult parse_utf8(const unsigned char *bytes, size_t len, long *cp
 
   unsigned char b0 = bytes[0];
 
-  if(b0 < 0xc0) {
+  if(b0 < 0x80) {
+    // Single byte ASCII
+    *cp = b0;
+    *nbytep = 1;
+    return TERMKEY_RES_KEY;
+  }
+  else if(b0 < 0xc0) {
     // Starts with a continuation byte - that's not right
     *cp = UTF8_INVALID;
     *nbytep = 1;
@@ -1060,4 +1066,68 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   }
 
   return pos;
+}
+
+TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)
+{
+  struct modnames *mods = &modnames[!!(format & TERMKEY_FORMAT_LONGMOD) +
+                                    !!(format & TERMKEY_FORMAT_ALTISMETA) * 2];
+
+  key->modifiers = 0;
+
+  if((format & TERMKEY_FORMAT_CARETCTRL) && str[0] == '^' && str[1]) {
+    TermKeyResult res = termkey_strpkey(tk, str+1, key, format & ~TERMKEY_FORMAT_CARETCTRL);
+
+    if(res != TERMKEY_RES_KEY)
+      return res;
+    if(key->type != TERMKEY_TYPE_UNICODE)
+      return TERMKEY_RES_NONE;
+    if(key->code.number < '@' || key->code.number > '_')
+      return TERMKEY_RES_NONE;
+    if(key->modifiers != 0)
+      return TERMKEY_RES_NONE;
+
+    if(key->code.number >= 'A' && key->code.number <= 'Z')
+      key->code.number += 0x20;
+    key->modifiers = TERMKEY_KEYMOD_CTRL;
+    fill_utf8(key);
+    return res;
+  }
+
+  const char *hyphen;
+
+  while((hyphen = strchr(str, '-'))) {
+    size_t n = hyphen - str;
+
+    if(n == strlen(mods->alt) && strncmp(mods->alt, str, n) == 0)
+      key->modifiers |= TERMKEY_KEYMOD_ALT;
+    else if(n == strlen(mods->ctrl) && strncmp(mods->ctrl, str, n) == 0)
+      key->modifiers |= TERMKEY_KEYMOD_CTRL;
+    else if(n == strlen(mods->shift) && strncmp(mods->shift, str, n) == 0)
+      key->modifiers |= TERMKEY_KEYMOD_SHIFT;
+
+    else
+      break;
+
+    str = hyphen + 1;
+  }
+
+  long codepoint;
+  size_t nbytes;
+
+  if(parse_utf8((unsigned char *)str, strlen(str), &codepoint, &nbytes) == TERMKEY_RES_KEY &&
+     nbytes == strlen(str)) {
+    key->type = TERMKEY_TYPE_UNICODE;
+    key->code.number = codepoint;
+    fill_utf8(key);
+  }
+  else if((key->code.sym = termkey_keyname2sym(tk, str)) != TERMKEY_SYM_UNKNOWN) {
+    key->type = TERMKEY_TYPE_KEYSYM;
+  }
+  // TODO: Consider function keys
+  else {
+    return TERMKEY_RES_NONE;
+  }
+
+  return TERMKEY_RES_KEY;
 }
