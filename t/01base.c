@@ -16,5 +16,5 @@ int main(int argc, char *argv[])
 
   ok(1, "termkey_free");
 
-  return 0;
+  return exit_status();
 }
