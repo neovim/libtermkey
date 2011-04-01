@@ -1,0 +1,38 @@
+.TH TERMKEY_STRPKEY 3
+.SH NAME
+termkey_strpkey \- parse a string representing a key event
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "size_t termkey_strpkey(TermKey *" tk ", const char *" str ",
+.BI "            TermKeyKey " key ", TermKeyFormat " format );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_strpkey\fP parses a string buffer containing a human-readable representation of a key event. It fills the \fIkey\fP structure from the results of this parsing, similar to the \fBstrptime\fP(3) standard library function.
+.PP
+The \fIformat\fP argument specifies the format expected in the string, as a bitmask of the following constants:
+.TP
+.B TERMKEY_FORMAT_LONGMOD
+Expect full modifier names e.g. "Shift-" instead of abbreviating to "S-".
+.TP
+.B TERMKEY_FORMAT_CARETCTRL
+If the only modifier is \fBTERMKEY_MOD_CTRL\fP on a plain letter, accept it as "^X" rather than "Ctrl-X".
+.TP
+.B TERMKEY_FORMAT_ALTISMETA
+Use the name "Meta" or the letter "M" instead of "Alt" or "A".
+.PP
+The \fBTERMKEY_FORMAT_WRAPBRACKET\fP and \fBTERMKEY_FORMAT_MOUSE_POS\fP options are currently not supported by \fBtermkey_strpkey\fP(). When returning a \fBTERMKEY_TYPE_UNICODE\fP key structure, this function will fill in the \fIutf8\fP member.
+.SH "RETURN VALUE"
+\fBtermkey_strpkey\fP() returns one of the following constants:
+.TP
+.B TERMKEY_RES_KEY
+A key structure was successfully parsed.
+.TP
+.B TERMKEY_RES_NONE
+No key was recognised in the string buffer.
+.SH "SEE ALSO"
+.BR termkey_new (3),
+.BR termkey_strfkey (3)
