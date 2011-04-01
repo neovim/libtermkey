@@ -914,18 +914,30 @@ const char *termkey_get_keyname(TermKey *tk, TermKeySym sym)
   return "UNKNOWN";
 }
 
-TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname)
+char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)
 {
   /* We store an array, so we can't do better than a linear search. Doesn't
    * matter because user won't be calling this too often */
 
+  for(*sym = 0; *sym < tk->nkeynames; (*sym)++) {
+    const char *thiskey = tk->keynames[*sym];
+    if(!thiskey)
+      continue;
+    size_t len = strlen(thiskey);
+    if(strncmp(str, thiskey, len) == 0)
+      return (char *)str + len;
+  }
+
+  return NULL;
+}
+
+TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname)
+{
   TermKeySym sym;
-
-  for(sym = 0; sym < tk->nkeynames; sym++)
-    if(tk->keynames[sym] && strcmp(keyname, tk->keynames[sym]) == 0)
-      return sym;
-
-  return TERMKEY_SYM_UNKNOWN;
+  char *endp = termkey_lookup_keyname(tk, keyname, &sym);
+  if(!endp || endp[0])
+    return TERMKEY_SYM_UNKNOWN;
+  return sym;
 }
 
 static TermKeySym register_c0(TermKey *tk, TermKeySym sym, unsigned char ctrl, const char *name)
