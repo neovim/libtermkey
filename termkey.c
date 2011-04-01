@@ -1080,7 +1080,7 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   return pos;
 }
 
-TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)
+char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)
 {
   struct modnames *mods = &modnames[!!(format & TERMKEY_FORMAT_LONGMOD) +
                                     !!(format & TERMKEY_FORMAT_ALTISMETA) * 2];
@@ -1088,22 +1088,19 @@ TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, Ter
   key->modifiers = 0;
 
   if((format & TERMKEY_FORMAT_CARETCTRL) && str[0] == '^' && str[1]) {
-    TermKeyResult res = termkey_strpkey(tk, str+1, key, format & ~TERMKEY_FORMAT_CARETCTRL);
+    str = termkey_strpkey(tk, str+1, key, format & ~TERMKEY_FORMAT_CARETCTRL);
 
-    if(res != TERMKEY_RES_KEY)
-      return res;
-    if(key->type != TERMKEY_TYPE_UNICODE)
-      return TERMKEY_RES_NONE;
-    if(key->code.codepoint < '@' || key->code.codepoint > '_')
-      return TERMKEY_RES_NONE;
-    if(key->modifiers != 0)
-      return TERMKEY_RES_NONE;
+    if(!str ||
+       key->type != TERMKEY_TYPE_UNICODE ||
+       key->code.codepoint < '@' || key->code.codepoint > '_' ||
+       key->modifiers != 0)
+      return NULL;
 
     if(key->code.codepoint >= 'A' && key->code.codepoint <= 'Z')
       key->code.codepoint += 0x20;
     key->modifiers = TERMKEY_KEYMOD_CTRL;
     fill_utf8(key);
-    return res;
+    return (char *)str;
   }
 
   const char *hyphen;
@@ -1125,22 +1122,25 @@ TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, Ter
   }
 
   size_t nbytes;
+  char *endstr;
 
   if(parse_utf8((unsigned char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY &&
      nbytes == strlen(str)) {
     key->type = TERMKEY_TYPE_UNICODE;
     fill_utf8(key);
+    str += nbytes;
   }
-  else if((key->code.sym = termkey_keyname2sym(tk, str)) != TERMKEY_SYM_UNKNOWN) {
+  else if((endstr = termkey_lookup_keyname(tk, str, &key->code.sym))) {
     key->type = TERMKEY_TYPE_KEYSYM;
+    str = endstr;
   }
-  else if(sscanf(str, "F%d", &key->code.number) == 1) {
+  else if(sscanf(str, "F%d%n", &key->code.number, &nbytes) == 1) {
     key->type = TERMKEY_TYPE_FUNCTION;
+    str += nbytes;
   }
   // TODO: Consider mouse events?
-  else {
-    return TERMKEY_RES_NONE;
-  }
+  else
+    return NULL;
 
-  return TERMKEY_RES_KEY;
+  return (char *)str;
 }
