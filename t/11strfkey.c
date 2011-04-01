@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
   char       buffer[16];
   size_t     len;
 
-  plan_tests(24);
+  plan_tests(28);
 
   tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
 
@@ -78,6 +78,18 @@ int main(int argc, char *argv[])
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_WRAPBRACKET);
   is_int(len, 4, "length for sym/Up/0 wrapbracket");
   is_str(buffer, "<Up>", "buffer for sym/Up/0 wrapbracket");
+
+  key.type = TERMKEY_TYPE_FUNCTION;
+  key.code.number = 5;
+  key.modifiers = 0;
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key, 0);
+  is_int(len, 2, "length for func/5/0");
+  is_str(buffer, "F5", "buffer for func/5/0");
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_WRAPBRACKET);
+  is_int(len, 4, "length for func/5/0 wrapbracket");
+  is_str(buffer, "<F5>", "buffer for func/5/0 wrapbracket");
 
   termkey_destroy(tk);
 

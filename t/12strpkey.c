@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
 #define CLEAR_KEY do { key.type = -1; key.code.codepoint = -1; key.modifiers = -1; key.utf8[0] = 0; } while(0)
 
-  plan_tests(44);
+  plan_tests(48);
 
   tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
 
@@ -83,6 +83,13 @@ int main(int argc, char *argv[])
   is_int(key.type,        TERMKEY_TYPE_KEYSYM, "key.type for sym/Up/0");
   is_int(key.code.sym,    TERMKEY_SYM_UP,      "key.code.codepoint for sym/Up/0");
   is_int(key.modifiers,   0,                   "key.modifiers for sym/Up/0");
+
+  CLEAR_KEY;
+  res = termkey_strpkey(tk, "F5", &key, 0);
+  is_int(res, TERMKEY_RES_KEY, "result for func/5/0");
+  is_int(key.type,        TERMKEY_TYPE_FUNCTION, "key.type for func/5/0");
+  is_int(key.code.number, 5,                     "key.code.number for func/5/0");
+  is_int(key.modifiers,   0,                     "key.modifiers for func/5/0");
 
   termkey_destroy(tk);
 
