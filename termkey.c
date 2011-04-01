@@ -1122,7 +1122,10 @@ TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, Ter
   else if((key->code.sym = termkey_keyname2sym(tk, str)) != TERMKEY_SYM_UNKNOWN) {
     key->type = TERMKEY_TYPE_KEYSYM;
   }
-  // TODO: Consider function keys
+  else if(sscanf(str, "F%d", &key->code.number) == 1) {
+    key->type = TERMKEY_TYPE_FUNCTION;
+  }
+  // TODO: Consider mouse events?
   else {
     return TERMKEY_RES_NONE;
   }
