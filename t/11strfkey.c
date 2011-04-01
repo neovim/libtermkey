@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
   tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
 
   key.type = TERMKEY_TYPE_UNICODE;
-  key.code.number = 'A';
+  key.code.codepoint = 'A';
   key.modifiers = 0;
   key.utf8[0] = 0;
 
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
   is_str(buffer, "A", "buffer for unicode/A/0 wrapbracket");
 
   key.type = TERMKEY_TYPE_UNICODE;
-  key.code.number = 'b';
+  key.code.codepoint = 'b';
   key.modifiers = TERMKEY_KEYMOD_CTRL;
   key.utf8[0] = 0;
 
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   is_str(buffer, "<C-b>", "buffer for unicode/b/CTRL wrapbracket");
 
   key.type = TERMKEY_TYPE_UNICODE;
-  key.code.number = 'c';
+  key.code.codepoint = 'c';
   key.modifiers = TERMKEY_KEYMOD_ALT;
   key.utf8[0] = 0;
 

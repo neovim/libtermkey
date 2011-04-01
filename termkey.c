@@ -1082,13 +1082,13 @@ TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, Ter
       return res;
     if(key->type != TERMKEY_TYPE_UNICODE)
       return TERMKEY_RES_NONE;
-    if(key->code.number < '@' || key->code.number > '_')
+    if(key->code.codepoint < '@' || key->code.codepoint > '_')
       return TERMKEY_RES_NONE;
     if(key->modifiers != 0)
       return TERMKEY_RES_NONE;
 
-    if(key->code.number >= 'A' && key->code.number <= 'Z')
-      key->code.number += 0x20;
+    if(key->code.codepoint >= 'A' && key->code.codepoint <= 'Z')
+      key->code.codepoint += 0x20;
     key->modifiers = TERMKEY_KEYMOD_CTRL;
     fill_utf8(key);
     return res;
@@ -1112,13 +1112,11 @@ TermKeyResult termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, Ter
     str = hyphen + 1;
   }
 
-  long codepoint;
   size_t nbytes;
 
-  if(parse_utf8((unsigned char *)str, strlen(str), &codepoint, &nbytes) == TERMKEY_RES_KEY &&
+  if(parse_utf8((unsigned char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY &&
      nbytes == strlen(str)) {
     key->type = TERMKEY_TYPE_UNICODE;
-    key->code.number = codepoint;
     fill_utf8(key);
   }
   else if((key->code.sym = termkey_keyname2sym(tk, str)) != TERMKEY_SYM_UNKNOWN) {
