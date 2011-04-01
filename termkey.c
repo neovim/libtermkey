@@ -726,7 +726,7 @@ static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)
   return TERMKEY_RES_KEY;
 }
 
-TermKeyResult termkey_interpret_mouse(TermKey *tk, TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col)
+TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col)
 {
   if(key->type != TERMKEY_TYPE_MOUSE)
     return TERMKEY_RES_NONE;
@@ -848,7 +848,7 @@ TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
   /* UNREACHABLE */
 }
 
-void termkey_pushinput(TermKey *tk, unsigned char *input, size_t inputlen)
+void termkey_pushinput(TermKey *tk, const unsigned char *input, size_t inputlen)
 {
   if(tk->buffstart + tk->buffcount + inputlen > tk->buffsize) {
     while(tk->buffstart + tk->buffcount + inputlen > tk->buffsize)
