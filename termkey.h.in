@@ -165,7 +165,7 @@ TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
 
-void termkey_pushinput(TermKey *tk, unsigned char *input, size_t inputlen);
+void termkey_pushinput(TermKey *tk, const unsigned char *input, size_t inputlen);
 
 TermKeyResult termkey_advisereadable(TermKey *tk);
 
@@ -175,7 +175,7 @@ char       *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym
 
 TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname); 
 
-TermKeyResult termkey_interpret_mouse(TermKey *tk, TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col);
+TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col);
 
 typedef enum {
   TERMKEY_FORMAT_LONGMOD     = 1 << 0, // Shift-... instead of S-...
