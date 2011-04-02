@@ -76,11 +76,11 @@ To convert the \fIsym\fP to a symbolic name, see \fBtermkey_get_keyname\fP(3) fu
 The following example program prints details of every keypress until the user presses "Ctrl-C". It demonstrates how to use the termkey instance in a typical \fBpoll\fP()-driven asynchronous program, which may include mixed IO with other file handles.
 .PP
 .in +4n
+.nf
 EOF
-sed i.br demo-async.c
+sed "s/\\\\/\\\\\\\\/g" demo-async.c
 cat <<EOF
 .in
-.nf
 .fi
 .SH "SEE ALSO"
 .BR termkey_new (3),
