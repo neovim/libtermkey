@@ -29,11 +29,11 @@ No key events are ready and the terminal has been closed, so no more will arrive
 The following example program prints details of every keypress until the user presses "Ctrl-C".
 .PP
 .in +4n
+.nf
 EOF
-sed i.br demo.c
+sed "s/\\\\/\\\\\\\\/g" demo.c
 cat <<EOF
 .in
-.nf
 .fi
 .SH "SEE ALSO"
 .BR termkey_new (3),
