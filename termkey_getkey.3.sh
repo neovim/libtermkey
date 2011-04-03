@@ -8,20 +8,19 @@ termkey_getkey, termkey_getkey_force \- retrieve the next key event
 .B #include <termkey.h>
 .sp
 .BI "TermKeyResult termkey_getkey(TermKey *" tk ", TermKeyKey *" key );
-.br
 .BI "TermKeyResult termkey_getkey_force(TermKey *" tk ", TermKeyKey *" key );
 .fi
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_getkey\fP attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. It returns one of the following values:
+\fBtermkey_getkey\fP() attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. It returns one of the following values:
 .in
 .TP
 .B TERMKEY_RES_KEY
 a complete keypress was removed from the buffer, and has been placed in the \fIkey\fP structure.
 .TP
 .B TERMKEY_RES_AGAIN
-a partial keypress event was found in the buffer, but it does not yet contain all the bytes required. An indication of what \fBtermkey_getkey_force(3)\fP would return has been placed in the \fIKey\fP structure.
+a partial keypress event was found in the buffer, but it does not yet contain all the bytes required. An indication of what \fBtermkey_getkey_force\fP(3) would return has been placed in the \fIkey\fP structure.
 .TP
 .B TERMKEY_RES_NONE
 no bytes are waiting in the buffer.
@@ -29,7 +28,7 @@ no bytes are waiting in the buffer.
 .B TERMKEY_RES_EOF
  no bytes are ready and the input stream is now closed.
 .PP
-\fBtermkey_getkey_force\fP is similar to \fBtermkey_getkey\fP but will not return \fBTERMKEY_RES_AGAIN\fP if a partial match is found. Instead, it will force an interpretation of the bytes, even if this means interpreting the start of an Escape-prefixed multi-byte sequence as a literal "Escape" key followed by normal letters.
+\fBtermkey_getkey_force\fP() is similar to \fBtermkey_getkey\fP() but will not return \fBTERMKEY_RES_AGAIN\fP if a partial match is found. Instead, it will force an interpretation of the bytes, even if this means interpreting the start of an Escape-prefixed multi-byte sequence as a literal "Escape" key followed by normal letters.
 .PP
 Neither of these functions will block or perform any IO operations on the underlying filehandle. To use the instance in an asynchronous program, see \fBtermkey_advisereadable\fP(3). For a blocking call suitable for use in a synchronous program, use \fBtermkey_waitkey\fP(3) instead of \fBtermkey_getkey\fP().
 .PP

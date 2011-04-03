@@ -10,7 +10,7 @@ termkey_keyname2sym \- look up a symbolic key value for a string name
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_keyname2sym\fP looks up the symbolic key value represented by the given string name. This is a case-sensitive comparison. If the given name is not found, \fBTERMKEY_SYM_UNKNOWN\fP is returned instead. This function is the inverse of \fBtermkey_get_keyname\fP(3), and is a more specific form of \fBtermkey_lookup_keyname\fP(3) which only recognises names as complete strings.
+\fBtermkey_keyname2sym\fP() looks up the symbolic key value represented by the given string name. This is a case-sensitive comparison. If the given name is not found, \fBTERMKEY_SYM_UNKNOWN\fP is returned instead. This function is the inverse of \fBtermkey_get_keyname\fP(3), and is a more specific form of \fBtermkey_lookup_keyname\fP(3) which only recognises names as complete strings.
 .PP
 Because the key names are stored in an array indexed by the symbol number, this function has to perform a linear search of the names. Use of this function should be restricted to converting key names into symbolic values during a program's initialisation, so that efficient comparisons can be done while it is running.
 .SH "RETURN VALUE"
