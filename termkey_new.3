@@ -6,15 +6,13 @@ termkey_new, termkey_destroy \- create or destroy new termkey instance
 .B #include <termkey.h>
 .sp
 .BI "TERMKEY_CHECK_VERSION;"
-.br
 .BI "TermKey *termkey_new(int " fd ", int " flags );
-.br
 .BI "void termkey_destroy(TermKey *" tk );
 .fi
 .sp
 Link with \fI\-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_new\fP() creates a new termkey instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fBTermKey\fP structure should be considered opaque; its contents are not intended for use outside of the library.
+\fBtermkey_new\fP() creates a new termkey instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fITermKey\fP structure should be considered opaque; its contents are not intended for use outside of the library.
 .PP
 \fBtermkey_destroy\fP() destroys the given instance and releases any resources controlled by it. It will not close the underlying filehandle given as the \fIfd\fP argument to \fBtermkey_new\fP().
 .PP
@@ -37,7 +35,7 @@ Ignore locale settings; force UTF-8 recombining on. This flag overrides \fBTERMK
 .B TERMKEY_FLAG_NOTERMIOS
 Even if the terminal file descriptor \fIfd\fP represents a
 .SM TTY
-device, do not call the \fBtcsetattr\fP() \fBtermios\fP function on it to set it to canonical input mode.
+device, do not call the \fBtcsetattr\fP(3) \fBtermios\fP function on it to set it to canonical input mode.
 .TP
 .B TERMKEY_FLAG_SPACESYMBOL
 Report space as being a symbolic key rather than a Unicode codepoint.
@@ -45,7 +43,7 @@ Report space as being a symbolic key rather than a Unicode codepoint.
 .B TERMKEY_FLAG_CTRLC
 Disable the \fBSIGINT\fP behaviour of \fICtrl-C\fP. If this flag is provided, then \fICtrl-C\fP will be available as a normal keypress, rather than sending the process group a \fBSIGINT\fP. This flag only takes effect without \fBTERMKEY_FLAG_NOTERMIOS\fP; with it, none of the signal keys are disabled anyway.
 .PP
-When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP().
+When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP(3).
 .SH VERSION CHECK MACRO
 Before calling any functions in the \fItermkey\fP library, an application should use the \fBTERMKEY_CHECK_VERSION\fP macro to check that the loaded version of the library is compatible with the version it was compiled against. This should be done early on, ideally just after entering its \fBmain()\fP function.
 .SH "RETURN VALUE"

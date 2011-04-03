@@ -11,7 +11,7 @@ termkey_interpret_mouse \- interpret opaque mouse event data
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_interpret_mouse\fP fills in variables in the passed pointers according to the mouse event found in \fIkey\fP. It should be called if \fBtermkey_getkey(3)\fP or similar have returned a key event with the type of \fBTERMKEY_TYPE_MOUSE\fP.
+\fBtermkey_interpret_mouse\fP() fills in variables in the passed pointers according to the mouse event found in \fIkey\fP. It should be called if \fBtermkey_getkey\fP(3) or similar have returned a key event with the type of \fBTERMKEY_TYPE_MOUSE\fP.
 .PP
 Any pointer may instead be given as \fBNULL\fP to not return that value.
 .PP

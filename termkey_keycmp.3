@@ -11,7 +11,7 @@ termkey_keycmp \- compare two key events
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_keycmp\fP compares two key structures and applies a total ordering, returning a value that is positive, zero, or negative, to indicate if the given structures are increasing, identical, or decreasing.
+\fBtermkey_keycmp\fP() compares two key structures and applies a total ordering, returning a value that is positive, zero, or negative, to indicate if the given structures are increasing, identical, or decreasing.
 .PP
 Two structures of differing type are ordered \fBTERMKEY_TYPE_UNICODE\fP, \fBTERMKEY_TYPE_KEYSYM\fP, \fBTERMKEY_TYPE_FUNCTION\fP, \fBTERMKEY_TYPE_MOUSE\fP. Unicode structures are ordered by codepoint, keysym structures are ordered by keysym number, function structures are ordered by function key number, and mouse structures are ordered opaquely by an unspecified but consistent ordering. Within these values, keys different in modifier bits are ordered by the modifiers.
 .SH "RETURN VALUE"

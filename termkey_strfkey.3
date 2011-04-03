@@ -11,7 +11,7 @@ termkey_strfkey \- format a string representing a key event
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_strfkey\fP formats a string buffer to contain a human-readable representation of a key event. It fills the \fIbuffer\fP in a way analogous to the \fBsnprintf\fP(3) or \fBstrftime\fP(3) standard library functions. This function used to be called \fBtermkey_snprint_key\fP but was renamed after version 0.6.
+\fBtermkey_strfkey\fP() formats a string buffer to contain a human-readable representation of a key event. It fills the \fIbuffer\fP in a way analogous to the \fBsnprintf\fP(3) or \fBstrftime\fP(3) standard library functions. This function used to be called \fBtermkey_snprint_key\fP() but was renamed after version 0.6.
 .PP
 The \fIformat\fP argument specifies the format of the output, as a bitmask of the following constants:
 .TP
