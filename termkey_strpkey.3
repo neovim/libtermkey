@@ -29,4 +29,5 @@ The \fBTERMKEY_FORMAT_WRAPBRACKET\fP and \fBTERMKEY_FORMAT_MOUSE_POS\fP options 
 After a successful parse, \fBtermkey_strpkey\fP() returns a pointer to the first character of the input it did not consume. If the input string contains more characters then this will point at the first character beyond. If the entire input string was consumed, then this will point at a null byte. If \fBtermkey_strpkey\fP() fails to parse, it returns \fBNULL\fP. After a failed parse, the \fIkey\fP structure may contain partial or invalid results. The structure will only be valid if the function returns a non-\fBNULL\fP result.
 .SH "SEE ALSO"
 .BR termkey_new (3),
-.BR termkey_strfkey (3)
+.BR termkey_strfkey (3),
+.BR termkey_keycmp (3)
