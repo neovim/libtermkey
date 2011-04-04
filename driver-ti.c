@@ -1,4 +1,5 @@
 // we want strdup()
+#define _XPG6
 #define _XOPEN_SOURCE 500
 
 #include "termkey.h"
