@@ -68,7 +68,7 @@ The \fImodifiers\fP bitmask is composed of a bitwise-or of the constants \fBTERM
 .PP
 The \fIutf8\fP field is only set on events whose \fItype\fP is \fBTERMKEY_TYPE_UNICODE\fP. It should not be read for other events.
 .PP
-To convert the \fIsym\fP to a symbolic name, see \fBtermkey_get_keyname\fP(3) function. It may instead be easier to convert the entire key event structure to a string, using \fBtermkey_snprint_key\fP(3).
+To convert the \fIsym\fP to a symbolic name, see \fBtermkey_get_keyname\fP(3) function. It may instead be easier to convert the entire key event structure to a string, using \fBtermkey_strfkey\fP(3).
 .SH "RETURN VALUE"
 \fBtermkey_getkey\fP() returns an enumeration of one of \fBTERMKEY_RES_KEY\fP, \fBTEMRKEY_RES_AGAIN\fP, \fBTERMKEY_RES_NONE\fP or \fBTERMKEY_RES_EOF\fP. \fBtermkey_getkey_force\fP() returns one of the above, except for \fBTERMKEY_RES_AGAIN\fP.
 .SH EXAMPLE
@@ -88,5 +88,6 @@ cat <<EOF
 .BR termkey_set_waittime (3),
 .BR termkey_get_keyname (3),
 .BR termkey_interpret_mouse (3),
-.BR termkey_snprint_key (3)
+.BR termkey_strfkey (3),
+.BR termkey_keycmp (3)
 EOF
