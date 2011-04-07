@@ -24,25 +24,25 @@ int main(int argc, char *argv[])
 
   key2.modifiers = TERMKEY_KEYMOD_CTRL;
 
-  ok(termkey_keycmp(tk, &key1, &key2) > 0, "cmpkey orders CTRL after nomod");
-  ok(termkey_keycmp(tk, &key2, &key1) < 0, "cmpkey orders nomod before CTRL");
+  ok(termkey_keycmp(tk, &key1, &key2) < 0, "cmpkey orders CTRL after nomod");
+  ok(termkey_keycmp(tk, &key2, &key1) > 0, "cmpkey orders nomod before CTRL");
 
   key2.code.codepoint = 'B';
   key2.modifiers = 0;
 
-  ok(termkey_keycmp(tk, &key1, &key2) > 0, "cmpkey orders 'B' after 'A'");
-  ok(termkey_keycmp(tk, &key2, &key1) < 0, "cmpkey orders 'A' before 'B'");
+  ok(termkey_keycmp(tk, &key1, &key2) < 0, "cmpkey orders 'B' after 'A'");
+  ok(termkey_keycmp(tk, &key2, &key1) > 0, "cmpkey orders 'A' before 'B'");
 
   key1.modifiers = TERMKEY_KEYMOD_CTRL;
 
-  ok(termkey_keycmp(tk, &key1, &key2) > 0, "cmpkey orders nomod 'B' after CTRL 'A'");
-  ok(termkey_keycmp(tk, &key2, &key1) < 0, "cmpkey orders CTRL 'A' before nomod 'B'");
+  ok(termkey_keycmp(tk, &key1, &key2) < 0, "cmpkey orders nomod 'B' after CTRL 'A'");
+  ok(termkey_keycmp(tk, &key2, &key1) > 0, "cmpkey orders CTRL 'A' before nomod 'B'");
 
   key2.type = TERMKEY_TYPE_KEYSYM;
   key2.code.sym = TERMKEY_SYM_UP;
 
-  ok(termkey_keycmp(tk, &key1, &key2) > 0, "cmpkey orders KEYSYM after UNICODE");
-  ok(termkey_keycmp(tk, &key2, &key1) < 0, "cmpkey orders UNICODE before KEYSYM");
+  ok(termkey_keycmp(tk, &key1, &key2) < 0, "cmpkey orders KEYSYM after UNICODE");
+  ok(termkey_keycmp(tk, &key2, &key1) > 0, "cmpkey orders UNICODE before KEYSYM");
 
   termkey_destroy(tk);
 
