@@ -1124,18 +1124,18 @@ char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyForm
   size_t nbytes;
   char *endstr;
 
-  if(parse_utf8((unsigned char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY &&
-     nbytes == strlen(str)) {
-    key->type = TERMKEY_TYPE_UNICODE;
-    fill_utf8(key);
-    str += nbytes;
-  }
-  else if((endstr = termkey_lookup_keyname(tk, str, &key->code.sym))) {
+  if((endstr = termkey_lookup_keyname(tk, str, &key->code.sym))) {
     key->type = TERMKEY_TYPE_KEYSYM;
     str = endstr;
   }
   else if(sscanf(str, "F%d%n", &key->code.number, &nbytes) == 1) {
     key->type = TERMKEY_TYPE_FUNCTION;
+    str += nbytes;
+  }
+  // Unicode must be last
+  else if(parse_utf8((unsigned char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY) {
+    key->type = TERMKEY_TYPE_UNICODE;
+    fill_utf8(key);
     str += nbytes;
   }
   // TODO: Consider mouse events?
