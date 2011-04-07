@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
 #define CLEAR_KEY do { key.type = -1; key.code.codepoint = -1; key.modifiers = -1; key.utf8[0] = 0; } while(0)
 
-  plan_tests(48);
+  plan_tests(53);
 
   tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
 
@@ -20,6 +20,14 @@ int main(int argc, char *argv[])
   is_int(key.modifiers,   0,                    "key.modifiers for unicode/A/0");
   is_str(key.utf8,        "A",                  "key.utf8 for unicode/A/0");
   is_str(endp, "", "consumed entire input for unicode/A/0");
+
+  CLEAR_KEY;
+  endp = termkey_strpkey(tk, "A and more", &key, 0);
+  is_int(key.type,        TERMKEY_TYPE_UNICODE, "key.type for unicode/A/0 trailing");
+  is_int(key.code.codepoint, 'A',               "key.code.codepoint for unicode/A/0 trailing");
+  is_int(key.modifiers,   0,                    "key.modifiers for unicode/A/0 trailing");
+  is_str(key.utf8,        "A",                  "key.utf8 for unicode/A/0 trailing");
+  is_str(endp, " and more", "points at string tail for unicode/A/0 trailing");
 
   CLEAR_KEY;
   endp = termkey_strpkey(tk, "C-b", &key, 0);
