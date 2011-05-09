@@ -235,6 +235,12 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
       return TERMKEY_RES_NONE;
     }
   }
+  else if(cmd == 'u') {
+    int mod = key->modifiers;
+    key->type = TERMKEY_TYPE_KEYSYM;
+    (*tk->method.emit_codepoint)(tk, arg[0], key);
+    key->modifiers |= mod;
+  }
   else if(cmd == 'M') {
     size_t csi_len = csi_end + 1;
 
