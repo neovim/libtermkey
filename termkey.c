@@ -873,7 +873,7 @@ TermKeyResult termkey_advisereadable(TermKey *tk)
   unsigned char buffer[64]; // Smaller than the default size
   ssize_t len = read(tk->fd, buffer, sizeof buffer);
 
-  if(len == -1 && errno == EAGAIN)
+  if(len == -1 && (errno == EAGAIN || errno == EINTR))
     return TERMKEY_RES_NONE;
   else if(len < 1) {
     tk->is_closed = 1;
