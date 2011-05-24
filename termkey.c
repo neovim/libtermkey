@@ -285,8 +285,8 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
         termios.c_lflag &= ~ISIG;
       else {
         /* Disable Ctrl-\==VQUIT and Ctrl-D==VSUSP but leave Ctrl-C as SIGINT */
-        termios.c_cc[VQUIT] = 0;
-        termios.c_cc[VSUSP] = 0;
+        termios.c_cc[VQUIT] = _POSIX_VDISABLE;
+        termios.c_cc[VSUSP] = _POSIX_VDISABLE;
       }
 
       tcsetattr(fd, TCSANOW, &termios);
