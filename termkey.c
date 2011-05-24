@@ -280,10 +280,14 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
       termios.c_iflag &= ~(IXON|INLCR|ICRNL);
       termios.c_lflag &= ~(ICANON|ECHO);
 
-      termios.c_cc[VQUIT] = 0;
-      termios.c_cc[VSUSP] = 0;
       if(flags & TERMKEY_FLAG_CTRLC)
-        termios.c_cc[VINTR] = 0;
+        /* want no signal keys at all, so just disable ISIG */
+        termios.c_lflag &= ~ISIG;
+      else {
+        /* Disable Ctrl-\==VQUIT and Ctrl-D==VSUSP but leave Ctrl-C as SIGINT */
+        termios.c_cc[VQUIT] = 0;
+        termios.c_cc[VSUSP] = 0;
+      }
 
       tcsetattr(fd, TCSANOW, &termios);
     }
