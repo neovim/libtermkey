@@ -743,10 +743,10 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
     *button = 0;
 
   if(col)
-    *col  = key->code.mouse[1];
+    *col  = (unsigned char)key->code.mouse[1];
 
   if(line)
-    *line = key->code.mouse[2];
+    *line = (unsigned char)key->code.mouse[2];
 
   if(!event)
     return TERMKEY_RES_KEY;
@@ -1070,7 +1070,7 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
         if(l <= 0) return pos;
         pos += l;
 
-        l = snprintf(buffer + pos, len - pos, " @ (%d,%d)", col, line);
+        l = snprintf(buffer + pos, len - pos, " @ (%u,%u)", col, line);
       }
     }
     break;
