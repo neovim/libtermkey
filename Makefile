@@ -52,7 +52,7 @@ install-inc:
 	install -d $(DESTDIR)$(INCDIR)
 	install -m644 termkey.h $(DESTDIR)$(INCDIR)
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
-	sed "s,@PREFIX@,$(PREFIX)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
+	sed "s,@LIBDIR@,$(LIBDIR),;s,@INCDIR@,$(INCDIR)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
 
 install-lib:
 	install -d $(DESTDIR)$(LIBDIR)
