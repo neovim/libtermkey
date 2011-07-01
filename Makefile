@@ -107,7 +107,7 @@ DISTDIR=libtermkey-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 distdir: all
 	mkdir __distdir
-	cp *.c *.h *.3 __distdir
+	cp *.c *.h *.3 LICENSE __distdir
 	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >__distdir/termkey.pc.in
 	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
 	mv __distdir $(DISTDIR)
