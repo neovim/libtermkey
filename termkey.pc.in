@@ -1,6 +1,5 @@
-prefix=@PREFIX@
-libdir=${prefix}/lib
-includedir=${prefix}/include
+libdir=@LIBDIR@
+includedir=@INCDIR@
 
 Name: termkey
 Description: Abstract terminal key input library
