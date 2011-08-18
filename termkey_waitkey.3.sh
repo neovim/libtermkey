@@ -25,6 +25,9 @@ A key event as been provided.
 .TP
 .B TERMKEY_RES_EOF
 No key events are ready and the terminal has been closed, so no more will arrive.
+.TP
+.B TERMKEY_RES_ERROR
+An IO error occured. \fIerrno\fP will be preserved.
 .SH EXAMPLE
 The following example program prints details of every keypress until the user presses "Ctrl-C".
 .PP

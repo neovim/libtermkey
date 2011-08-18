@@ -607,6 +607,7 @@ static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nb
 
       /* fallthrough */
     case TERMKEY_RES_EOF:
+    case TERMKEY_RES_ERROR:
       return ret;
 
     case TERMKEY_RES_AGAIN:
@@ -673,6 +674,7 @@ static TermKeyResult peekkey_simple(TermKey *tk, TermKeyKey *key, int force, siz
       case TERMKEY_RES_NONE:
       case TERMKEY_RES_EOF:
       case TERMKEY_RES_AGAIN:
+      case TERMKEY_RES_ERROR:
         break;
     }
 
@@ -821,10 +823,13 @@ TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
     switch(ret) {
       case TERMKEY_RES_KEY:
       case TERMKEY_RES_EOF:
+      case TERMKEY_RES_ERROR:
         return ret;
 
       case TERMKEY_RES_NONE:
-        termkey_advisereadable(tk);
+        ret = termkey_advisereadable(tk);
+        if(ret == TERMKEY_RES_ERROR)
+          return ret;
         break;
 
       case TERMKEY_RES_AGAIN:
@@ -839,13 +844,17 @@ TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
           fd.fd = tk->fd;
           fd.events = POLLIN;
 
-          poll(&fd, 1, tk->waittime);
+          int pollret = poll(&fd, 1, tk->waittime);
+          if(pollret == -1)
+            return TERMKEY_RES_ERROR;
 
           if(fd.revents & (POLLIN|POLLHUP|POLLERR))
             ret = termkey_advisereadable(tk);
           else
             ret = TERMKEY_RES_NONE;
 
+          if(ret == TERMKEY_RES_ERROR)
+            return ret;
           if(ret == TERMKEY_RES_NONE)
             return termkey_getkey_force(tk, key);
         }
@@ -877,8 +886,12 @@ TermKeyResult termkey_advisereadable(TermKey *tk)
   unsigned char buffer[64]; // Smaller than the default size
   ssize_t len = read(tk->fd, buffer, sizeof buffer);
 
-  if(len == -1 && (errno == EAGAIN || errno == EINTR))
-    return TERMKEY_RES_NONE;
+  if(len == -1) {
+    if(errno == EAGAIN)
+      return TERMKEY_RES_NONE;
+    else
+      return TERMKEY_RES_ERROR;
+  }
   else if(len < 1) {
     tk->is_closed = 1;
     return TERMKEY_RES_NONE;
