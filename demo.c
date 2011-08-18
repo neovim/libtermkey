@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <getopt.h>
+#include <errno.h>
 
 #include "termkey.h"
 
@@ -44,13 +45,22 @@ int main(int argc, char *argv[])
     printf("\e[?%dhMouse mode active\n", mouse);
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
-    termkey_strfkey(tk, buffer, sizeof buffer, &key, format);
-    printf("%s\n", buffer);
+    if(ret == TERMKEY_RES_KEY) {
+      termkey_strfkey(tk, buffer, sizeof buffer, &key, format);
+      printf("%s\n", buffer);
 
-    if(key.type == TERMKEY_TYPE_UNICODE && 
-       key.modifiers & TERMKEY_KEYMOD_CTRL &&
-       (key.code.codepoint == 'C' || key.code.codepoint == 'c'))
-      break;
+      if(key.type == TERMKEY_TYPE_UNICODE && 
+         key.modifiers & TERMKEY_KEYMOD_CTRL &&
+         (key.code.codepoint == 'C' || key.code.codepoint == 'c'))
+        break;
+    }
+    else if(ret == TERMKEY_RES_ERROR) {
+      if(errno != EINTR) {
+        perror("termkey_waitkey");
+        break;
+      }
+      printf("Interrupted by signal\n");
+    }
   }
 
   if(mouse)

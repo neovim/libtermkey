@@ -23,6 +23,9 @@ At least one byte was read.
 .TP
 .B TERMKEY_RES_NONE
 No nore bytes were read.
+.TP
+.B TERMKEY_RES_ERROR
+An IO error occured. \fIerrno\fP will be preserved.
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_getkey (3),
