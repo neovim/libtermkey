@@ -279,6 +279,8 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
 
       termios.c_iflag &= ~(IXON|INLCR|ICRNL);
       termios.c_lflag &= ~(ICANON|ECHO);
+      termios.c_cc[VMIN] = 1;
+      termios.c_cc[VTIME] = 0;
 
       if(flags & TERMKEY_FLAG_CTRLC)
         /* want no signal keys at all, so just disable ISIG */
