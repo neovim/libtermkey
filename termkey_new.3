@@ -42,6 +42,9 @@ Report space as being a symbolic key rather than a Unicode codepoint.
 .TP
 .B TERMKEY_FLAG_CTRLC
 Disable the \fBSIGINT\fP behaviour of \fICtrl-C\fP. If this flag is provided, then \fICtrl-C\fP will be available as a normal keypress, rather than sending the process group a \fBSIGINT\fP. This flag only takes effect without \fBTERMKEY_FLAG_NOTERMIOS\fP; with it, none of the signal keys are disabled anyway.
+.TP
+.B TERMKEY_FLAG_EINTR
+Without this flag, IO operations are retried when interrupted by a signal (\fBEINTR\fP). With this flag the \fBTERMKEY_RES_ERROR\fP result is returned instead.
 .PP
 When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP(3).
 .SH VERSION CHECK MACRO
