@@ -841,12 +841,17 @@ TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
 
           struct pollfd fd;
 
+retry:
           fd.fd = tk->fd;
           fd.events = POLLIN;
 
           int pollret = poll(&fd, 1, tk->waittime);
-          if(pollret == -1)
+          if(pollret == -1) {
+            if(errno == EINTR && !(tk->flags & TERMKEY_FLAG_EINTR))
+              goto retry;
+
             return TERMKEY_RES_ERROR;
+          }
 
           if(fd.revents & (POLLIN|POLLHUP|POLLERR))
             ret = termkey_advisereadable(tk);
@@ -884,11 +889,16 @@ void termkey_pushinput(TermKey *tk, const unsigned char *input, size_t inputlen)
 TermKeyResult termkey_advisereadable(TermKey *tk)
 {
   unsigned char buffer[64]; // Smaller than the default size
-  ssize_t len = read(tk->fd, buffer, sizeof buffer);
+  ssize_t len;
+
+retry:
+  len = read(tk->fd, buffer, sizeof buffer);
 
   if(len == -1) {
     if(errno == EAGAIN)
       return TERMKEY_RES_NONE;
+    else if(errno == EINTR && !(tk->flags & TERMKEY_FLAG_EINTR))
+      goto retry;
     else
       return TERMKEY_RES_ERROR;
   }
