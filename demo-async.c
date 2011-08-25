@@ -1,3 +1,6 @@
+// <poll.h> might need this for sigset_t
+#define _XOPEN_SOURCE 600
+
 #include <poll.h>
 #include <stdio.h>
 
