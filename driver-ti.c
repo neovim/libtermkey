@@ -1,6 +1,5 @@
 // we want strdup()
-#define _XPG6
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 
 #include "termkey.h"
 #include "termkey-internal.h"
