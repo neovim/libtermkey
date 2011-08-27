@@ -24,6 +24,8 @@ If the only modifier is \fBTERMKEY_MOD_CTRL\fP on a plain letter, accept it as "
 .B TERMKEY_FORMAT_ALTISMETA
 Use the name "Meta" or the letter "M" instead of "Alt" or "A".
 .PP
+Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
+.PP
 The \fBTERMKEY_FORMAT_WRAPBRACKET\fP and \fBTERMKEY_FORMAT_MOUSE_POS\fP options are currently not supported by \fBtermkey_strpkey\fP(). When returning a \fBTERMKEY_TYPE_UNICODE\fP key structure, this function will fill in the \fIutf8\fP member.
 .SH "RETURN VALUE"
 After a successful parse, \fBtermkey_strpkey\fP() returns a pointer to the first character of the input it did not consume. If the input string contains more characters then this will point at the first character beyond. If the entire input string was consumed, then this will point at a null byte. If \fBtermkey_strpkey\fP() fails to parse, it returns \fBNULL\fP. After a failed parse, the \fIkey\fP structure may contain partial or invalid results. The structure will only be valid if the function returns a non-\fBNULL\fP result.

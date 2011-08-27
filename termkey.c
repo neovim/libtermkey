@@ -538,12 +538,6 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
       key->type = TERMKEY_TYPE_KEYSYM;
     }
   }
-  else if(codepoint == 0x20 && (tk->flags & TERMKEY_FLAG_SPACESYMBOL)) {
-    // ASCII space
-    key->type = TERMKEY_TYPE_KEYSYM;
-    key->code.sym = TERMKEY_SYM_SPACE;
-    key->modifiers = 0;
-  }
   else if(codepoint == 0x7f && !(tk->flags & TERMKEY_FLAG_NOINTERPRET)) {
     // ASCII DEL
     key->type = TERMKEY_TYPE_KEYSYM;
@@ -569,8 +563,29 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
     key->modifiers = 0;
   }
 
+  termkey_canonicalise(tk, key);
+
   if(key->type == TERMKEY_TYPE_UNICODE)
     fill_utf8(key);
+}
+
+void termkey_canonicalise(TermKey *tk, TermKeyKey *key)
+{
+  int flags = tk->flags;
+
+  if(flags & TERMKEY_FLAG_SPACESYMBOL) {
+    if(key->type == TERMKEY_TYPE_UNICODE && key->code.number == 0x20) {
+      key->type     = TERMKEY_TYPE_KEYSYM;
+      key->code.sym = TERMKEY_SYM_SPACE;
+    }
+  }
+  else {
+    if(key->type == TERMKEY_TYPE_KEYSYM && key->code.sym == TERMKEY_SYM_SPACE) {
+      key->type        = TERMKEY_TYPE_UNICODE;
+      key->code.number = 0x20;
+      fill_utf8(key);
+    }
+  }
 }
 
 static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)
@@ -1177,6 +1192,8 @@ char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyForm
   // TODO: Consider mouse events?
   else
     return NULL;
+
+  termkey_canonicalise(tk, key);
 
   return (char *)str;
 }
