@@ -32,6 +32,8 @@ no bytes are waiting in the buffer.
 .PP
 Neither of these functions will block or perform any IO operations on the underlying filehandle. To use the instance in an asynchronous program, see \fBtermkey_advisereadable\fP(3). For a blocking call suitable for use in a synchronous program, use \fBtermkey_waitkey\fP(3) instead of \fBtermkey_getkey\fP().
 .PP
+Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
+.PP
 The \fITermKeyKey\fP structure is defined as follows:
 .PP
 .in +4n

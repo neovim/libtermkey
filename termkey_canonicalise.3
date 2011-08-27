@@ -1,0 +1,24 @@
+.TH TERMKEY_CANONICALISE 3
+.SH NAME
+termkey_canonicalise \- canonicalise a key event
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "void termkey_canonicalise(TermKey *" tk ", TermKeyKey *" key );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_canonicalise\fP(3) modifies the key event structure given by \fIkey\fP according to the flags set on the given \fItk\fP instance. This operation is performed implicitly by \fBtermkey_getkey\fP(3), \fBtermkey_waitkey\fP(3) and \fBtermkey_strpkey\fP(3), and is also provided explicitly by this function.
+.PP
+The canonicalisation operation is affected by the following flags:
+.TP
+.B TERMKEY_FLAG_SPACESYMBOL
+If this flag is set then a Unicode space character is represented using the \fBTERMKEY_SYM_SPACE\fP symbol. If this flag is not set, it is represented by the U+0020 Unicode codepoint.
+.SH "RETURN VALUE"
+\fBtermkey_canonicalise\fP() returns no value.
+.SH "SEE ALSO"
+.BR termkey_new (3),
+.BR termkey_waitkey (3),
+.BR termkey_strpkey (3)
