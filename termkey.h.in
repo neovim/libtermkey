@@ -197,18 +197,6 @@ char   *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFo
 
 int termkey_keycmp(TermKey *tk, const TermKeyKey *key1, const TermKeyKey *key2);
 
-// Old name for termkey_strfkey()
-size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
-
-// Legacy name typedefs
-
-typedef TermKeySym    termkey_keysym;
-typedef TermKeyType   termkey_type;
-typedef TermKeyResult termkey_result;
-typedef TermKeyKey    termkey_key;
-
-typedef TermKey termkey_t;
-
 #endif
 
 #ifdef __cplusplus
