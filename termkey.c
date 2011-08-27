@@ -995,7 +995,10 @@ static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set
   return sym;
 }
 
-/* Previous name for this function */
+/* Previous name for this function
+ * No longer declared in termkey.h but it remains in the compiled library for
+ * backward-compatibility reasons.
+ */
 size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
 {
   return termkey_strfkey(tk, buffer, len, key, format);
