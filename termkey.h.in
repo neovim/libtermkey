@@ -163,6 +163,8 @@ void termkey_set_flags(TermKey *tk, int newflags);
 int  termkey_get_waittime(TermKey *tk);
 void termkey_set_waittime(TermKey *tk, int msec);
 
+void termkey_canonicalise(TermKey *tk, TermKeyKey *key);
+
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
