@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
   is_str(key.utf8,        " ",                  "key.utf8 for Space/unicode");
   is_str(endp, "", "consumed entire input for Space/unicode");
 
-  termkey_set_flags(tk, termkey_get_flags(tk) | TERMKEY_FLAG_SPACESYMBOL);
+  termkey_set_canonflags(tk, termkey_get_canonflags(tk) | TERMKEY_CANON_SPACESYMBOL);
 
   CLEAR_KEY;
   endp = termkey_strpkey(tk, " ", &key, 0);

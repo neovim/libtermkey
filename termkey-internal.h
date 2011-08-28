@@ -33,6 +33,7 @@ struct TermKeyDriverNode {
 struct _TermKey {
   int    fd;
   int    flags;
+  int    canonflags;
   unsigned char *buffer;
   size_t buffstart; // First offset in buffer
   size_t buffcount; // NUMBER of entires valid in buffer

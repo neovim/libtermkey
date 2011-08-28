@@ -144,9 +144,13 @@ enum {
   TERMKEY_FLAG_RAW         = 1 << 2, // Input is raw bytes, not UTF-8
   TERMKEY_FLAG_UTF8        = 1 << 3, // Input is definitely UTF-8
   TERMKEY_FLAG_NOTERMIOS   = 1 << 4, // Do not make initial termios calls on construction
-  TERMKEY_FLAG_SPACESYMBOL = 1 << 5, // Space is symbolic rather than Unicode
+  TERMKEY_FLAG_SPACESYMBOL = 1 << 5, // Sets TERMKEY_CANON_SPACESYMBOL
   TERMKEY_FLAG_CTRLC       = 1 << 6, // Allow Ctrl-C to be read as normal, disabling SIGINT
   TERMKEY_FLAG_EINTR       = 1 << 7  // Return ERROR on signal (EINTR) rather than retry
+};
+
+enum {
+  TERMKEY_CANON_SPACESYMBOL = 1 << 0, // Space is symbolic rather than Unicode
 };
 
 void termkey_check_version(int major, int minor);
@@ -162,6 +166,9 @@ void termkey_set_flags(TermKey *tk, int newflags);
 
 int  termkey_get_waittime(TermKey *tk);
 void termkey_set_waittime(TermKey *tk, int msec);
+
+int  termkey_get_canonflags(TermKey *tk);
+void termkey_set_canonflags(TermKey *tk, int);
 
 void termkey_canonicalise(TermKey *tk, TermKeyKey *key);
 
