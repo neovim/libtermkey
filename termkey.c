@@ -198,6 +198,10 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
 
   tk->fd    = fd;
   tk->flags = flags;
+  tk->canonflags = 0;
+
+  if(flags & TERMKEY_FLAG_SPACESYMBOL)
+    tk->canonflags |= TERMKEY_CANON_SPACESYMBOL;
 
   tk->buffer = malloc(buffsize);
   if(!tk->buffer)
@@ -373,6 +377,11 @@ int termkey_get_flags(TermKey *tk)
 void termkey_set_flags(TermKey *tk, int newflags)
 {
   tk->flags = newflags;
+
+  if(tk->flags & TERMKEY_FLAG_SPACESYMBOL)
+    tk->canonflags |= TERMKEY_CANON_SPACESYMBOL;
+  else
+    tk->canonflags &= ~TERMKEY_CANON_SPACESYMBOL;
 }
 
 void termkey_set_waittime(TermKey *tk, int msec)
@@ -383,6 +392,21 @@ void termkey_set_waittime(TermKey *tk, int msec)
 int termkey_get_waittime(TermKey *tk)
 {
   return tk->waittime;
+}
+
+int termkey_get_canonflags(TermKey *tk)
+{
+  return tk->canonflags;
+}
+
+void termkey_set_canonflags(TermKey *tk, int flags)
+{
+  tk->canonflags = flags;
+
+  if(tk->canonflags & TERMKEY_CANON_SPACESYMBOL)
+    tk->flags |= TERMKEY_FLAG_SPACESYMBOL;
+  else
+    tk->flags &= ~TERMKEY_FLAG_SPACESYMBOL;
 }
 
 static void eat_bytes(TermKey *tk, size_t count)
@@ -571,9 +595,9 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
 
 void termkey_canonicalise(TermKey *tk, TermKeyKey *key)
 {
-  int flags = tk->flags;
+  int flags = tk->canonflags;
 
-  if(flags & TERMKEY_FLAG_SPACESYMBOL) {
+  if(flags & TERMKEY_CANON_SPACESYMBOL) {
     if(key->type == TERMKEY_TYPE_UNICODE && key->code.number == 0x20) {
       key->type     = TERMKEY_TYPE_KEYSYM;
       key->code.sym = TERMKEY_SYM_SPACE;
