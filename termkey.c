@@ -610,6 +610,12 @@ void termkey_canonicalise(TermKey *tk, TermKeyKey *key)
       fill_utf8(key);
     }
   }
+
+  if(flags & TERMKEY_CANON_DELBS) {
+    if(key->type == TERMKEY_TYPE_KEYSYM && key->code.sym == TERMKEY_SYM_DEL) {
+      key->code.sym = TERMKEY_SYM_BACKSPACE;
+    }
+  }
 }
 
 static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nbytep)
