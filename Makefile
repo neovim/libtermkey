@@ -66,6 +66,7 @@ install-man:
 	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_destroy.3.gz
 	ln -sf termkey_getkey.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getkey_force.3.gz
 	ln -sf termkey_set_waittime.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_waittime.3.gz
+	ln -sf termkey_set_flags.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_flags.3.gz
 
 # DIST CUT
 
