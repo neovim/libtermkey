@@ -16,6 +16,9 @@ The canonicalisation operation is affected by the following flags:
 .TP
 .B TERMKEY_CANON_SPACESYMBOL
 If this flag is set then a Unicode space character is represented using the \fBTERMKEY_SYM_SPACE\fP symbol. If this flag is not set, it is represented by the U+0020 Unicode codepoint.
+.TP
+.B TERMKEY_CANON_DELBS
+If this flag is set then an ASCII DEL character is represented by the \fBTERMKEY_SYM_BACKSPACE\fP symbol. If not, it is represented by \fBTERMKEY_SYM_DEL\fP. An ASCII BS character is always represented by \fBTERMKEY_SYM_BACKSPACE\fP, regardless of this flag.
 .SH "RETURN VALUE"
 \fBtermkey_canonicalise\fP() returns no value.
 .SH "SEE ALSO"
