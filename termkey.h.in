@@ -151,6 +151,7 @@ enum {
 
 enum {
   TERMKEY_CANON_SPACESYMBOL = 1 << 0, // Space is symbolic rather than Unicode
+  TERMKEY_CANON_DELBS       = 1 << 1, // Del is converted to Backspace
 };
 
 void termkey_check_version(int major, int minor);
