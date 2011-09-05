@@ -105,7 +105,7 @@ termkey.h: termkey.h.in Makefile
 	    -e 's/@@VERSION_MINOR@@/$(VERSION_MINOR)/g' \
 	    $< >$@
 
-DISTDIR=libtermkey-$(VERSION_MAJOR).$(VERSION_MINOR)
+DISTDIR=libtermkey-$(VERSION)
 
 distdir: all
 	mkdir __distdir
