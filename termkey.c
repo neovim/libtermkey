@@ -153,6 +153,8 @@ static void print_key(TermKey *tk, TermKeyKey *key)
 
 static const char *res2str(TermKeyResult res)
 {
+  static char errorbuffer[256];
+
   switch(res) {
   case TERMKEY_RES_KEY:
     return "TERMKEY_RES_KEY";
@@ -162,6 +164,9 @@ static const char *res2str(TermKeyResult res)
     return "TERMKEY_RES_AGAIN";
   case TERMKEY_RES_NONE:
     return "TERMKEY_RES_NONE";
+  case TERMKEY_RES_ERROR:
+    snprintf(errorbuffer, sizeof errorbuffer, "TERMKEY_RES_ERROR(errno=%d)\n", errno);
+    return (const char*)errorbuffer;
   }
 
   return "unknown";
