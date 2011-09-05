@@ -256,7 +256,7 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
       continue;
 
 #ifdef DEBUG
-    fprintf(stderr, "Loading the %s driver\n", drivers[i]->name);
+    fprintf(stderr, "Loading the %s driver...\n", drivers[i]->name);
 #endif
 
     struct TermKeyDriverNode *thisdrv = malloc(sizeof(*thisdrv));
@@ -273,6 +273,10 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
       tail->next = thisdrv;
 
     tail = thisdrv;
+
+#ifdef DEBUG
+    fprintf(stderr, "Loaded %s driver\n", drivers[i]->name);
+#endif
   }
 
   if(!tk->drivers) {
@@ -304,6 +308,9 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
 #endif
       }
 
+#ifdef DEBUG
+      fprintf(stderr, "Setting termios(3) flags\n");
+#endif
       tcsetattr(fd, TCSANOW, &termios);
     }
   }
@@ -312,6 +319,10 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
   for(p = tk->drivers; p; p = p->next)
     if(p->driver->start_driver)
       (*p->driver->start_driver)(tk, p->info);
+
+#ifdef DEBUG
+  fprintf(stderr, "Drivers started; termkey instance %p is ready\n", tk);
+#endif
 
   return tk;
 
