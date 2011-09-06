@@ -1244,28 +1244,34 @@ char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyForm
   return (char *)str;
 }
 
-int termkey_keycmp(TermKey *tk, const TermKeyKey *key1, const TermKeyKey *key2)
+int termkey_keycmp(TermKey *tk, const TermKeyKey *key1p, const TermKeyKey *key2p)
 {
-  if(key1->type != key2->type)
-    return key1->type - key2->type;
+  /* Copy the key structs since we'll be modifying them */
+  TermKeyKey key1 = *key1p, key2 = *key2p;
 
-  switch(key1->type) {
+  termkey_canonicalise(tk, &key1);
+  termkey_canonicalise(tk, &key2);
+
+  if(key1.type != key2.type)
+    return key1.type - key2.type;
+
+  switch(key1.type) {
     case TERMKEY_TYPE_UNICODE:
-      if(key1->code.codepoint != key2->code.codepoint)
-        return key1->code.codepoint - key2->code.codepoint;
+      if(key1.code.codepoint != key2.code.codepoint)
+        return key1.code.codepoint - key2.code.codepoint;
     case TERMKEY_TYPE_KEYSYM:
-      if(key1->code.sym != key2->code.sym)
-        return key1->code.sym - key2->code.sym;
+      if(key1.code.sym != key2.code.sym)
+        return key1.code.sym - key2.code.sym;
     case TERMKEY_TYPE_FUNCTION:
-      if(key1->code.number != key2->code.number)
-        return key1->code.number - key2->code.number;
+      if(key1.code.number != key2.code.number)
+        return key1.code.number - key2.code.number;
     case TERMKEY_TYPE_MOUSE:
       {
-        int cmp = strncmp(key1->code.mouse, key2->code.mouse, 4);
+        int cmp = strncmp(key1.code.mouse, key2.code.mouse, 4);
         if(cmp != 0)
           return cmp;
       }
   }
 
-  return key1->modifiers - key2->modifiers;
+  return key1.modifiers - key2.modifiers;
 }
