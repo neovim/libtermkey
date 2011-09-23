@@ -157,24 +157,14 @@ static struct trie_node *compress_trie(struct trie_node *n)
   return n;
 }
 
-static void *new_driver(TermKey *tk, const char *term)
+static int load_terminfo(TermKeyTI *ti, const char *term)
 {
   int err;
 
   /* Have to cast away the const. But it's OK - we know terminfo won't really
    * modify term */
   if(setupterm((char*)term, 1, &err) != OK)
-    return NULL;
-
-  TermKeyTI *ti = malloc(sizeof *ti);
-  if(!ti)
-    return NULL;
-
-  ti->tk = tk;
-
-  ti->root = new_node_arr(0, 0xff);
-  if(!ti->root)
-    goto abort_free_ti;
+    return 0;
 
   int i;
   for(i = 0; strfnames[i]; i++) {
@@ -189,10 +179,10 @@ static void *new_driver(TermKey *tk, const char *term)
 
     struct trie_node *node = NULL;
 
-    if(strcmp(strfnames[i] + 4, "mouse") == 0) {
+    if(strcmp(name + 4, "mouse") == 0) {
       node = malloc(sizeof(*node));
       if(!node)
-        goto abort_free_trie;
+        return 0;
 
       node->type = TYPE_MOUSE;
     }
@@ -202,7 +192,7 @@ static void *new_driver(TermKey *tk, const char *term)
       int mask = 0;
       int set  = 0;
 
-      if(!funcname2keysym(strfnames[i] + 4, &type, &sym, &mask, &set))
+      if(!funcname2keysym(name + 4, &type, &sym, &mask, &set))
         continue;
 
       if(sym == TERMKEY_SYM_NONE)
@@ -214,11 +204,9 @@ static void *new_driver(TermKey *tk, const char *term)
     if(node)
       if(!insert_seq(ti, value, node)) {
         free(node);
-        goto abort_free_trie;
+        return 0;
       }
   }
-
-  ti->root = compress_trie(ti->root);
 
   /* Take copies of these terminfo strings, in case we build multiple termkey
    * instances for multiple different termtypes, and it's different by the
@@ -233,6 +221,26 @@ static void *new_driver(TermKey *tk, const char *term)
     ti->stop_string = strdup(keypad_local);
   else
     ti->stop_string = NULL;
+
+  return 1;
+}
+
+static void *new_driver(TermKey *tk, const char *term)
+{
+  TermKeyTI *ti = malloc(sizeof *ti);
+  if(!ti)
+    return NULL;
+
+  ti->tk = tk;
+
+  ti->root = new_node_arr(0, 0xff);
+  if(!ti->root)
+    goto abort_free_ti;
+
+  if(!load_terminfo(ti, term))
+    goto abort_free_trie;
+
+  ti->root = compress_trie(ti->root);
 
   return ti;
 
