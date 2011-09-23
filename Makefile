@@ -1,6 +1,7 @@
 LIBTOOL=libtool
 
 CFLAGS?=
+LDFLAGS=-lcurses
 
 CFLAGS_DEBUG=
 
@@ -30,7 +31,7 @@ LIBRARY=libtermkey.la
 	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $<
 
 $(LIBRARY): $(OBJECTS)
-	$(LIBTOOL) --mode=link --tag=CC gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -lcurses -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) $(LDFLAGS) -o $@ $^
 
 demo: $(LIBRARY) demo.lo
 	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
