@@ -1,7 +1,13 @@
 LIBTOOL=libtool
 
 CFLAGS?=
-LDFLAGS=-lcurses
+
+ifeq ($(shell pkg-config --atleast-version=0.1.0 unibilium && echo 1),1)
+  CFLAGS +=$(shell pkg-config --cflags unibilium) -DHAVE_UNIBILIUM
+  LDFLAGS+=$(shell pkg-config --libs   unibilium)
+else
+  LDFLAGS+=-lncurses
+endif
 
 CFLAGS_DEBUG=
 

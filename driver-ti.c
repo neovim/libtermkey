@@ -4,11 +4,15 @@
 #include "termkey.h"
 #include "termkey-internal.h"
 
-#include <curses.h>
-#include <term.h>
+#ifdef HAVE_UNIBILIUM
+# include <unibilium.h>
+#else
+# include <curses.h>
+# include <term.h>
 
 /* curses.h has just poluted our namespace. We want this back */
-#undef buttons
+# undef buttons
+#endif
 
 #include <ctype.h>
 #include <stdio.h>
@@ -159,21 +163,41 @@ static struct trie_node *compress_trie(struct trie_node *n)
 
 static int load_terminfo(TermKeyTI *ti, const char *term)
 {
+  int i;
+
+#ifdef HAVE_UNIBILIUM
+  unibi_term *unibi = unibi_from_term(term);
+  if(!unibi)
+    return 0;
+#else
   int err;
 
   /* Have to cast away the const. But it's OK - we know terminfo won't really
    * modify term */
   if(setupterm((char*)term, 1, &err) != OK)
     return 0;
+#endif
 
-  int i;
-  for(i = 0; strfnames[i]; i++) {
+#ifdef HAVE_UNIBILIUM
+  for(i = unibi_string_begin_+1; i < unibi_string_end_; i++)
+#else
+  for(i = 0; strfnames[i]; i++)
+#endif
+  {
     // Only care about the key_* constants
+#ifdef HAVE_UNIBILIUM
+    const char *name = unibi_name_str(i);
+#else
     const char *name = strfnames[i];
+#endif
     if(strncmp(name, "key_", 4) != 0)
       continue;
 
+#ifdef HAVE_UNIBILIUM
+    const char *value = unibi_get_str(unibi, i);
+#else
     const char *value = tigetstr(strnames[i]);
+#endif
     if(!value || value == (char*)-1)
       continue;
 
@@ -212,15 +236,27 @@ static int load_terminfo(TermKeyTI *ti, const char *term)
    * instances for multiple different termtypes, and it's different by the
    * time we want to use it
    */
+#ifdef HAVE_UNIBILIUM
+  const char *keypad_xmit = unibi_get_str(unibi, unibi_pkey_xmit);
+#endif
+
   if(keypad_xmit)
     ti->start_string = strdup(keypad_xmit);
   else
     ti->start_string = NULL;
 
+#ifdef HAVE_UNIBILIUM
+  const char *keypad_local = unibi_get_str(unibi, unibi_pkey_local);
+#endif
+
   if(keypad_local)
     ti->stop_string = strdup(keypad_local);
   else
     ti->stop_string = NULL;
+
+#ifdef HAVE_UNIBILIUM
+  unibi_destroy(unibi);
+#endif
 
   return 1;
 }
