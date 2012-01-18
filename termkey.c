@@ -940,29 +940,17 @@ retry:
   /* UNREACHABLE */
 }
 
-static void push_bytes(TermKey *tk, const unsigned char *input, size_t inputlen)
-{
-  if(tk->buffstart + tk->buffcount + inputlen > tk->buffsize) {
-    while(tk->buffstart + tk->buffcount + inputlen > tk->buffsize)
-      tk->buffsize *= 2;
-
-    unsigned char *newbuffer = realloc(tk->buffer, tk->buffsize);
-    // TODO: Handle realloc() failure
-    tk->buffer = newbuffer;
-  }
-
-  // Not strcpy just in case of NUL bytes
-  memcpy(tk->buffer + tk->buffstart + tk->buffcount, input, inputlen);
-  tk->buffcount += inputlen;
-}
-
 TermKeyResult termkey_advisereadable(TermKey *tk)
 {
-  unsigned char buffer[64]; // Smaller than the default size
   ssize_t len;
 
+  if(tk->buffstart) {
+    memmove(tk->buffer, tk->buffer + tk->buffstart, tk->buffcount);
+    tk->buffstart = 0;
+  }
+
 retry:
-  len = read(tk->fd, buffer, sizeof buffer);
+  len = read(tk->fd, tk->buffer + tk->buffcount, tk->buffsize - tk->buffcount);
 
   if(len == -1) {
     if(errno == EAGAIN)
@@ -977,7 +965,7 @@ retry:
     return TERMKEY_RES_NONE;
   }
   else {
-    push_bytes(tk, buffer, len);
+    tk->buffcount += len;
     return TERMKEY_RES_AGAIN;
   }
 }
