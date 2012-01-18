@@ -1,0 +1,3 @@
+termkey_destroy.3 = termkey_new.3
+termkey_get_flags.3 = termkey_set_flags.3
+termkey_getkey_force.3 = termkey_getkey.3
