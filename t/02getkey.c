@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   is_int(key.code.number, 'a',                  "key.code.number after C-a");
   is_int(key.modifiers,   TERMKEY_KEYMOD_CTRL,  "key.modifiers after C-a");
 
-  termkey_push_bytes(tk, "\eOA", 3);
+  termkey_push_bytes(tk, "\033OA", 3);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY after Up");
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   is_int(key.code.sym,    TERMKEY_SYM_UP,       "key.code.sym after Up");
   is_int(key.modifiers,   0,                    "key.modifiers after Up");
 
-  is_int(termkey_push_bytes(tk, "\eO", 2), 2, "push_bytes returns 2");
+  is_int(termkey_push_bytes(tk, "\033O", 2), 2, "push_bytes returns 2");
 
   is_int(termkey_get_buffer_remaining(tk), 254, "buffer free 254 after partial write");
 

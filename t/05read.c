@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_NONE, "getkey yields RES_NONE a second time");
 
-  write(fd[1], "\eO", 2);
+  write(fd[1], "\033O", 2);
   termkey_advisereadable(tk);
 
   is_int(termkey_get_buffer_remaining(tk), 254, "buffer free 254 after partial write");
