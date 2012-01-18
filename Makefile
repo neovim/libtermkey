@@ -67,8 +67,8 @@ install-lib:
 
 install-man:
 	install -d $(DESTDIR)$(MAN3DIR)
-	for F in *.3; do \
-	  gzip <$$F >$(DESTDIR)$(MAN3DIR)/$$F.gz; \
+	for F in man/*.3; do \
+	  gzip <$$F >$(DESTDIR)$(MAN3DIR)/$${F#man/}.gz; \
 	done
 	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_destroy.3.gz
 	ln -sf termkey_getkey.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getkey_force.3.gz
@@ -78,7 +78,7 @@ install-man:
 
 # DIST CUT
 
-MANSOURCE=$(wildcard *.3.sh)
+MANSOURCE=$(wildcard man/*.3.sh)
 BUILTMAN=$(MANSOURCE:.3.sh=.3)
 
 VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
