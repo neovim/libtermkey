@@ -976,6 +976,29 @@ retry:
   }
 }
 
+size_t termkey_push_bytes(TermKey *tk, const char *bytes, size_t len)
+{
+  if(tk->buffstart) {
+    memmove(tk->buffer, tk->buffer + tk->buffstart, tk->buffcount);
+    tk->buffstart = 0;
+  }
+
+  /* Not expecting it ever to be greater but doesn't hurt to handle that */
+  if(tk->buffcount >= tk->buffsize) {
+    errno = ENOMEM;
+    return (size_t)-1;
+  }
+
+  if(len > tk->buffsize - tk->buffcount)
+    len = tk->buffsize - tk->buffcount;
+
+  // memcpy(), not strncpy() in case of null bytes in input
+  memcpy(tk->buffer + tk->buffcount, bytes, len);
+  tk->buffcount += len;
+
+  return len;
+}
+
 TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name)
 {
   if(!sym)
