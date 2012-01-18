@@ -933,7 +933,7 @@ retry:
   /* UNREACHABLE */
 }
 
-void termkey_pushinput(TermKey *tk, const unsigned char *input, size_t inputlen)
+static void push_bytes(TermKey *tk, const unsigned char *input, size_t inputlen)
 {
   if(tk->buffstart + tk->buffcount + inputlen > tk->buffsize) {
     while(tk->buffstart + tk->buffcount + inputlen > tk->buffsize)
@@ -970,7 +970,7 @@ retry:
     return TERMKEY_RES_NONE;
   }
   else {
-    termkey_pushinput(tk, buffer, len);
+    push_bytes(tk, buffer, len);
     return TERMKEY_RES_AGAIN;
   }
 }
