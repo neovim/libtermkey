@@ -12,7 +12,7 @@ termkey_waitkey \- wait for and retrieve the next key event
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_waitkey\fP(3) attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. If successful it will return \fBTERMKEY_RES_KEY\fP to indicate that the structure now contains a new keypress event. If nothing is in the buffer it will block until one is available. If no events are ready and the input stream is now closed, will return \fBTERMKEY_RES_EOF\fP.
+\fBtermkey_waitkey\fP(3) attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. If successful it will return \fBTERMKEY_RES_KEY\fP to indicate that the structure now contains a new keypress event. If nothing is in the buffer it will block until one is available. If no events are ready and the input stream is now closed, will return \fBTERMKEY_RES_EOF\fP. If no filehandle is associated with this instance, \fBTERMKEY_RES_ERROR\fP is returned with \fIerrno\fP set to \fBEBADF\fP.
 .PP
 Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
 .PP

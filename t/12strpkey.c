@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
   plan_tests(53);
 
-  tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
+  tk = termkey_new(-1, 0);
 
   CLEAR_KEY;
   endp = termkey_strpkey(tk, "A", &key, 0);
