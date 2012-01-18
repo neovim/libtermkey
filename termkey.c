@@ -425,6 +425,13 @@ void termkey_set_canonflags(TermKey *tk, int flags)
     tk->flags &= ~TERMKEY_FLAG_SPACESYMBOL;
 }
 
+size_t termkey_get_buffer_remaining(TermKey *tk)
+{
+  /* Return the total number of free bytes in the buffer, because that's what
+   * is available to the user. */
+  return tk->buffsize - tk->buffcount;
+}
+
 static void eat_bytes(TermKey *tk, size_t count)
 {
   if(count >= tk->buffcount) {
