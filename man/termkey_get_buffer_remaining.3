@@ -10,11 +10,12 @@ termkey_get_buffer_remaining \- returns the free buffer space
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-A termkey instance contains a buffer of pending bytes that have been read by \fBtermkey_advisereadable\fP(3) but not yet consumed by \fBtermkey_getkey\fP(3). \fBtermkey_get_buffer_remaining\fP() returns the number of bytes of buffer space currently free in the termkey instance.
+A termkey instance contains a buffer of pending bytes that have been read by \fBtermkey_advisereadable\fP(3) or provided by \fBtermkey_push_bytes\fP(3) but not yet consumed by \fBtermkey_getkey\fP(3). \fBtermkey_get_buffer_remaining\fP() returns the number of bytes of buffer space currently free in the termkey instance.
 .PP
 .SH "RETURN VALUE"
 \fBtermkey_get_buffer_remaining\fP() returns a size in bytes.
 .SH "SEE ALSO"
 .BR termkey_new (3),
+.BR termkey_push_bytes (3),
 .BR termkey_advisereadable (3),
 .BR termkey_getkey (3)

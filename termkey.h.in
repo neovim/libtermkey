@@ -181,6 +181,8 @@ TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
 
 TermKeyResult termkey_advisereadable(TermKey *tk);
 
+size_t termkey_push_bytes(TermKey *tk, const char *bytes, size_t len);
+
 TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name);
 const char *termkey_get_keyname(TermKey *tk, TermKeySym sym);
 char       *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym);
