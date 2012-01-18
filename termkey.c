@@ -949,6 +949,12 @@ TermKeyResult termkey_advisereadable(TermKey *tk)
     tk->buffstart = 0;
   }
 
+  /* Not expecting it ever to be greater but doesn't hurt to handle that */
+  if(tk->buffcount >= tk->buffsize) {
+    errno = ENOMEM;
+    return TERMKEY_RES_ERROR;
+  }
+
 retry:
   len = read(tk->fd, tk->buffer + tk->buffcount, tk->buffsize - tk->buffcount);
 
