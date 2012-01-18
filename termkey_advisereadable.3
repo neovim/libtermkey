@@ -10,7 +10,7 @@ termkey_advisereadable \- read more bytes from the underlying terminal
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_advisereadable\fP() informs the instance that new input may be available on the underlying file descriptor and so it should call \fBread\fP(2) to obtain it. If at least one more byte was read it will return \fBTERMKEY_RES_AGAIN\fP to indicate it may be useful to call \fBtermkey_getkey\fP(3) again. If no more input was read then \fBTERMKEY_RES_NONE\fP is returned.
+\fBtermkey_advisereadable\fP() informs the instance that new input may be available on the underlying file descriptor and so it should call \fBread\fP(2) to obtain it. If at least one more byte was read it will return \fBTERMKEY_RES_AGAIN\fP to indicate it may be useful to call \fBtermkey_getkey\fP(3) again. If no more input was read then \fBTERMKEY_RES_NONE\fP is returned. If there was no buffer space remaining, then \fBTERMKEY_RES_ERROR\fP is returned with \fIerrno\fP set to \fBENOMEM\fP.
 .PP
 This function, along with \fBtermkey_getkey\fP(3) make it possible to use the termkey instance in an asynchronous program.
 .PP
