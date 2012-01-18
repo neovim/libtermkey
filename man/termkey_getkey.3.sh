@@ -20,7 +20,7 @@ Link with \fI-ltermkey\fP.
 a complete keypress was removed from the buffer, and has been placed in the \fIkey\fP structure.
 .TP
 .B TERMKEY_RES_AGAIN
-a partial keypress event was found in the buffer, but it does not yet contain all the bytes required. An indication of what \fBtermkey_getkey_force\fP(3) would return has been placed in the \fIkey\fP structure.
+a partial keypress event was found in the buffer, but it does not yet contain all the bytes required. An indication of what \fBtermkey_getkey_force\fP() would return has been placed in the \fIkey\fP structure.
 .TP
 .B TERMKEY_RES_NONE
 no bytes are waiting in the buffer.
