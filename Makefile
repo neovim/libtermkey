@@ -127,5 +127,7 @@ dist: distdir
 	tar -czf $(TARBALL) $(DISTDIR)
 	rm -rf $(DISTDIR)
 
+HTMLDIR=html
+
 htmldocs:
-	perl $(HOME)/src/perl/Parse-Man/examples/man-to-html.pl -O $(HOME)/website-source2/code/libtermkey/doc --file-extension tmpl --link-extension html --template home_lou.tt2 *.3
+	perl $(HOME)/src/perl/Parse-Man/examples/man-to-html.pl -O $(HTMLDIR) --file-extension tmpl --link-extension html --template home_lou.tt2 man/*.3
