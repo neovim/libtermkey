@@ -171,6 +171,8 @@ void termkey_set_waittime(TermKey *tk, int msec);
 int  termkey_get_canonflags(TermKey *tk);
 void termkey_set_canonflags(TermKey *tk, int);
 
+size_t termkey_get_buffer_remaining(TermKey *tk);
+
 void termkey_canonicalise(TermKey *tk, TermKeyKey *key);
 
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
