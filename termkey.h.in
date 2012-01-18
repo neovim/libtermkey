@@ -177,8 +177,6 @@ TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
 
-void termkey_pushinput(TermKey *tk, const unsigned char *input, size_t inputlen);
-
 TermKeyResult termkey_advisereadable(TermKey *tk);
 
 TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name);
