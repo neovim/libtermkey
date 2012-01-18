@@ -284,7 +284,7 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
     goto abort_free_keynames;
   }
 
-  if(!(flags & TERMKEY_FLAG_NOTERMIOS)) {
+  if(fd != -1 && !(flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
     if(tcgetattr(fd, &termios) == 0) {
       tk->restore_termios = termios;
@@ -887,6 +887,11 @@ TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key)
 
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
 {
+  if(tk->fd == -1) {
+    errno = EBADF;
+    return TERMKEY_RES_ERROR;
+  }
+
   while(1) {
     TermKeyResult ret = termkey_getkey(tk, key);
 
@@ -943,6 +948,11 @@ retry:
 TermKeyResult termkey_advisereadable(TermKey *tk)
 {
   ssize_t len;
+
+  if(tk->fd == -1) {
+    errno = EBADF;
+    return TERMKEY_RES_ERROR;
+  }
 
   if(tk->buffstart) {
     memmove(tk->buffer, tk->buffer + tk->buffstart, tk->buffcount);
