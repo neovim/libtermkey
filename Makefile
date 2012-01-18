@@ -126,3 +126,6 @@ TARBALL=$(DISTDIR).tar.gz
 dist: distdir
 	tar -czf $(TARBALL) $(DISTDIR)
 	rm -rf $(DISTDIR)
+
+htmldocs:
+	perl $(HOME)/src/perl/Parse-Man/examples/man-to-html.pl -O $(HOME)/website-source2/code/libtermkey/doc --file-extension tmpl --link-extension html --template home_lou.tt2 *.3

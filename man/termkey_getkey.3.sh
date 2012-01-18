@@ -30,7 +30,7 @@ no bytes are waiting in the buffer.
 .PP
 \fBtermkey_getkey_force\fP() is similar to \fBtermkey_getkey\fP() but will not return \fBTERMKEY_RES_AGAIN\fP if a partial match is found. Instead, it will force an interpretation of the bytes, even if this means interpreting the start of an Escape-prefixed multi-byte sequence as a literal "Escape" key followed by normal letters.
 .PP
-Neither of these functions will block or perform any IO operations on the underlying filehandle. To use the instance in an asynchronous program, see \fBtermkey_advisereadable\fP(3). For a blocking call suitable for use in a synchronous program, use \fBtermkey_waitkey\fP(3) instead of \fBtermkey_getkey\fP().
+Neither of these functions will block or perform any IO operations on the underlying filehandle. To use the instance in an asynchronous program, see \fBtermkey_advisereadable\fP(3). For a blocking call suitable for use in a synchronous program, use \fBtermkey_waitkey\fP(3) instead of \fBtermkey_getkey\fP(). For providing input without a readable filehandle, use \fBtermkey_push_bytes\fP(3).
 .PP
 Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
 .PP
@@ -86,6 +86,7 @@ cat <<EOF
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_advisereadable (3),
+.BR termkey_push_bytes (3),
 .BR termkey_waitkey (3),
 .BR termkey_set_waittime (3),
 .BR termkey_get_keyname (3),
