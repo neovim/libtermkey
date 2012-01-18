@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   TermKeyKey key;
 
   if(mouse)
-    printf("\e[?%dhMouse mode active\n", mouse);
+    printf("\033[?%dhMouse mode active\n", mouse);
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
     if(ret == TERMKEY_RES_KEY) {
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
   }
 
   if(mouse)
-    printf("\e[?%dlMouse mode deactivated\n", mouse);
+    printf("\033[?%dlMouse mode deactivated\n", mouse);
 
   termkey_destroy(tk);
 }
