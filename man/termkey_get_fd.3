@@ -12,7 +12,7 @@ Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
 \fBtermkey_get_fd\fP() returns the file descriptor that was passed as the \fIfd\fP argument to \fBtermkey_new\fP(3).
 .SH "RETURN VALUE"
-\fBtermkey_get_fd\fP() returns the current file descriptor.
+\fBtermkey_get_fd\fP() returns the current file descriptor, or -1 if no file descriptor is associated with this instance.
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_get_flags (3)

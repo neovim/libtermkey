@@ -296,7 +296,7 @@ static void start_driver(TermKey *tk, void *info)
   /* The terminfo database will contain keys in application cursor key mode.
    * We may need to enable that mode
    */
-  if(ti->start_string) {
+  if(tk->fd != -1 && ti->start_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
     write(tk->fd, ti->start_string, strlen(ti->start_string));
   }
@@ -306,7 +306,7 @@ static void stop_driver(TermKey *tk, void *info)
 {
   TermKeyTI *ti = info;
 
-  if(ti->stop_string) {
+  if(tk->fd != -1 && ti->stop_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
     write(tk->fd, ti->stop_string, strlen(ti->stop_string));
   }

@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
   /* Sanitise this just in case */
   putenv("TERM=vt100");
 
-  tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
+  tk = termkey_new(-1, 0);
 
   termkey_push_bytes(tk, " ", 1);
 

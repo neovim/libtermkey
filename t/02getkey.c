@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
   /* Sanitise this just in case */
   putenv("TERM=vt100");
 
-  tk = termkey_new(0, TERMKEY_FLAG_NOTERMIOS);
+  tk = termkey_new(-1, 0);
 
   is_int(termkey_get_buffer_remaining(tk), 256, "buffer free initially 256");
 
