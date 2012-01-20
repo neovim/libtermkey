@@ -318,7 +318,8 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
   struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next)
     if(p->driver->start_driver)
-      (*p->driver->start_driver)(tk, p->info);
+      if(!(*p->driver->start_driver)(tk, p->info))
+        goto abort_free_drivers;
 
 #ifdef DEBUG
   fprintf(stderr, "Drivers started; termkey instance %p is ready\n", tk);
