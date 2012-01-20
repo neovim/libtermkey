@@ -363,7 +363,7 @@ static TermKeyResult peekkey_ss3(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
 
   if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
 #ifdef DEBUG
-    fprintf(stderr, "CSI: Unknown SS3 %c (0x%02x)\n", cmd, cmd);
+    fprintf(stderr, "CSI: Unknown SS3 %c (0x%02x)\n", (char)cmd, cmd);
 #endif
     return TERMKEY_RES_NONE;
   }
