@@ -268,16 +268,16 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
 #ifdef DEBUG
       switch(args) {
       case 1:
-        fprintf(stderr, "CSI: Unknown arg1=%ld cmd=%c\n", arg[0], cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld cmd=%c\n", arg[0], (char)cmd);
         break;
       case 2:
-        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld cmd=%c\n", arg[0], arg[1], (char)cmd);
         break;
       case 3:
-        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld cmd=%c\n", arg[0], arg[1], arg[2], cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld cmd=%c\n", arg[0], arg[1], arg[2], (char)cmd);
         break;
       default:
-        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, cmd);
+        fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, (char)cmd);
         break;
       }
 #endif
