@@ -289,27 +289,54 @@ abort_free_ti:
   return NULL;
 }
 
-static void start_driver(TermKey *tk, void *info)
+static int start_driver(TermKey *tk, void *info)
 {
   TermKeyTI *ti = info;
+  char *start_string = ti->start_string;
+  size_t len;
+
+  if(tk->fd == -1 || !start_string)
+    return 1;
 
   /* The terminfo database will contain keys in application cursor key mode.
    * We may need to enable that mode
    */
-  if(tk->fd != -1 && ti->start_string) {
-    // Can't call putp or tputs because they suck and don't give us fd control
-    (void)write(tk->fd, ti->start_string, strlen(ti->start_string));
+
+  // Can't call putp or tputs because they suck and don't give us fd control
+  len = strlen(start_string);
+  while(len) {
+    size_t written = write(tk->fd, start_string, len);
+    if(written == -1)
+      return 0;
+    start_string += written;
+    len -= written;
   }
+  return 1;
 }
 
-static void stop_driver(TermKey *tk, void *info)
+static int stop_driver(TermKey *tk, void *info)
 {
   TermKeyTI *ti = info;
+  char *stop_string = ti->stop_string;
+  size_t len;
 
-  if(tk->fd != -1 && ti->stop_string) {
-    // Can't call putp or tputs because they suck and don't give us fd control
-    (void)write(tk->fd, ti->stop_string, strlen(ti->stop_string));
+  if(tk->fd == -1 || !stop_string)
+    return 1;
+
+  /* The terminfo database will contain keys in application cursor key mode.
+   * We may need to enable that mode
+   */
+
+  // Can't call putp or tputs because they suck and don't give us fd control
+  len = strlen(stop_string);
+  while(len) {
+    size_t written = write(tk->fd, stop_string, len);
+    if(written == -1)
+      return 0;
+    stop_string += written;
+    len -= written;
   }
+  return 1;
 }
 
 static void free_driver(void *info)
