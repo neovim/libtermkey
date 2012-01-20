@@ -298,7 +298,7 @@ static void start_driver(TermKey *tk, void *info)
    */
   if(tk->fd != -1 && ti->start_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
-    write(tk->fd, ti->start_string, strlen(ti->start_string));
+    (void)write(tk->fd, ti->start_string, strlen(ti->start_string));
   }
 }
 
@@ -308,7 +308,7 @@ static void stop_driver(TermKey *tk, void *info)
 
   if(tk->fd != -1 && ti->stop_string) {
     // Can't call putp or tputs because they suck and don't give us fd control
-    write(tk->fd, ti->stop_string, strlen(ti->stop_string));
+    (void)write(tk->fd, ti->stop_string, strlen(ti->stop_string));
   }
 }
 
