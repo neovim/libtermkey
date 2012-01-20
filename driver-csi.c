@@ -4,25 +4,142 @@
 #include <stdio.h>
 #include <string.h>
 
+// There are 64 codes 0x40 - 0x7F
+int keyinfo_initialised = 0;
+struct keyinfo csi_ss3s[64];
+struct keyinfo ss3s[64];
+char ss3_kpalts[64];
+struct keyinfo csifuncs[35]; /* This value must be increased if more CSI function keys are added */
+#define NCSIFUNCS (sizeof(csifuncs)/sizeof(csifuncs[0]))
+
 typedef struct {
   TermKey *tk;
-
-  // There are 64 codes 0x40 - 0x7F
-  struct keyinfo csi_ss3s[64];
-  struct keyinfo ss3s[64];
-  char ss3_kpalts[64];
-
-  int ncsifuncs;
-  struct keyinfo *csifuncs;
 } TermKeyCsi;
 
-static TermKeySym register_csi_ss3(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name);
-static TermKeySym register_ss3kpalt(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name, char kpalt);
-static TermKeySym register_csifunc(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int number, const char *name);
+static void register_csi_ss3_full(TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd)
+{
+  if(cmd < 0x40 || cmd >= 0x80) {
+    fprintf(stderr, "Cannot register CSI/SS3 key at cmd 0x%02x - out of bounds\n", cmd);
+    return;
+  }
 
-static TermKeySym register_csi_ss3_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name);
-static TermKeySym register_ss3kpalt_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt);
-static TermKeySym register_csifunc_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, int number, const char *name);
+  csi_ss3s[cmd - 0x40].type = type;
+  csi_ss3s[cmd - 0x40].sym = sym;
+  csi_ss3s[cmd - 0x40].modifier_set = modifier_set;
+  csi_ss3s[cmd - 0x40].modifier_mask = modifier_mask;
+}
+
+static void register_csi_ss3(TermKeyType type, TermKeySym sym, unsigned char cmd)
+{
+  register_csi_ss3_full(type, sym, 0, 0, cmd);
+}
+
+static void register_ss3kpalt(TermKeyType type, TermKeySym sym, unsigned char cmd, char kpalt)
+{
+  if(cmd < 0x40 || cmd >= 0x80) {
+    fprintf(stderr, "Cannot register SS3 key at cmd 0x%02x - out of bounds\n", cmd);
+    return;
+  }
+
+  ss3s[cmd - 0x40].type = type;
+  ss3s[cmd - 0x40].sym = sym;
+  ss3s[cmd - 0x40].modifier_set = 0;
+  ss3s[cmd - 0x40].modifier_mask = 0;
+  ss3_kpalts[cmd - 0x40] = kpalt;
+}
+
+static void register_csifunc(TermKeyType type, TermKeySym sym, int number)
+{
+  if(number >= NCSIFUNCS) {
+    fprintf(stderr, "Cannot register CSI function key at number %d - out of bounds\n", number);
+    return;
+  }
+
+  csifuncs[number].type = type;
+  csifuncs[number].sym = sym;
+  csifuncs[number].modifier_set = 0;
+  csifuncs[number].modifier_mask = 0;
+}
+
+static int register_keys(void)
+{
+  int i;
+
+  for(i = 0; i < 64; i++) {
+    csi_ss3s[i].sym = TERMKEY_SYM_UNKNOWN;
+    ss3s[i].sym     = TERMKEY_SYM_UNKNOWN;
+    ss3_kpalts[i] = 0;
+  }
+
+  for(i = 0; i < NCSIFUNCS; i++)
+    csifuncs[i].sym = TERMKEY_SYM_UNKNOWN;
+
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,    'A');
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,  'B');
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT, 'C');
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,  'D');
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN, 'E');
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,   'F');
+  register_csi_ss3(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,  'H');
+  register_csi_ss3(TERMKEY_TYPE_FUNCTION, 1, 'P');
+  register_csi_ss3(TERMKEY_TYPE_FUNCTION, 2, 'Q');
+  register_csi_ss3(TERMKEY_TYPE_FUNCTION, 3, 'R');
+  register_csi_ss3(TERMKEY_TYPE_FUNCTION, 4, 'S');
+
+  register_csi_ss3_full(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB, TERMKEY_KEYMOD_SHIFT, TERMKEY_KEYMOD_SHIFT, 'Z');
+
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPENTER,  'M', 0);
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPEQUALS, 'X', '=');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMULT,   'j', '*');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPLUS,   'k', '+');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPCOMMA,  'l', ',');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMINUS,  'm', '-');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPERIOD, 'n', '.');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPDIV,    'o', '/');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP0,      'p', '0');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP1,      'q', '1');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP2,      'r', '2');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP3,      's', '3');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP4,      't', '4');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP5,      'u', '5');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP6,      'v', '6');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP7,      'w', '7');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP8,      'x', '8');
+  register_ss3kpalt(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP9,      'y', '9');
+
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      1);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    2);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    3);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    4);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    5);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  6);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      7);
+  register_csifunc(TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       8);
+
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 1,  11);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 2,  12);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 3,  13);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 4,  14);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 5,  15);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 6,  17);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 7,  18);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 8,  19);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 9,  20);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 10, 21);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 11, 23);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 12, 24);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 13, 25);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 14, 26);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 15, 28);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 16, 29);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 17, 31);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 18, 32);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 19, 33);
+  register_csifunc(TERMKEY_TYPE_FUNCTION, 20, 34);
+
+  keyinfo_initialised = 1;
+  return 1;
+}
 
 static void *new_driver(TermKey *tk, const char *term)
 {
@@ -43,105 +160,22 @@ static void *new_driver(TermKey *tk, const char *term)
 
   // Excellent - we'll continue
 
+  if(!keyinfo_initialised)
+    if(!register_keys())
+      return NULL;
+
   TermKeyCsi *csi = malloc(sizeof *csi);
   if(!csi)
     return NULL;
 
   csi->tk = tk;
 
-  int i;
-
-  for(i = 0; i < 64; i++) {
-    csi->csi_ss3s[i].sym = TERMKEY_SYM_UNKNOWN;
-    csi->ss3s[i].sym     = TERMKEY_SYM_UNKNOWN;
-    csi->ss3_kpalts[i] = 0;
-  }
-
-  csi->ncsifuncs = 32;
-
-  csi->csifuncs = malloc(sizeof(csi->csifuncs[0]) * csi->ncsifuncs);
-  if(!csi->csifuncs)
-    goto abort_free_csi;
-
-  for(i = 0; i < csi->ncsifuncs; i++)
-    csi->csifuncs[i].sym = TERMKEY_SYM_UNKNOWN;
-
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,    'A', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,  'B', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT, 'C', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,  'D', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN, 'E', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,   'F', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,  'H', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 1, 'P', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 2, 'Q', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 3, 'R', NULL);
-  register_csi_ss3(csi, TERMKEY_TYPE_FUNCTION, 4, 'S', NULL);
-
-  register_csi_ss3_full(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB, TERMKEY_KEYMOD_SHIFT, TERMKEY_KEYMOD_SHIFT, 'Z', NULL);
-
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPENTER,  'M', NULL, 0);
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPEQUALS, 'X', NULL, '=');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMULT,   'j', NULL, '*');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPLUS,   'k', NULL, '+');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPCOMMA,  'l', NULL, ',');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPMINUS,  'm', NULL, '-');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPPERIOD, 'n', NULL, '.');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KPDIV,    'o', NULL, '/');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP0,      'p', NULL, '0');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP1,      'q', NULL, '1');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP2,      'r', NULL, '2');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP3,      's', NULL, '3');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP4,      't', NULL, '4');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP5,      'u', NULL, '5');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP6,      'v', NULL, '6');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP7,      'w', NULL, '7');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP8,      'x', NULL, '8');
-  register_ss3kpalt(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_KP9,      'y', NULL, '9');
-
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      1, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    2, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    3, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    4, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    5, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  6, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      7, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       8, NULL);
-
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 1,  11, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 2,  12, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 3,  13, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 4,  14, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 5,  15, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 6,  17, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 7,  18, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 8,  19, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 9,  20, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 10, 21, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 11, 23, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 12, 24, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 13, 25, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 14, 26, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 15, 28, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 16, 29, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 17, 31, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 18, 32, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 19, 33, NULL);
-  register_csifunc(csi, TERMKEY_TYPE_FUNCTION, 20, 34, NULL);
-
   return csi;
-
-abort_free_csi:
-  free(csi);
-
-  return NULL;
 }
 
 static void free_driver(void *info)
 {
   TermKeyCsi *csi = info;
-
-  free(csi->csifuncs); csi->csifuncs = NULL;
 
   free(csi);
 }
@@ -219,11 +253,11 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
       (*tk->method.emit_codepoint)(tk, arg[2], key);
       key->modifiers |= mod;
     }
-    else if(arg[0] >= 0 && arg[0] < csi->ncsifuncs) {
-      key->type = csi->csifuncs[arg[0]].type;
-      key->code.sym = csi->csifuncs[arg[0]].sym;
-      key->modifiers &= ~(csi->csifuncs[arg[0]].modifier_mask);
-      key->modifiers |= csi->csifuncs[arg[0]].modifier_set;
+    else if(arg[0] >= 0 && arg[0] < NCSIFUNCS) {
+      key->type = csifuncs[arg[0]].type;
+      key->code.sym = csifuncs[arg[0]].sym;
+      key->modifiers &= ~(csifuncs[arg[0]].modifier_mask);
+      key->modifiers |= csifuncs[arg[0]].modifier_set;
     }
     else
       key->code.sym = TERMKEY_SYM_UNKNOWN;
@@ -259,10 +293,10 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   }
   else {
     // We know from the logic above that cmd must be >= 0x40 and < 0x80
-    key->type = csi->csi_ss3s[cmd - 0x40].type;
-    key->code.sym = csi->csi_ss3s[cmd - 0x40].sym;
-    key->modifiers &= ~(csi->csi_ss3s[cmd - 0x40].modifier_mask);
-    key->modifiers |= csi->csi_ss3s[cmd - 0x40].modifier_set;
+    key->type = csi_ss3s[cmd - 0x40].type;
+    key->code.sym = csi_ss3s[cmd - 0x40].sym;
+    key->modifiers &= ~(csi_ss3s[cmd - 0x40].modifier_mask);
+    key->modifiers |= csi_ss3s[cmd - 0x40].modifier_set;
 
     if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
 #ifdef DEBUG
@@ -307,23 +341,23 @@ static TermKeyResult peekkey_ss3(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   if(cmd < 0x40 || cmd >= 0x80)
     return TERMKEY_RES_NONE;
 
-  key->type = csi->csi_ss3s[cmd - 0x40].type;
-  key->code.sym = csi->csi_ss3s[cmd - 0x40].sym;
-  key->modifiers = csi->csi_ss3s[cmd - 0x40].modifier_set;
+  key->type = csi_ss3s[cmd - 0x40].type;
+  key->code.sym = csi_ss3s[cmd - 0x40].sym;
+  key->modifiers = csi_ss3s[cmd - 0x40].modifier_set;
 
   if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
-    if(tk->flags & TERMKEY_FLAG_CONVERTKP && csi->ss3_kpalts[cmd - 0x40]) {
+    if(tk->flags & TERMKEY_FLAG_CONVERTKP && ss3_kpalts[cmd - 0x40]) {
       key->type = TERMKEY_TYPE_UNICODE;
-      key->code.codepoint = csi->ss3_kpalts[cmd - 0x40];
+      key->code.codepoint = ss3_kpalts[cmd - 0x40];
       key->modifiers = 0;
 
       key->utf8[0] = key->code.codepoint;
       key->utf8[1] = 0;
     }
     else {
-      key->type = csi->ss3s[cmd - 0x40].type;
-      key->code.sym = csi->ss3s[cmd - 0x40].sym;
-      key->modifiers = csi->ss3s[cmd - 0x40].modifier_set;
+      key->type = ss3s[cmd - 0x40].type;
+      key->code.sym = ss3s[cmd - 0x40].sym;
+      key->modifiers = ss3s[cmd - 0x40].modifier_set;
     }
   }
 
@@ -363,83 +397,6 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
   }
   else
     return TERMKEY_RES_NONE;
-}
-
-static TermKeySym register_csi_ss3(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name)
-{
-  return register_csi_ss3_full(csi, type, sym, 0, 0, cmd, name);
-}
-
-static TermKeySym register_csi_ss3_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name)
-{
-  if(cmd < 0x40 || cmd >= 0x80) {
-    fprintf(stderr, "Cannot register CSI/SS3 key at cmd 0x%02x - out of bounds\n", cmd);
-    return -1;
-  }
-
-  if(name)
-    sym = termkey_register_keyname(csi->tk, sym, name);
-
-  csi->csi_ss3s[cmd - 0x40].type = type;
-  csi->csi_ss3s[cmd - 0x40].sym = sym;
-  csi->csi_ss3s[cmd - 0x40].modifier_set = modifier_set;
-  csi->csi_ss3s[cmd - 0x40].modifier_mask = modifier_mask;
-
-  return sym;
-}
-
-static TermKeySym register_ss3kpalt(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, unsigned char cmd, const char *name, char kpalt)
-{
-  return register_ss3kpalt_full(csi, type, sym, 0, 0, cmd, name, kpalt);
-}
-
-static TermKeySym register_ss3kpalt_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd, const char *name, char kpalt)
-{
-  if(cmd < 0x40 || cmd >= 0x80) {
-    fprintf(stderr, "Cannot register SS3 key at cmd 0x%02x - out of bounds\n", cmd);
-    return -1;
-  }
-
-  if(name)
-    sym = termkey_register_keyname(csi->tk, sym, name);
-
-  csi->ss3s[cmd - 0x40].type = type;
-  csi->ss3s[cmd - 0x40].sym = sym;
-  csi->ss3s[cmd - 0x40].modifier_set = modifier_set;
-  csi->ss3s[cmd - 0x40].modifier_mask = modifier_mask;
-  csi->ss3_kpalts[cmd - 0x40] = kpalt;
-
-  return sym;
-}
-
-static TermKeySym register_csifunc(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int number, const char *name)
-{
-  return register_csifunc_full(csi, type, sym, 0, 0, number, name);
-}
-
-static TermKeySym register_csifunc_full(TermKeyCsi *csi, TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, int number, const char *name)
-{
-  if(name)
-    sym = termkey_register_keyname(csi->tk, sym, name);
-
-  if(number >= csi->ncsifuncs) {
-    struct keyinfo *new_csifuncs = realloc(csi->csifuncs, sizeof(new_csifuncs[0]) * (number + 1));
-    // TODO: Handle realloc() failure
-    csi->csifuncs = new_csifuncs;
-
-    // Fill in the hole
-    for(int i = csi->ncsifuncs; i < number; i++)
-      csi->csifuncs[i].sym = TERMKEY_SYM_UNKNOWN;
-
-    csi->ncsifuncs = number + 1;
-  }
-
-  csi->csifuncs[number].type = type;
-  csi->csifuncs[number].sym = sym;
-  csi->csifuncs[number].modifier_set = modifier_set;
-  csi->csifuncs[number].modifier_mask = modifier_mask;
-
-  return sym;
 }
 
 struct TermKeyDriver termkey_driver_csi = {
