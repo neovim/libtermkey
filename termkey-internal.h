@@ -11,8 +11,8 @@ struct TermKeyDriver
   const char      *name;
   void          *(*new_driver)(TermKey *tk, const char *term);
   void           (*free_driver)(void *info);
-  void           (*start_driver)(TermKey *tk, void *info);
-  void           (*stop_driver)(TermKey *tk, void *info);
+  int            (*start_driver)(TermKey *tk, void *info);
+  int            (*stop_driver)(TermKey *tk, void *info);
   TermKeyResult (*peekkey)(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytes);
 };
 
