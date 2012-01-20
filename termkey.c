@@ -239,7 +239,8 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
   tk->method.peekkey_mouse  = &peekkey_mouse;
 
   for(i = 0; keynames[i].name; i++)
-    termkey_register_keyname(tk, keynames[i].sym, keynames[i].name);
+    if(termkey_register_keyname(tk, keynames[i].sym, keynames[i].name) == -1)
+      goto abort_free_keynames;
 
   register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, NULL);
   register_c0(tk, TERMKEY_SYM_TAB,       0x09, NULL);
@@ -1017,7 +1018,9 @@ TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *nam
 
   if(sym >= tk->nkeynames) {
     const char **new_keynames = realloc(tk->keynames, sizeof(new_keynames[0]) * (sym + 1));
-    // TODO: Handle realloc() failure
+    if(!new_keynames)
+      return -1;
+
     tk->keynames = new_keynames;
 
     // Fill in the hole
