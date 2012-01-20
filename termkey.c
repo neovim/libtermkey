@@ -1254,15 +1254,16 @@ char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyForm
   }
 
   size_t nbytes;
+  ssize_t snbytes;
   char *endstr;
 
   if((endstr = termkey_lookup_keyname(tk, str, &key->code.sym))) {
     key->type = TERMKEY_TYPE_KEYSYM;
     str = endstr;
   }
-  else if(sscanf(str, "F%d%zn", &key->code.number, &nbytes) == 1) {
+  else if(sscanf(str, "F%d%zn", &key->code.number, &snbytes) == 1) {
     key->type = TERMKEY_TYPE_FUNCTION;
-    str += nbytes;
+    str += snbytes;
   }
   // Unicode must be last
   else if(parse_utf8((unsigned char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY) {
