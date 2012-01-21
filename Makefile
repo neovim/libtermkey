@@ -23,6 +23,7 @@ LIBDIR=$(PREFIX)/lib
 INCDIR=$(PREFIX)/include
 MANDIR=$(PREFIX)/share/man
 MAN3DIR=$(MANDIR)/man3
+MAN7DIR=$(MANDIR)/man7
 
 ifeq ($(DEBUG),1)
   CFLAGS_DEBUG=-ggdb -DDEBUG
@@ -69,6 +70,9 @@ install-man:
 	install -d $(DESTDIR)$(MAN3DIR)
 	for F in man/*.3; do \
 	  gzip <$$F >$(DESTDIR)$(MAN3DIR)/$${F#man/}.gz; \
+	done
+	for F in man/*.7; do \
+	  gzip <$$F >$(DESTDIR)$(MAN7DIR)/$${F#man/}.gz; \
 	done
 	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_destroy.3.gz
 	ln -sf termkey_getkey.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getkey_force.3.gz
