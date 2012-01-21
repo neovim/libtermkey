@@ -36,7 +36,7 @@ Before returning, this function canonicalises the \fIkey\fP structure according 
 .SH "RETURN VALUE"
 \fBtermkey_getkey\fP() returns an enumeration of one of \fBTERMKEY_RES_KEY\fP, \fBTEMRKEY_RES_AGAIN\fP, \fBTERMKEY_RES_NONE\fP or \fBTERMKEY_RES_EOF\fP. \fBtermkey_getkey_force\fP() returns one of the above, except for \fBTERMKEY_RES_AGAIN\fP.
 .SH EXAMPLE
-The following example program prints details of every keypress until the user presses "Ctrl-C". It demonstrates how to use the \fBtermkey\fP instance in a typical \fBpoll\fP()-driven asynchronous program, which may include mixed IO with other file handles.
+The following example program prints details of every keypress until the user presses "Ctrl-C". It demonstrates how to use the \fBtermkey\fP instance in a typical \fBpoll\fP(2)-driven asynchronous program, which may include mixed IO with other file handles.
 .PP
 .in +4n
 .nf
