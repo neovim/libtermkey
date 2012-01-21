@@ -11,11 +11,11 @@ termkey_set_canonflags, termkey_get_canonflags \- control the canonicalisation f
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_set_canonflags\fP() changes the set of canonicalisation flags in the termkey instance to those given by \fInewflags\fP. For detail on the available flags and their meaning, see \fBtermkey_set_canonflags\fP(3).
+\fBtermkey_set_canonflags\fP() changes the set of canonicalisation flags in the \fBtermkey\fP(7) instance to those given by \fInewflags\fP. For detail on the available flags and their meaning, see the \fBtermkey\fP manpage.
 .PP
 \fBtermkey_get_canonflags\fP() returns the value set by the last call to \fBtermkey_canonicalise\fP().
 .SH "RETURN VALUE"
 \fBtermkey_set_flags\fP() returns no value. \fBtermkey_get_flags\fP() returns the current canonicalisation flags.
 .SH "SEE ALSO"
-.BR termkey_new (3),
-.BR termkey_canonicalise (3)
+.BR termkey_canonicalise (3),
+.BR termkey (7)

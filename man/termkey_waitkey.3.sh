@@ -12,13 +12,11 @@ termkey_waitkey \- wait for and retrieve the next key event
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_waitkey\fP(3) attempts to retrieve a single keypress event from the buffer, and put it in the structure referred to by \fIkey\fP. If successful it will return \fBTERMKEY_RES_KEY\fP to indicate that the structure now contains a new keypress event. If nothing is in the buffer it will block until one is available. If no events are ready and the input stream is now closed, will return \fBTERMKEY_RES_EOF\fP. If no filehandle is associated with this instance, \fBTERMKEY_RES_ERROR\fP is returned with \fIerrno\fP set to \fBEBADF\fP.
+\fBtermkey_waitkey\fP(3) attempts to retrieve a single keypress event from the \fBtermkey\fP(7) instance buffer, and put it in the structure referred to by \fIkey\fP. If successful it will return \fBTERMKEY_RES_KEY\fP to indicate that the structure now contains a new keypress event. If nothing is in the buffer it will block until one is available. If no events are ready and the input stream is now closed, will return \fBTERMKEY_RES_EOF\fP. If no filehandle is associated with this instance, \fBTERMKEY_RES_ERROR\fP is returned with \fIerrno\fP set to \fBEBADF\fP.
 .PP
 Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
 .PP
-For details of the \fITermKeyKey\fP structure, see \fBtermkey_getkey\fP(3).
-.PP
-Some keypresses generate multiple bytes from the terminal. Because there may be network or other delays between the terminal and an application using termkey, \fBtermkey_waitkey\fP() will attempt to wait for the remaining bytes to arrive if it detects the start of a multibyte sequence. If no more bytes arrive within a certain time, then the bytes will be reported as they stand, even if this results in interpreting a partially-complete Escape sequence as a literal Escape key followed by some normal letters or other symbols. The amount of time to wait can be set by \fBtermkey_set_waittime\fP(3).
+Some keypresses generate multiple bytes from the terminal. Because there may be network or other delays between the terminal and an application using \fBtermkey\fP, \fBtermkey_waitkey\fP() will attempt to wait for the remaining bytes to arrive if it detects the start of a multibyte sequence. If no more bytes arrive within a certain time, then the bytes will be reported as they stand, even if this results in interpreting a partially-complete Escape sequence as a literal Escape key followed by some normal letters or other symbols. The amount of time to wait can be set by \fBtermkey_set_waittime\fP(3).
 .SH "RETURN VALUE"
 \fBtermkey_waitkey\fP() returns one of the following constants:
 .TP
@@ -41,10 +39,7 @@ cat <<EOF
 .in
 .fi
 .SH "SEE ALSO"
-.BR termkey_new (3),
 .BR termkey_getkey (3),
 .BR termkey_set_waittime (3),
-.BR termkey_get_keyname (3),
-.BR termkey_strfkey (3),
-.BR termkey_keycmp (3)
+.BR termkey (7)
 EOF

@@ -12,41 +12,9 @@ termkey_new, termkey_destroy \- create or destroy new termkey instance
 .sp
 Link with \fI\-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_new\fP() creates a new termkey instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fITermKey\fP structure should be considered opaque; its contents are not intended for use outside of the library. If \fIfd\fP is given the value -1, then no file handle will be associated.
+\fBtermkey_new\fP() creates a new \fBtermkey\fP(7) instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fITermKey\fP structure should be considered opaque; its contents are not intended for use outside of the library. If \fIfd\fP is given the value -1, then no file handle will be associated.
 .PP
 \fBtermkey_destroy\fP() destroys the given instance and releases any resources controlled by it. It will not close the underlying filehandle given as the \fIfd\fP argument to \fBtermkey_new\fP().
-.PP
-A termkey instance contains a buffer of bytes representing keypresses yet to be returned to the application. This buffer may be fed bytes directly by calling \fBtermkey_push_bytes\fP(3), or by calling \fBtermkey_advisereadable\fP(3) which itself will \fBread\fP(3) them from the filehandle given by \fIfd\fP. Once in the buffer, these bytes can be returned as key press events by calling \fBtermkey_getkey\fP(3). The read and get operations are combined in a single function \fBtermkey_waitkey\fP(3), which may be more convenient to use in the standard case of blocking reads from the \fIstdin\fP filehandle.
-.PP
-The following values may be given as the \fIflags\fP bitmask:
-.TP
-.B TERMKEY_FLAG_NOINTERPRET
-Do not attempt to interpret \fBC0\fP codes into keysyms. Instead report them as plain "Ctrl-letter" events.
-.TP
-.B TERMKEY_FLAG_CONVERTKP
-Convert xterm's alternative keypad symbols into the plain
-.SM ASCII
-codes they would represent.
-.TP
-.B TERMKEY_FLAG_RAW
-Ignore locale settings; do not attempt to recombine UTF-8 sequences. Instead report only raw values.
-.TP
-.B TERMKEY_FLAG_UTF8
-Ignore locale settings; force UTF-8 recombining on. This flag overrides \fBTERMKEY_FLAG_RAW\fP.
-.TP
-.B TERMKEY_FLAG_NOTERMIOS
-Even if the terminal file descriptor \fIfd\fP represents a
-.SM TTY
-device, do not call the \fBtcsetattr\fP(3) \fBtermios\fP function on it to set it to canonical input mode.
-.TP
-.B TERMKEY_FLAG_SPACESYMBOL
-Report space as being a symbolic key rather than a Unicode codepoint.
-.TP
-.B TERMKEY_FLAG_CTRLC
-Disable the \fBSIGINT\fP behaviour of \fICtrl-C\fP. If this flag is provided, then \fICtrl-C\fP will be available as a normal keypress, rather than sending the process group a \fBSIGINT\fP. This flag only takes effect without \fBTERMKEY_FLAG_NOTERMIOS\fP; with it, none of the signal keys are disabled anyway.
-.TP
-.B TERMKEY_FLAG_EINTR
-Without this flag, IO operations are retried when interrupted by a signal (\fBEINTR\fP). With this flag the \fBTERMKEY_RES_ERROR\fP result is returned instead.
 .PP
 When the constructor is invoked, it attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP(3).
 .PP
@@ -61,4 +29,5 @@ If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On fai
 .BR termkey_getkey (3),
 .BR termkey_get_flags (3),
 .BR termkey_get_fd (3),
-.BR termkey_get_buffer_remaining (3)
+.BR termkey_get_buffer_remaining (3),
+.BR termkey (7)
