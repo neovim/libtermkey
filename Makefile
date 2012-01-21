@@ -134,4 +134,4 @@ dist: distdir
 HTMLDIR=html
 
 htmldocs:
-	perl $(HOME)/src/perl/Parse-Man/examples/man-to-html.pl -O $(HTMLDIR) --file-extension tmpl --link-extension html --template home_lou.tt2 --also man/also man/*.3
+	perl $(HOME)/src/perl/Parse-Man/examples/man-to-html.pl -O $(HTMLDIR) --file-extension tmpl --link-extension html --template home_lou.tt2 --also man/also man/*.3 man/*.7
