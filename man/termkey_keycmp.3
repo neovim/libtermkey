@@ -19,7 +19,6 @@ Two structures of differing type are ordered \fBTERMKEY_TYPE_UNICODE\fP, \fBTERM
 .SH NOTES
 This function does not perform any canonicalisation of the key structures, and performs a simple comparison of the fields in the structures. In particular, it will not consider as equal \fBTERMKEY_TYPE_UNICODE\fP containing the Space codepoint (U+0020) vs. \fBTERMKEY_TYPE_KEYSYM\fP containing \fBTERMKEY_SYM_SPACE\fP. 
 .SH "SEE ALSO"
-.BR termkey_new (3),
-.BR termkey_getkey (3),
 .BR termkey_strpkey (3),
-.BR termkey_canonicalise (3)
+.BR termkey_canonicalise (3),
+.BR termkey (7)
