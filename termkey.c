@@ -1103,7 +1103,7 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
   return termkey_strfkey(tk, buffer, len, key, format);
 }
 
-struct modnames {
+static struct modnames {
   const char *shift, *alt, *ctrl;
 }
 modnames[] = {
