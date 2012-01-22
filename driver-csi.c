@@ -5,11 +5,11 @@
 #include <string.h>
 
 // There are 64 codes 0x40 - 0x7F
-int keyinfo_initialised = 0;
-struct keyinfo csi_ss3s[64];
-struct keyinfo ss3s[64];
-char ss3_kpalts[64];
-struct keyinfo csifuncs[35]; /* This value must be increased if more CSI function keys are added */
+static int keyinfo_initialised = 0;
+static struct keyinfo csi_ss3s[64];
+static struct keyinfo ss3s[64];
+static char ss3_kpalts[64];
+static struct keyinfo csifuncs[35]; /* This value must be increased if more CSI function keys are added */
 #define NCSIFUNCS (sizeof(csifuncs)/sizeof(csifuncs[0]))
 
 typedef struct {
