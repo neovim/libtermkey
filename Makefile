@@ -68,6 +68,7 @@ install-lib:
 
 install-man:
 	install -d $(DESTDIR)$(MAN3DIR)
+	install -d $(DESTDIR)$(MAN7DIR)
 	for F in man/*.3; do \
 	  gzip <$$F >$(DESTDIR)$(MAN3DIR)/$${F#man/}.gz; \
 	done
