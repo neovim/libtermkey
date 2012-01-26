@@ -369,6 +369,24 @@ TermKey *termkey_new(int fd, int flags)
   return tk;
 }
 
+TermKey *termkey_new_abstract(const char *term, int flags)
+{
+  TermKey *tk = termkey_alloc();
+  if(!tk)
+    return NULL;
+
+  tk->fd = -1;
+
+  termkey_set_flags(tk, flags);
+
+  if(!termkey_init(tk, term)) {
+    free(tk);
+    return NULL;
+  }
+
+  return tk;
+}
+
 void termkey_free(TermKey *tk)
 {
   free(tk->buffer); tk->buffer = NULL;
