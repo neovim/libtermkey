@@ -173,12 +173,47 @@ static const char *res2str(TermKeyResult res)
 }
 #endif
 
-/* We might expose this as public API one day, when the ideas are finalised.
- * As yet it isn't public, so keep it static
- */
-static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittime)
+static TermKey *termkey_alloc(void)
 {
-  TermKey *tk = malloc(sizeof(*tk));
+  TermKey *tk = malloc(sizeof(TermKey));
+  if(!tk)
+    return NULL;
+
+  /* Default all the object fields but don't allocate anything */
+
+  tk->fd         = -1;
+  tk->flags      = 0;
+  tk->canonflags = 0;
+
+  tk->buffer    = NULL;
+  tk->buffstart = 0;
+  tk->buffcount = 0;
+  tk->buffsize  = 256; /* bytes */
+
+  tk->restore_termios_valid = 0;
+
+  tk->waittime = 50; /* msec */
+
+  tk->is_closed = 0;
+
+  tk->nkeynames = 64;
+  tk->keynames  = NULL;
+
+  for(int i = 0; i < 32; i++)
+    tk->c0[i].sym = TERMKEY_SYM_NONE;
+
+  tk->drivers = NULL;
+
+  tk->method.emit_codepoint = &emit_codepoint;
+  tk->method.peekkey_simple = &peekkey_simple;
+  tk->method.peekkey_mouse  = &peekkey_mouse;
+
+  return tk;
+}
+
+TermKey *termkey_new(int fd, int flags)
+{
+  TermKey *tk = termkey_alloc();
   if(!tk)
     return NULL;
 
@@ -203,26 +238,14 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
 
   tk->fd    = fd;
   tk->flags = flags;
-  tk->canonflags = 0;
 
   if(flags & TERMKEY_FLAG_SPACESYMBOL)
     tk->canonflags |= TERMKEY_CANON_SPACESYMBOL;
 
-  tk->buffer = malloc(buffsize);
+  tk->buffer = malloc(tk->buffsize);
   if(!tk->buffer)
     goto abort_free_tk;
 
-  tk->buffstart = 0;
-  tk->buffcount = 0;
-  tk->buffsize  = buffsize;
-
-  tk->restore_termios_valid = 0;
-
-  tk->waittime = waittime;
-
-  tk->is_closed = 0;
-
-  tk->nkeynames = 64;
   tk->keynames = malloc(sizeof(tk->keynames[0]) * tk->nkeynames);
   if(!tk->keynames)
     goto abort_free_buffer;
@@ -230,13 +253,6 @@ static TermKey *termkey_new_full(int fd, int flags, size_t buffsize, int waittim
   int i;
   for(i = 0; i < tk->nkeynames; i++)
     tk->keynames[i] = NULL;
-
-  for(i = 0; i < 32; i++)
-    tk->c0[i].sym = TERMKEY_SYM_NONE;
-
-  tk->method.emit_codepoint = &emit_codepoint;
-  tk->method.peekkey_simple = &peekkey_simple;
-  tk->method.peekkey_mouse  = &peekkey_mouse;
 
   for(i = 0; keynames[i].name; i++)
     if(termkey_register_keyname(tk, keynames[i].sym, keynames[i].name) == -1)
@@ -346,11 +362,6 @@ abort_free_tk:
   free(tk);
 
   return NULL;
-}
-
-TermKey *termkey_new(int fd, int flags)
-{
-  return termkey_new_full(fd, flags, 256, 50);
 }
 
 void termkey_free(TermKey *tk)
