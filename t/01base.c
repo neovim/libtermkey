@@ -8,9 +8,9 @@ int main(int argc, char *argv[])
 
   plan_tests(2);
 
-  tk = termkey_new(-1, 0);
+  tk = termkey_new_abstract("vt100", 0);
 
-  ok(!!tk, "termkey_new");
+  ok(!!tk, "termkey_new_abstract");
 
   termkey_destroy(tk);
 

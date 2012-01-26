@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
   plan_tests(10);
 
-  tk = termkey_new(-1, 0);
+  tk = termkey_new_abstract("vt100", 0);
 
   sym = termkey_keyname2sym(tk, "Space");
   is_int(sym, TERMKEY_SYM_SPACE, "keyname2sym Space");
