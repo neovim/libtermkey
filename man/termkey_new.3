@@ -7,12 +7,15 @@ termkey_new, termkey_destroy \- create or destroy new termkey instance
 .sp
 .BI "TERMKEY_CHECK_VERSION;"
 .BI "TermKey *termkey_new(int " fd ", int " flags );
+.BI "TermKey *termkey_new_abstract(const char *" term ", int " flags );
 .BI "void termkey_destroy(TermKey *" tk );
 .fi
 .sp
 Link with \fI\-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_new\fP() creates a new \fBtermkey\fP(7) instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fITermKey\fP structure should be considered opaque; its contents are not intended for use outside of the library. If \fIfd\fP is given the value -1, then no file handle will be associated.
+\fBtermkey_new\fP() creates a new \fBtermkey\fP(7) instance connected to the file handle opened by \fIfd\fP using the \fIflags\fP. The \fITermKey\fP structure should be considered opaque; its contents are not intended for use outside of the library.
+.PP
+\fBtermkey_new_abstract\fP() creates a new \fBtermkey\fP() instance with no file handle associated. As this is usually done for handling other sources of terminal byte input, it also takes a string indicating the termtype to use.
 .PP
 \fBtermkey_destroy\fP() destroys the given instance and releases any resources controlled by it. It will not close the underlying filehandle given as the \fIfd\fP argument to \fBtermkey_new\fP().
 .PP

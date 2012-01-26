@@ -157,6 +157,7 @@ enum {
 void termkey_check_version(int major, int minor);
 
 TermKey *termkey_new(int fd, int flags);
+TermKey *termkey_new_abstract(const char *term, int flags);
 void     termkey_free(TermKey *tk);
 void     termkey_destroy(TermKey *tk);
 
