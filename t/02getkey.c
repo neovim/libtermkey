@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "../termkey.h"
 #include "taplib.h"
 
@@ -9,10 +8,7 @@ int main(int argc, char *argv[])
 
   plan_tests(27);
 
-  /* Sanitise this just in case */
-  putenv("TERM=vt100");
-
-  tk = termkey_new(-1, 0);
+  tk = termkey_new_abstract("vt100", 0);
 
   is_int(termkey_get_buffer_remaining(tk), 256, "buffer free initially 256");
 

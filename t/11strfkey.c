@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 
   plan_tests(28);
 
-  tk = termkey_new(-1, 0);
+  tk = termkey_new_abstract("vt100", 0);
 
   key.type = TERMKEY_TYPE_UNICODE;
   key.code.codepoint = 'A';
