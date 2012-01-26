@@ -8,10 +8,7 @@ int main(int argc, char *argv[])
 
   plan_tests(57);
 
-  /* Sanitise this just in case */
-  putenv("TERM=vt100");
-
-  tk = termkey_new(-1, TERMKEY_FLAG_UTF8);
+  tk = termkey_new_abstract("vt100", TERMKEY_FLAG_UTF8);
 
   termkey_push_bytes(tk, "a", 1);
 
