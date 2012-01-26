@@ -211,38 +211,11 @@ static TermKey *termkey_alloc(void)
   return tk;
 }
 
-TermKey *termkey_new(int fd, int flags)
+static int termkey_init(TermKey *tk, const char *term)
 {
-  TermKey *tk = termkey_alloc();
-  if(!tk)
-    return NULL;
-
-  tk->fd = fd;
-
-  if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
-    int locale_is_utf8 = 0;
-    char *e;
-
-    if((e = getenv("LANG")) && strstr(e, "UTF-8"))
-      locale_is_utf8 = 1;
-
-    if(!locale_is_utf8 && (e = getenv("LC_MESSAGES")) && strstr(e, "UTF-8"))
-      locale_is_utf8 = 1;
-
-    if(!locale_is_utf8 && (e = getenv("LC_ALL")) && strstr(e, "UTF-8"))
-      locale_is_utf8 = 1;
-
-    if(locale_is_utf8)
-      flags |= TERMKEY_FLAG_UTF8;
-    else
-      flags |= TERMKEY_FLAG_RAW;
-  }
-
-  termkey_set_flags(tk, flags);
-
   tk->buffer = malloc(tk->buffsize);
   if(!tk->buffer)
-    goto abort_free_tk;
+    return 0;
 
   tk->keynames = malloc(sizeof(tk->keynames[0]) * tk->nkeynames);
   if(!tk->keynames)
@@ -260,8 +233,6 @@ TermKey *termkey_new(int fd, int flags)
   register_c0(tk, TERMKEY_SYM_TAB,       0x09, NULL);
   register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, NULL);
   register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, NULL);
-
-  const char *term = getenv("TERM");
 
   struct TermKeyDriverNode *tail = NULL;
 
@@ -299,9 +270,9 @@ TermKey *termkey_new(int fd, int flags)
     goto abort_free_keynames;
   }
 
-  if(fd != -1 && !(flags & TERMKEY_FLAG_NOTERMIOS)) {
+  if(tk->fd != -1 && !(tk->flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
-    if(tcgetattr(fd, &termios) == 0) {
+    if(tcgetattr(tk->fd, &termios) == 0) {
       tk->restore_termios = termios;
       tk->restore_termios_valid = 1;
 
@@ -310,7 +281,7 @@ TermKey *termkey_new(int fd, int flags)
       termios.c_cc[VMIN] = 1;
       termios.c_cc[VTIME] = 0;
 
-      if(flags & TERMKEY_FLAG_CTRLC)
+      if(tk->flags & TERMKEY_FLAG_CTRLC)
         /* want no signal keys at all, so just disable ISIG */
         termios.c_lflag &= ~ISIG;
       else {
@@ -326,7 +297,7 @@ TermKey *termkey_new(int fd, int flags)
 #ifdef DEBUG
       fprintf(stderr, "Setting termios(3) flags\n");
 #endif
-      tcsetattr(fd, TCSANOW, &termios);
+      tcsetattr(tk->fd, TCSANOW, &termios);
     }
   }
 
@@ -340,7 +311,7 @@ TermKey *termkey_new(int fd, int flags)
   fprintf(stderr, "Drivers started; termkey instance %p is ready\n", tk);
 #endif
 
-  return tk;
+  return 1;
 
 abort_free_drivers:
   for(p = tk->drivers; p; ) {
@@ -356,10 +327,46 @@ abort_free_keynames:
 abort_free_buffer:
   free(tk->buffer);
 
-abort_free_tk:
-  free(tk);
+  return 0;
+}
 
-  return NULL;
+TermKey *termkey_new(int fd, int flags)
+{
+  TermKey *tk = termkey_alloc();
+  if(!tk)
+    return NULL;
+
+  tk->fd = fd;
+
+  if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
+    int locale_is_utf8 = 0;
+    char *e;
+
+    if((e = getenv("LANG")) && strstr(e, "UTF-8"))
+      locale_is_utf8 = 1;
+
+    if(!locale_is_utf8 && (e = getenv("LC_MESSAGES")) && strstr(e, "UTF-8"))
+      locale_is_utf8 = 1;
+
+    if(!locale_is_utf8 && (e = getenv("LC_ALL")) && strstr(e, "UTF-8"))
+      locale_is_utf8 = 1;
+
+    if(locale_is_utf8)
+      flags |= TERMKEY_FLAG_UTF8;
+    else
+      flags |= TERMKEY_FLAG_RAW;
+  }
+
+  termkey_set_flags(tk, flags);
+
+  const char *term = getenv("TERM");
+
+  if(!termkey_init(tk, term)) {
+    free(tk);
+    return NULL;
+  }
+
+  return tk;
 }
 
 void termkey_free(TermKey *tk)
