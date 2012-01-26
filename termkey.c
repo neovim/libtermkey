@@ -217,6 +217,8 @@ TermKey *termkey_new(int fd, int flags)
   if(!tk)
     return NULL;
 
+  tk->fd = fd;
+
   if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
     int locale_is_utf8 = 0;
     char *e;
@@ -236,11 +238,7 @@ TermKey *termkey_new(int fd, int flags)
       flags |= TERMKEY_FLAG_RAW;
   }
 
-  tk->fd    = fd;
-  tk->flags = flags;
-
-  if(flags & TERMKEY_FLAG_SPACESYMBOL)
-    tk->canonflags |= TERMKEY_CANON_SPACESYMBOL;
+  termkey_set_flags(tk, flags);
 
   tk->buffer = malloc(tk->buffsize);
   if(!tk->buffer)
