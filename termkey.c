@@ -266,7 +266,7 @@ static int termkey_init(TermKey *tk, const char *term)
   }
 
   if(!tk->drivers) {
-    fprintf(stderr, "Unable to find a terminal driver\n");
+    errno = ENOENT;
     goto abort_free_keynames;
   }
 
@@ -1114,7 +1114,7 @@ static TermKeySym register_c0(TermKey *tk, TermKeySym sym, unsigned char ctrl, c
 static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char ctrl, const char *name)
 {
   if(ctrl >= 0x20) {
-    fprintf(stderr, "Cannot register C0 key at ctrl 0x%02x - out of bounds\n", ctrl);
+    errno = EINVAL;
     return -1;
   }
 
