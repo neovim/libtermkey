@@ -25,7 +25,16 @@ If a file handle is provided, the terminfo driver may send a string to initialis
 .SH VERSION CHECK MACRO
 Before calling any functions in the \fBtermkey\fP library, an application should use the \fBTERMKEY_CHECK_VERSION\fP macro to check that the loaded version of the library is compatible with the version it was compiled against. This should be done early on, ideally just after entering its \fBmain\fP() function.
 .SH "RETURN VALUE"
-If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On failure, \fBNULL\fP is returned. \fBtermkey_destroy\fP() returns no value.
+If successful, \fBtermkey_new\fP() returns a pointer to the new instance. On failure, \fBNULL\fP is returned with \fIerrno\fP set to indicate the failure. \fBtermkey_destroy\fP() returns no value.
+.SH ERRORS
+.TP
+.B ENOENT
+No driver was able to recognise the given terminal type.
+.TP
+.B ENOMEM
+A call to \fBmalloc\fP(3) failed to allocate memory.
+.PP
+Additionally, \fBtermkey_new\fP() may fail if \fBfstat\fP(2) or \fBwrite\fP(2) fails on the given file handle.
 .SH "SEE ALSO"
 .BR termkey_waitkey (3),
 .BR termkey_advisereadable (3),
