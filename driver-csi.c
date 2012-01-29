@@ -19,7 +19,6 @@ typedef struct {
 static void register_csi_ss3_full(TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd)
 {
   if(cmd < 0x40 || cmd >= 0x80) {
-    fprintf(stderr, "Cannot register CSI/SS3 key at cmd 0x%02x - out of bounds\n", cmd);
     return;
   }
 
@@ -37,7 +36,6 @@ static void register_csi_ss3(TermKeyType type, TermKeySym sym, unsigned char cmd
 static void register_ss3kpalt(TermKeyType type, TermKeySym sym, unsigned char cmd, char kpalt)
 {
   if(cmd < 0x40 || cmd >= 0x80) {
-    fprintf(stderr, "Cannot register SS3 key at cmd 0x%02x - out of bounds\n", cmd);
     return;
   }
 
@@ -51,7 +49,6 @@ static void register_ss3kpalt(TermKeyType type, TermKeySym sym, unsigned char cm
 static void register_csifunc(TermKeyType type, TermKeySym sym, int number)
 {
   if(number >= NCSIFUNCS) {
-    fprintf(stderr, "Cannot register CSI function key at number %d - out of bounds\n", number);
     return;
   }
 
