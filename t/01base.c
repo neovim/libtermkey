@@ -6,11 +6,13 @@ int main(int argc, char *argv[])
 {
   TermKey   *tk;
 
-  plan_tests(2);
+  plan_tests(3);
 
   tk = termkey_new_abstract("vt100", 0);
 
   ok(!!tk, "termkey_new_abstract");
+
+  is_int(termkey_get_buffer_size(tk), 256, "termkey_get_buffer_size");
 
   termkey_destroy(tk);
 
