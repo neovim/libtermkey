@@ -173,6 +173,7 @@ int  termkey_get_canonflags(TermKey *tk);
 void termkey_set_canonflags(TermKey *tk, int);
 
 size_t termkey_get_buffer_size(TermKey *tk);
+int    termkey_set_buffer_size(TermKey *tk, size_t size);
 
 size_t termkey_get_buffer_remaining(TermKey *tk);
 
