@@ -81,6 +81,7 @@ install-man:
 	ln -sf termkey_set_waittime.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_waittime.3.gz
 	ln -sf termkey_set_flags.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_flags.3.gz
 	ln -sf termkey_set_canonflags.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_canonflags.3.gz
+	ln -sf termkey_set_buffer_size.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_buffer_size.3.gz
 
 # DIST CUT
 
