@@ -466,6 +466,18 @@ size_t termkey_get_buffer_size(TermKey *tk)
   return tk->buffsize;
 }
 
+int termkey_set_buffer_size(TermKey *tk, size_t size)
+{
+  unsigned char *buffer = realloc(tk->buffer, size);
+  if(!buffer)
+    return 0;
+
+  tk->buffer = buffer;
+  tk->buffsize = size;
+
+  return 1;
+}
+
 size_t termkey_get_buffer_remaining(TermKey *tk)
 {
   /* Return the total number of free bytes in the buffer, because that's what
