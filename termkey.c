@@ -195,6 +195,7 @@ static TermKey *termkey_alloc(void)
   tk->waittime = 50; /* msec */
 
   tk->is_closed = 0;
+  tk->is_started = 0;
 
   tk->nkeynames = 64;
   tk->keynames  = NULL;
@@ -270,51 +271,10 @@ static int termkey_init(TermKey *tk, const char *term)
     goto abort_free_keynames;
   }
 
-  if(tk->fd != -1 && !(tk->flags & TERMKEY_FLAG_NOTERMIOS)) {
-    struct termios termios;
-    if(tcgetattr(tk->fd, &termios) == 0) {
-      tk->restore_termios = termios;
-      tk->restore_termios_valid = 1;
-
-      termios.c_iflag &= ~(IXON|INLCR|ICRNL);
-      termios.c_lflag &= ~(ICANON|ECHO);
-      termios.c_cc[VMIN] = 1;
-      termios.c_cc[VTIME] = 0;
-
-      if(tk->flags & TERMKEY_FLAG_CTRLC)
-        /* want no signal keys at all, so just disable ISIG */
-        termios.c_lflag &= ~ISIG;
-      else {
-        /* Disable Ctrl-\==VQUIT and Ctrl-D==VSUSP but leave Ctrl-C as SIGINT */
-        termios.c_cc[VQUIT] = _POSIX_VDISABLE;
-        termios.c_cc[VSUSP] = _POSIX_VDISABLE;
-        /* Some OSes have Ctrl-Y==VDSUSP */
-#ifdef VDSUSP
-        termios.c_cc[VDSUSP] = _POSIX_VDISABLE;
-#endif
-      }
-
-#ifdef DEBUG
-      fprintf(stderr, "Setting termios(3) flags\n");
-#endif
-      tcsetattr(tk->fd, TCSANOW, &termios);
-    }
-  }
-
-  struct TermKeyDriverNode *p;
-  for(p = tk->drivers; p; p = p->next)
-    if(p->driver->start_driver)
-      if(!(*p->driver->start_driver)(tk, p->info))
-        goto abort_free_drivers;
-
-#ifdef DEBUG
-  fprintf(stderr, "Drivers started; termkey instance %p is ready\n", tk);
-#endif
-
   return 1;
 
 abort_free_drivers:
-  for(p = tk->drivers; p; ) {
+  for(struct TermKeyDriverNode *p = tk->drivers; p; ) {
     (*p->driver->free_driver)(p->info);
     struct TermKeyDriverNode *next = p->next;
     free(p);
@@ -361,12 +321,17 @@ TermKey *termkey_new(int fd, int flags)
 
   const char *term = getenv("TERM");
 
-  if(!termkey_init(tk, term)) {
-    free(tk);
-    return NULL;
-  }
+  if(!termkey_init(tk, term))
+    goto abort;
+
+  if(!termkey_start(tk))
+    goto abort;
 
   return tk;
+
+abort:
+  free(tk);
+  return NULL;
 }
 
 TermKey *termkey_new_abstract(const char *term, int flags)
@@ -383,6 +348,8 @@ TermKey *termkey_new_abstract(const char *term, int flags)
     free(tk);
     return NULL;
   }
+
+  termkey_start(tk);
 
   return tk;
 }
@@ -405,6 +372,67 @@ void termkey_free(TermKey *tk)
 
 void termkey_destroy(TermKey *tk)
 {
+  if(tk->is_started)
+    termkey_stop(tk);
+
+  termkey_free(tk);
+}
+
+int termkey_start(TermKey *tk)
+{
+  if(tk->is_started)
+    return 1;
+
+  if(tk->fd != -1 && !(tk->flags & TERMKEY_FLAG_NOTERMIOS)) {
+    struct termios termios;
+    if(tcgetattr(tk->fd, &termios) == 0) {
+      tk->restore_termios = termios;
+      tk->restore_termios_valid = 1;
+
+      termios.c_iflag &= ~(IXON|INLCR|ICRNL);
+      termios.c_lflag &= ~(ICANON|ECHO);
+      termios.c_cc[VMIN] = 1;
+      termios.c_cc[VTIME] = 0;
+
+      if(tk->flags & TERMKEY_FLAG_CTRLC)
+        /* want no signal keys at all, so just disable ISIG */
+        termios.c_lflag &= ~ISIG;
+      else {
+        /* Disable Ctrl-\==VQUIT and Ctrl-D==VSUSP but leave Ctrl-C as SIGINT */
+        termios.c_cc[VQUIT] = _POSIX_VDISABLE;
+        termios.c_cc[VSUSP] = _POSIX_VDISABLE;
+        /* Some OSes have Ctrl-Y==VDSUSP */
+#ifdef VDSUSP
+        termios.c_cc[VDSUSP] = _POSIX_VDISABLE;
+#endif
+      }
+
+#ifdef DEBUG
+      fprintf(stderr, "Setting termios(3) flags\n");
+#endif
+      tcsetattr(tk->fd, TCSANOW, &termios);
+    }
+  }
+
+  struct TermKeyDriverNode *p;
+  for(p = tk->drivers; p; p = p->next)
+    if(p->driver->start_driver)
+      if(!(*p->driver->start_driver)(tk, p->info))
+        return 0;
+
+#ifdef DEBUG
+  fprintf(stderr, "Drivers started; termkey instance %p is ready\n", tk);
+#endif
+
+  tk->is_started = 1;
+  return 1;
+}
+
+int termkey_stop(TermKey *tk)
+{
+  if(!tk->is_started)
+    return 1;
+
   struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next)
     if(p->driver->stop_driver)
@@ -413,7 +441,9 @@ void termkey_destroy(TermKey *tk)
   if(tk->restore_termios_valid)
     tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
 
-  termkey_free(tk);
+  tk->is_started = 0;
+
+  return 1;
 }
 
 int termkey_get_fd(TermKey *tk)

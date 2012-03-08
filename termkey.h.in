@@ -161,6 +161,9 @@ TermKey *termkey_new_abstract(const char *term, int flags);
 void     termkey_free(TermKey *tk);
 void     termkey_destroy(TermKey *tk);
 
+int termkey_start(TermKey *tk);
+int termkey_stop(TermKey *tk);
+
 int termkey_get_fd(TermKey *tk);
 
 int  termkey_get_flags(TermKey *tk);
