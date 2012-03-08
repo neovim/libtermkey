@@ -78,13 +78,9 @@ install-man:
 	for F in man/*.7; do \
 	  gzip <$$F >$(DESTDIR)$(MAN7DIR)/$${F#man/}.gz; \
 	done
-	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_destroy.3.gz
-	ln -sf termkey_new.3.gz $(DESTDIR)$(MAN3DIR)/termkey_new_abstract.3.gz
-	ln -sf termkey_getkey.3.gz $(DESTDIR)$(MAN3DIR)/termkey_getkey_force.3.gz
-	ln -sf termkey_set_waittime.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_waittime.3.gz
-	ln -sf termkey_set_flags.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_flags.3.gz
-	ln -sf termkey_set_canonflags.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_canonflags.3.gz
-	ln -sf termkey_set_buffer_size.3.gz $(DESTDIR)$(MAN3DIR)/termkey_get_buffer_size.3.gz
+	while read FROM EQ TO; do \
+	  echo ln -sf $$TO.gz $(DESTDIR)$(MAN3DIR)/$$FROM.gz; \
+	done < man/also
 
 # DIST CUT
 
