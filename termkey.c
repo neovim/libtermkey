@@ -733,6 +733,11 @@ static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nb
 {
   int again = 0;
 
+  if(!tk->is_started) {
+    errno = EINVAL;
+    return TERMKEY_RES_ERROR;
+  }
+
 #ifdef DEBUG
   fprintf(stderr, "getkey(force=%d): buffer ", force);
   print_buffer(tk);
