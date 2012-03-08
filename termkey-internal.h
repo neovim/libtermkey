@@ -45,6 +45,7 @@ struct _TermKey {
   int waittime; // msec
 
   char   is_closed;
+  char   is_started;
 
   int  nkeynames;
   const char **keynames;
