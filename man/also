@@ -5,3 +5,5 @@ termkey_get_canonflags.3 = termkey_set_canonflags.3
 termkey_get_buffer_size.3 = termkey_set_buffer_size.3
 termkey_get_waittime.3 = termkey_set_waittime.3
 termkey_getkey_force.3 = termkey_getkey.3
+termkey_stop.3 = termkey_start.3
+termkey_is_started.3 = termkey_start.3

@@ -21,7 +21,7 @@ Link with \fI\-ltermkey\fP.
 .PP
 The constructor attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP(3).
 .PP
-If a file handle is provided, the terminfo driver may send a string to initialise or set the state of the terminal before \fBtermkey_new\fP() returns. This will not be done if no file handle is provided, or if the file handle is a pipe (\fBS_ISFIFO\fP()). In this case it will be the caller's responsibility to ensure the terminal is in the correct mode.
+If a file handle is provided, the terminfo driver may send a string to initialise or set the state of the terminal before \fBtermkey_new\fP() returns. This will not be done if no file handle is provided, or if the file handle is a pipe (\fBS_ISFIFO\fP()). In this case it will be the caller's responsibility to ensure the terminal is in the correct mode. Once initialised, the terminal can be stopped by \fBtermkey_stop\fP(3), and started again by \fBtermkey_start\fP(3).
 .SH VERSION CHECK MACRO
 Before calling any functions in the \fBtermkey\fP library, an application should use the \fBTERMKEY_CHECK_VERSION\fP macro to check that the loaded version of the library is compatible with the version it was compiled against. This should be done early on, ideally just after entering its \fBmain\fP() function.
 .SH "RETURN VALUE"
