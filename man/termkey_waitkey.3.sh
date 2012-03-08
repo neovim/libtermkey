@@ -27,7 +27,7 @@ A key event as been provided.
 No key events are ready and the terminal has been closed, so no more will arrive.
 .TP
 .B TERMKEY_RES_ERROR
-An IO error occured. \fIerrno\fP will be preserved. If the error is \fBEINTR\fP then this will only be returned if \fBTERMKEY_FLAG_EINTR\fP flag is not set; if it is then the IO operation will be retried instead.
+An IO error occured. \fIerrno\fP will be preserved. If the error is \fBEINTR\fP then this will only be returned if \fBTERMKEY_FLAG_EINTR\fP flag is not set; if it is then the IO operation will be retried instead. If this is called with terminal IO stopped, due to \fBtermkey_stop\fP(3) then \fIerrno\fP will be set to \fBEINVAL\fP.
 .SH EXAMPLE
 The following example program prints details of every keypress until the user presses "Ctrl-C".
 .PP
