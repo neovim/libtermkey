@@ -163,6 +163,7 @@ void     termkey_destroy(TermKey *tk);
 
 int termkey_start(TermKey *tk);
 int termkey_stop(TermKey *tk);
+int termkey_is_started(TermKey *tk);
 
 int termkey_get_fd(TermKey *tk);
 
