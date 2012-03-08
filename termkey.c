@@ -446,6 +446,11 @@ int termkey_stop(TermKey *tk)
   return 1;
 }
 
+int termkey_is_started(TermKey *tk)
+{
+  return tk->is_started;
+}
+
 int termkey_get_fd(TermKey *tk)
 {
   return tk->fd;
