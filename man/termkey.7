@@ -14,7 +14,7 @@ To work with an asynchronous program, two other functions are used. \fBtermkey_a
 .PP
 Finally, bytes of input can be fed into the \fBtermkey\fP instance directly, by calling \fBtermkey_push_bytes\fP(3). This may be useful if the bytes have already been read from the terminal by the application, or even in situations that don't directly involve a terminal filehandle. Because of these situations, it is possible to construct a \fBtermkey\fP instance not associated with a file handle, by passing -1 as the file descriptor.
 .PP
-A \fBtermkey\fP instance contains a buffer of pending bytes that have been read but not yet consumed by \fBtermkey_getkey\fP(3). \fBtermkey_get_buffer_remaining\fP(3) returns the number of bytes of buffer space currently free in the instance.
+A \fBtermkey\fP instance contains a buffer of pending bytes that have been read but not yet consumed by \fBtermkey_getkey\fP(3). \fBtermkey_get_buffer_remaining\fP(3) returns the number of bytes of buffer space currently free in the instance. \fBtermkey_set_buffer_size\fP(3) and \fBtermkey_get_buffer_size\fP(3) can be used to control and return the total size of this buffer.
 .SS Key Events
 Key events are stored in structures. Each structure holds details of one key event. This structure is defined as follows.
 .PP
