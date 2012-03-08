@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <errno.h>
 #include "../termkey.h"
 #include "taplib.h"
 
@@ -8,7 +9,7 @@ int main(int argc, char *argv[])
   TermKey   *tk;
   TermKeyKey key;
 
-  plan_tests(19);
+  plan_tests(21);
 
   /* We'll need a real filehandle we can write/read.
    * pipe() can make us one */
@@ -59,6 +60,11 @@ int main(int argc, char *argv[])
   is_int(key.modifiers,   0,                    "key.modifiers after Right");
 
   is_int(termkey_get_buffer_remaining(tk), 256, "buffer free 256 after completion");
+
+  termkey_stop(tk);
+
+  is_int(termkey_getkey(tk, &key), TERMKEY_RES_ERROR, "getkey yields RES_ERROR after termkey_stop()");
+  is_int(errno, EINVAL, "getkey error is EINVAL");
 
   termkey_destroy(tk);
 
