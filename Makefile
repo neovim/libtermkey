@@ -1,6 +1,23 @@
-LIBTOOL=libtool
+ifeq ($(shell uname),Darwin)
+  LIBTOOL ?= glibtool
+else
+  LIBTOOL ?= libtool
+endif
 
-CFLAGS?=
+ifneq ($(VERBOSE),1)
+  LIBTOOL +=--quiet
+endif
+
+CFLAGS +=-Wall -std=c99
+
+ifeq ($(DEBUG),1)
+  CFLAGS +=-ggdb -DDEBUG
+endif
+
+ifeq ($(PROFILE),1)
+  CFLAGS +=-pg
+  LDFLAGS+=-pg
+endif
 
 ifeq ($(shell pkg-config --atleast-version=0.1.0 unibilium && echo 1),1)
   CFLAGS +=$(shell pkg-config --cflags unibilium) -DHAVE_UNIBILIUM
@@ -12,7 +29,8 @@ else
   LDFLAGS+=-lncurses
 endif
 
-CFLAGS_DEBUG=
+OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
+LIBRARY=libtermkey.la
 
 VERSION_MAJOR=0
 VERSION_MINOR=13
@@ -28,17 +46,10 @@ MANDIR=$(PREFIX)/share/man
 MAN3DIR=$(MANDIR)/man3
 MAN7DIR=$(MANDIR)/man7
 
-ifeq ($(DEBUG),1)
-  CFLAGS_DEBUG=-ggdb -DDEBUG
-endif
-
-all: termkey.h demo demo-async
-
-OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
-LIBRARY=libtermkey.la
+all: $(LIBRARY) demo demo-async
 
 %.lo: %.c termkey.h termkey-internal.h
-	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) $(CFLAGS_DEBUG) -Wall -std=c99 -o $@ -c $<
+	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $<
 
 $(LIBRARY): $(OBJECTS)
 	$(LIBTOOL) --mode=link --tag=CC gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) $(LDFLAGS) -o $@ $^
@@ -59,15 +70,16 @@ clean:
 install: install-inc install-lib install-man
 	$(LIBTOOL) --mode=finish $(DESTDIR)$(LIBDIR)
 
-install-inc:
+install-inc: termkey.h
 	install -d $(DESTDIR)$(INCDIR)
 	install -m644 termkey.h $(DESTDIR)$(INCDIR)
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
 	sed "s,@LIBDIR@,$(LIBDIR),;s,@INCDIR@,$(INCDIR)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
 
-install-lib:
+# rm the old binary first in case it's still in use
+install-lib: $(LIBRARY)
 	install -d $(DESTDIR)$(LIBDIR)
-	$(LIBTOOL) --mode=install cp libtermkey.la $(DESTDIR)$(LIBDIR)/libtermkey.la
+	$(LIBTOOL) --mode=install cp --remove-destination libtermkey.la $(DESTDIR)$(LIBDIR)/libtermkey.la
 
 install-man:
 	install -d $(DESTDIR)$(MAN3DIR)
