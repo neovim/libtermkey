@@ -32,6 +32,9 @@ endif
 OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
 LIBRARY=libtermkey.la
 
+TESTSOURCES=$(wildcard t/[0-9]*.c)
+TESTFILES=$(TESTSOURCES:.c=.t)
+
 VERSION_MAJOR=0
 VERSION_MINOR=13
 
@@ -60,8 +63,22 @@ demo: $(LIBRARY) demo.lo
 demo-async: $(LIBRARY) demo-async.lo
 	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
 
+t/%.t: t/%.c $(LIBRARY) t/taplib.lo
+	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+
+t/taplib.lo: t/taplib.c
+	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $^
+
+.PHONY: test
+test: $(TESTFILES)
+	prove -e ""
+
+.PHONY: clean-test
+clean-test:
+	$(LIBTOOL) --mode=clean rm -f $(TESTFILES) t/taplib.lo
+
 .PHONY: clean
-clean:
+clean: clean-test
 	$(LIBTOOL) --mode=clean rm -f $(OBJECTS) demo.lo demo-async.lo
 	$(LIBTOOL) --mode=clean rm -f $(LIBRARY)
 	$(LIBTOOL) --mode=clean rm -rf demo demo-async
@@ -108,18 +125,6 @@ doc: $(BUILTMAN)
 %.3: %.3.sh
 	sh $< >$@
 
-TESTSOURCES=$(wildcard t/[0-9]*.c)
-TESTFILES=$(TESTSOURCES:.c=.t)
-
-t/%.t: t/%.c $(LIBRARY) t/taplib.lo
-	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
-
-t/taplib.lo: t/taplib.c
-	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $^
-
-test: $(TESTFILES)
-	prove -e ""
-
 clean: clean-built
 
 clean-built:
@@ -135,6 +140,8 @@ DISTDIR=libtermkey-$(VERSION)
 distdir: all
 	mkdir __distdir
 	cp *.c *.h LICENSE __distdir
+	mkdir __distdir/t
+	cp t/*.c t/*.h __distdir/t
 	mkdir __distdir/man
 	cp man/*.[37] __distdir/man
 	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >__distdir/termkey.pc.in
