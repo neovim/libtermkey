@@ -143,7 +143,7 @@ distdir: all
 	mkdir __distdir/t
 	cp t/*.c t/*.h __distdir/t
 	mkdir __distdir/man
-	cp man/*.[37] __distdir/man
+	cp man/*.[37] man/also __distdir/man
 	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >__distdir/termkey.pc.in
 	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
 	mv __distdir $(DISTDIR)
