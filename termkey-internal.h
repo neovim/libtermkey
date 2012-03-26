@@ -30,7 +30,7 @@ struct TermKeyDriverNode {
   struct TermKeyDriverNode *next;
 };
 
-struct _TermKey {
+struct TermKey {
   int    fd;
   int    flags;
   int    canonflags;
