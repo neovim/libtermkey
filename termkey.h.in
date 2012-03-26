@@ -136,7 +136,7 @@ typedef struct {
   char utf8[7];
 } TermKeyKey;
 
-typedef struct _TermKey TermKey;
+typedef struct TermKey TermKey;
 
 enum {
   TERMKEY_FLAG_NOINTERPRET = 1 << 0, /* Do not interpret C0//DEL codes if possible */
