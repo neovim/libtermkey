@@ -32,6 +32,12 @@ endif
 OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
 LIBRARY=libtermkey.la
 
+DEMOS=demo demo-async
+
+ifeq ($(shell pkg-config glib-2.0 && echo 1),1)
+  DEMOS+=demo-glib
+endif
+
 TESTSOURCES=$(wildcard t/[0-9]*.c)
 TESTFILES=$(TESTSOURCES:.c=.t)
 
@@ -49,7 +55,7 @@ MANDIR=$(PREFIX)/share/man
 MAN3DIR=$(MANDIR)/man3
 MAN7DIR=$(MANDIR)/man7
 
-all: $(LIBRARY) demo demo-async
+all: $(LIBRARY) $(DEMOS)
 
 %.lo: %.c termkey.h termkey-internal.h
 	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $<
@@ -62,6 +68,12 @@ demo: $(LIBRARY) demo.lo
 
 demo-async: $(LIBRARY) demo-async.lo
 	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+
+demo-glib.lo: demo-glib.c termkey.h
+	$(LIBTOOL) --mode=compile --tag=CC gcc -o $@ -c $< $(shell pkg-config glib-2.0 --cflags)
+
+demo-glib: $(LIBRARY) demo-glib.lo
+	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^ $(shell pkg-config glib-2.0 --libs)
 
 t/%.t: t/%.c $(LIBRARY) t/taplib.lo
 	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
