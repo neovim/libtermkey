@@ -894,7 +894,10 @@ static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)
   key->code.mouse[0] = CHARAT(0) - 0x20;
   key->code.mouse[1] = CHARAT(1) - 0x20;
   key->code.mouse[2] = CHARAT(2) - 0x20;
-  key->modifiers     = 0;
+
+  key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
+  key->code.mouse[0] &= ~0x1c;
+
   *nbytep = 3;
   return TERMKEY_RES_KEY;
 }
@@ -922,12 +925,14 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
 
   int drag = code & 0x20;
 
-  switch(code & ~0x20) {
+  code &= ~0x3c;
+
+  switch(code) {
   case 0:
   case 1:
   case 2:
     *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
-    btn = (code & ~0x20) + 1;
+    btn = code + 1;
     break;
 
   case 3:
@@ -938,7 +943,7 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
   case 64:
   case 65:
     *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
-    btn = (code & ~0x20) + 4 - 64;
+    btn = code + 4 - 64;
     break;
 
   default:
