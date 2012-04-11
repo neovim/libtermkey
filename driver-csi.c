@@ -203,8 +203,15 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   long arg[16];
   char present = 0;
   int args = 0;
+  int initial = 0;
 
   size_t p = introlen;
+
+  // See if there is an initial byte
+  if(CHARAT(p) >= '<' && CHARAT(p) <= '?') {
+    initial = CHARAT(p);
+    p++;
+  }
 
   // Now attempt to parse out up number;number;... separated values
   while(p < csi_end) {
@@ -272,10 +279,10 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
     (*tk->method.emit_codepoint)(tk, arg[0], key);
     key->modifiers |= mod;
   }
-  else if(cmd == 'M') {
+  else if(cmd == 'M' || (initial == '<' && cmd == 'm')) {
     size_t csi_len = csi_end + 1;
 
-    if(args >= 3) {
+    if(!initial && args >= 3) { // rxvt protocol
       key->code.mouse[0] = arg[0];
 
       key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
@@ -290,6 +297,28 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
         key->code.mouse[2] = 0xff;
       else
         key->code.mouse[2] = arg[2];
+
+      *nbytep = csi_len;
+      return TERMKEY_RES_KEY;
+    }
+
+    if(initial == '<' && args >= 3) { // SGR protocol
+      key->code.mouse[0] = arg[0];
+
+      key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
+      key->code.mouse[0] &= ~0x1c;
+
+      if(arg[1] > 0xff)
+        key->code.mouse[1] = 0xff;
+      else
+        key->code.mouse[1] = arg[1];
+
+      if(arg[2] > 0xff)
+        key->code.mouse[2] = 0xff;
+      else
+        key->code.mouse[2] = arg[2];
+
+      key->code.mouse[3] = (cmd == 'm');
 
       *nbytep = csi_len;
       return TERMKEY_RES_KEY;
