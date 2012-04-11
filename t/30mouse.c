@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   char       buffer[32];
   size_t     len;
 
-  plan_tests(31);
+  plan_tests(46);
 
   /* vt100 doesn't have a mouse, we need xterm */
   tk = termkey_new_abstract("xterm", 0);
@@ -72,6 +72,34 @@ int main(int argc, char *argv[])
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, 0);
   is_int(len, 15, "string length for Ctrl-press");
   is_str(buffer, "C-MousePress(1)", "string buffer for Ctrl-press");
+
+  // rxvt protocol
+  termkey_push_bytes(tk, "\e[0;20;20M", 10);
+
+  is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse press rxvt protocol");
+
+  is_int(key.type, TERMKEY_TYPE_MOUSE, "key.type for mouse press rxvt protocol");
+
+  is_int(termkey_interpret_mouse(tk, &key, &ev, &button, &line, &col), TERMKEY_RES_KEY, "interpret_mouse yields RES_KEY");
+
+  is_int(ev,     TERMKEY_MOUSE_PRESS, "mouse event for press rxvt protocol");
+  is_int(button, 1,                   "mouse button for press rxvt protocol");
+  is_int(line,   20,                  "mouse line for press rxvt protocol");
+  is_int(col,    20,                  "mouse column for press rxvt protocol");
+  is_int(key.modifiers, 0,            "modifiers for press rxvt protocol");
+
+  termkey_push_bytes(tk, "\e[3;20;20M", 10);
+
+  is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse release rxvt protocol");
+
+  is_int(key.type, TERMKEY_TYPE_MOUSE, "key.type for mouse release rxvt protocol");
+
+  is_int(termkey_interpret_mouse(tk, &key, &ev, &button, &line, &col), TERMKEY_RES_KEY, "interpret_mouse yields RES_KEY");
+
+  is_int(ev,     TERMKEY_MOUSE_RELEASE, "mouse event for release rxvt protocol");
+  is_int(line,   20,                  "mouse line for release rxvt protocol");
+  is_int(col,    20,                  "mouse column for release rxvt protocol");
+  is_int(key.modifiers, 0,            "modifiers for release rxvt protocol");
 
   termkey_destroy(tk);
 
