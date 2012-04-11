@@ -894,6 +894,7 @@ static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)
   key->code.mouse[0] = CHARAT(0) - 0x20;
   key->code.mouse[1] = CHARAT(1) - 0x20;
   key->code.mouse[2] = CHARAT(2) - 0x20;
+  key->code.mouse[3] = 0;
 
   key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
   key->code.mouse[0] &= ~0x1c;
@@ -952,6 +953,9 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
 
   if(button)
     *button = btn;
+
+  if(key->code.mouse[3])
+    *event = TERMKEY_MOUSE_RELEASE;
 
   return TERMKEY_RES_KEY;
 }
