@@ -275,6 +275,26 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   else if(cmd == 'M') {
     size_t csi_len = csi_end + 1;
 
+    if(args >= 3) {
+      key->code.mouse[0] = arg[0];
+
+      key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
+      key->code.mouse[0] &= ~0x1c;
+
+      if(arg[1] > 0xff)
+        key->code.mouse[1] = 0xff;
+      else
+        key->code.mouse[1] = arg[1];
+
+      if(arg[2] > 0xff)
+        key->code.mouse[2] = 0xff;
+      else
+        key->code.mouse[2] = arg[2];
+
+      *nbytep = csi_len;
+      return TERMKEY_RES_KEY;
+    }
+
     tk->buffstart += csi_len;
     tk->buffcount -= csi_len;
 
