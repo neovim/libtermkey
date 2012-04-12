@@ -12,13 +12,14 @@ int main(int argc, char *argv[])
   TERMKEY_CHECK_VERSION;
 
   int mouse = 0;
+  int mouse_proto = 0;
   TermKeyFormat format = TERMKEY_FORMAT_VIM;
 
   char buffer[50];
   TermKey *tk;
 
   int opt;
-  while((opt = getopt(argc, argv, "m::")) != -1) {
+  while((opt = getopt(argc, argv, "m::p:")) != -1) {
     switch(opt) {
     case 'm':
       if(optarg)
@@ -28,6 +29,11 @@ int main(int argc, char *argv[])
       format |= TERMKEY_FORMAT_MOUSE_POS;
 
       break;
+
+    case 'p':
+      mouse_proto = atoi(optarg);
+      break;
+
     default:
       fprintf(stderr, "Usage: %s [-m]\n", argv[0]);
       return 1;
@@ -44,8 +50,11 @@ int main(int argc, char *argv[])
   TermKeyResult ret;
   TermKeyKey key;
 
-  if(mouse)
+  if(mouse) {
     printf("\033[?%dhMouse mode active\n", mouse);
+    if(mouse_proto)
+      printf("\033[?%dh", mouse_proto);
+  }
 
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
     if(ret == TERMKEY_RES_KEY) {
