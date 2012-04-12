@@ -5,7 +5,7 @@ termkey_interpret_mouse \- interpret opaque mouse event data
 .nf
 .B #include <termkey.h>
 .sp
-.BI "TermKeyResult termkey_interpret_mouse(TermKey *" tk ", TermKeyKey *" key ", "
+.BI "TermKeyResult termkey_interpret_mouse(TermKey *" tk ", const TermKeyKey *" key ", "
 .BI "    TermKeyMouseEvent *" ev ", int *" button ", int *" line ", int *" col );
 .fi
 .sp
@@ -31,8 +31,6 @@ the mouse was moved while holding a button; \fIbutton\fP will contain its number
 a mouse button was released, or the mouse was moved while no button was pressed. If known, \fIbutton\fP will contain the number of the button released. Not all terminals can report this, so it may be 0 instead.
 .PP
 The \fIline\fP and \fIcol\fP variables will be filled in with the mouse position, indexed from 1.
-.PP
-After calling this function, it is possible that the \fImodifiers\fP field of the \fIkey\fP structure will have been set according to the modifiers reported by the terminal. This function will not otherwise alter either the \fIkey\fP or the containing \fItk\fP structure, and will be safe to call again on the same event if required.
 .SH "RETURN VALUE"
 If passed a \fIkey\fP event of the type \fBTERMKEY_TYPE_MOUSE\fP, this function will return \fBTERMKEY_RES_KEY\fP and will affect the variables whose pointers were passed in, as described above.
 .PP
