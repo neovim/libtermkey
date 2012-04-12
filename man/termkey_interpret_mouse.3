@@ -30,7 +30,7 @@ the mouse was moved while holding a button; \fIbutton\fP will contain its number
 .B TERMKEY_MOUSE_RELEASE
 a mouse button was released, or the mouse was moved while no button was pressed. If known, \fIbutton\fP will contain the number of the button released. Not all terminals can report this, so it may be 0 instead.
 .PP
-The \fIline\fP and \fIcol\fP variables will be filled in with the mouse position, indexed from 1.
+The \fIline\fP and \fIcol\fP variables will be filled in with the mouse position, indexed from 1. Note that due to the limited number of bytes in the \fBTermKeyKey\fP structure, the line and column numbers are limited to 2047 and 4095 respectively.
 .SH "RETURN VALUE"
 If passed a \fIkey\fP event of the type \fBTERMKEY_TYPE_MOUSE\fP, this function will return \fBTERMKEY_RES_KEY\fP and will affect the variables whose pointers were passed in, as described above.
 .PP
