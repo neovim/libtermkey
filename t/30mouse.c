@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   char       buffer[32];
   size_t     len;
 
-  plan_tests(58);
+  plan_tests(60);
 
   /* vt100 doesn't have a mouse, we need xterm */
   tk = termkey_new_abstract("xterm", 0);
@@ -125,6 +125,14 @@ int main(int argc, char *argv[])
   is_int(termkey_interpret_mouse(tk, &key, &ev, &button, &line, &col), TERMKEY_RES_KEY, "interpret_mouse yields RES_KEY");
 
   is_int(ev,     TERMKEY_MOUSE_RELEASE, "mouse event for release SGR");
+
+  termkey_push_bytes(tk, "\e[<0;500;300M", 13);
+
+  termkey_getkey(tk, &key);
+  termkey_interpret_mouse(tk, &key, &ev, &button, &line, &col);
+
+  is_int(line,   300, "mouse line for press SGR wide");
+  is_int(col,    500, "mouse column for press SGR wide");
 
   termkey_destroy(tk);
 
