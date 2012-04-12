@@ -288,15 +288,17 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
       key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
       key->code.mouse[0] &= ~0x1c;
 
-      if(arg[1] > 0xff)
-        key->code.mouse[1] = 0xff;
-      else
-        key->code.mouse[1] = arg[1];
+      key->code.mouse[3] = 0;
 
-      if(arg[2] > 0xff)
-        key->code.mouse[2] = 0xff;
-      else
-        key->code.mouse[2] = arg[2];
+      if(arg[1] > 0xfff)
+        arg[1] = 0xfff;
+      key->code.mouse[1]  = (arg[1] & 0x0ff);
+      key->code.mouse[3] |= (arg[1] & 0xf00) >> 8;
+
+      if(arg[2] > 0x7ff)
+        arg[1] = 0x7ff;
+      key->code.mouse[2]  = (arg[2] & 0x0ff);
+      key->code.mouse[3] |= (arg[2] & 0x300) >> 4;
 
       *nbytep = csi_len;
       return TERMKEY_RES_KEY;
@@ -308,17 +310,20 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
       key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
       key->code.mouse[0] &= ~0x1c;
 
-      if(arg[1] > 0xff)
-        key->code.mouse[1] = 0xff;
-      else
-        key->code.mouse[1] = arg[1];
+      key->code.mouse[3] = 0;
 
-      if(arg[2] > 0xff)
-        key->code.mouse[2] = 0xff;
-      else
-        key->code.mouse[2] = arg[2];
+      if(arg[1] > 0xfff)
+        arg[1] = 0xfff;
+      key->code.mouse[1]  = (arg[1] & 0x0ff);
+      key->code.mouse[3] |= (arg[1] & 0xf00) >> 8;
 
-      key->code.mouse[3] = (cmd == 'm');
+      if(arg[2] > 0x7ff)
+        arg[1] = 0x7ff;
+      key->code.mouse[2]  = (arg[2] & 0x0ff);
+      key->code.mouse[3] |= (arg[2] & 0x300) >> 4;
+
+      if(cmd == 'm') // release
+        key->code.mouse[3] |= 0x80;
 
       *nbytep = csi_len;
       return TERMKEY_RES_KEY;
