@@ -101,6 +101,10 @@ If this flag is set then an ASCII DEL character is represented by the \fBTERMKEY
 Special keys, mouse events, and UTF-8 encoded Unicode text, are all represented by more than one byte. If the start of a multi-byte sequence is seen by \fBtermkey_waitkey\fP() it will wait a short time to see if the remainder of the sequence arrives. If the sequence remains unfinished after this timeout, it will be returned in its incomplete state. Partial escape sequences are returned as an Escape key (\fBTERMKEY_SYM_ESCAPE\fP) followed by the text contained in the sequence. Partial UTF-8 sequences are returned as the Unicode replacement character, U+FFFD.
 .PP
 The amount of time that the \fBtermkey\fP instance will wait is set by \fBtermkey_set_waittime\fP(3), and is returned by \fBtermkey_get_waittime\fP(3). Initially it will be set to 50 miliseconds.
+.SS Mouse Events
+The \fBTERMKEY_TYPE_MOUSE\fP event type indicates a mouse event. The \fIcode\fP field of the event structure should be considered opaque, though \fImodifiers\fP will be valid. In order to obtain the details of the mouse event, call \fBtermkey_interpret_mouse\fP(3) passing the event structure and pointers to integers to store the result in. 
+.PP
+\fBtermkey\fP recognises three mouse protocols: the original X10 protocol (\f(CWCSI M\fP followed by three bytes), SGR encoding (\f(CWCSI < ... M\fP, as requested by \f(CWCSI ? 1006 h\fP), and rxvt encoding (\f(CWCSI ... M\fP, as requested by \f(CWCSI ? 1015 h\fP). Which encoding is in use is inferred automatically by \fBtermkey\fP, and does not need to be specified explicitly.
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_waitkey (3),
