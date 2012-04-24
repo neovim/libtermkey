@@ -19,7 +19,9 @@ Link with \fI\-ltermkey\fP.
 .PP
 \fBtermkey_destroy\fP() destroys the given instance and releases any resources controlled by it. It will not close the underlying filehandle given as the \fIfd\fP argument to \fBtermkey_new\fP().
 .PP
-The constructor attempts to detect if the current locale is UTF-8 aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP(3).
+The constructor attempts to detect if the current locale is
+.SM UTF-8
+aware or not, and sets either the \fBTERMKEY_FLAG_UTF8\fP or \fBTERMKEY_FLAG_RAW\fP flag. One of these two bits will always be in effect. The current flags in effect can be obtained by \fBtermkey_get_flags\fP(3).
 .PP
 If a file handle is provided, the terminfo driver may send a string to initialise or set the state of the terminal before \fBtermkey_new\fP() returns. This will not be done if no file handle is provided, or if the file handle is a pipe (\fBS_ISFIFO\fP()). In this case it will be the caller's responsibility to ensure the terminal is in the correct mode. Once initialised, the terminal can be stopped by \fBtermkey_stop\fP(3), and started again by \fBtermkey_start\fP(3).
 .SH VERSION CHECK MACRO
