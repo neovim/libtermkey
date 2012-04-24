@@ -47,6 +47,9 @@ a symbolic key. This value indicates that \fIcode.sym\fP is valid, and contains 
 .TP
 .B TERMKEY_TYPE_MOUSE
 a mouse button press, release, or movement. The \fIcode.mouse\fP array should be considered opaque.
+.TP
+.B TERMKEY_TYPE_POSITION
+a cursor position report.
 .PP
 The \fImodifiers\fP bitmask is composed of a bitwise-or of the constants \fBTERMKEY_KEYMOD_SHIFT\fP, \fBTERMKEY_KEYMOD_CTRL\fP and \fBTERMKEY_KEYMOD_ALT\fP.
 .PP
@@ -105,6 +108,8 @@ The amount of time that the \fBtermkey\fP instance will wait is set by \fBtermke
 The \fBTERMKEY_TYPE_MOUSE\fP event type indicates a mouse event. The \fIcode\fP field of the event structure should be considered opaque, though \fImodifiers\fP will be valid. In order to obtain the details of the mouse event, call \fBtermkey_interpret_mouse\fP(3) passing the event structure and pointers to integers to store the result in. 
 .PP
 \fBtermkey\fP recognises three mouse protocols: the original X10 protocol (\f(CWCSI M\fP followed by three bytes), SGR encoding (\f(CWCSI < ... M\fP, as requested by \f(CWCSI ? 1006 h\fP), and rxvt encoding (\f(CWCSI ... M\fP, as requested by \f(CWCSI ? 1015 h\fP). Which encoding is in use is inferred automatically by \fBtermkey\fP, and does not need to be specified explicitly.
+.SS Position Events
+The \fBTERMKEY_TYPE_POSITION\fP event type indicates a cursor position report. This is typically sent by a terminal in response to the Report Cursor Position command (\f(CWCSI 6n\fP). The event bytes are opaque, but can be obtained by calling \fBtermkey_interpret_position\fP(3) passing the event structure and pointers to integers to store the result in.
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_waitkey (3),
