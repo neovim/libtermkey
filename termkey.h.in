@@ -95,7 +95,8 @@ typedef enum {
   TERMKEY_TYPE_UNICODE,
   TERMKEY_TYPE_FUNCTION,
   TERMKEY_TYPE_KEYSYM,
-  TERMKEY_TYPE_MOUSE
+  TERMKEY_TYPE_MOUSE,
+  TERMKEY_TYPE_POSITION
 } TermKeyType;
 
 typedef enum {
@@ -198,6 +199,8 @@ char       *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym
 TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname); 
 
 TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col);
+
+TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col);
 
 typedef enum {
   TERMKEY_FORMAT_LONGMOD     = 1 << 0, /* Shift-... instead of S-... */
