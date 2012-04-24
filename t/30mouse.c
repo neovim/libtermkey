@@ -12,8 +12,7 @@ int main(int argc, char *argv[])
 
   plan_tests(60);
 
-  /* vt100 doesn't have a mouse, we need xterm */
-  tk = termkey_new_abstract("xterm", 0);
+  tk = termkey_new_abstract("vt100", 0);
 
   termkey_push_bytes(tk, "\e[M !!", 6);
 

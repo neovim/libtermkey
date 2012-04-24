@@ -140,23 +140,6 @@ static int register_keys(void)
 
 static void *new_driver(TermKey *tk, const char *term)
 {
-  if(strncmp(term, "xterm", 5) == 0) {
-    // We want "xterm" or "xtermc" or "xterm-..."
-    if(term[5] != 0 && term[5] != '-' && term[5] != 'c')
-      return NULL;
-  }
-  else if(strcmp(term, "screen") == 0) {
-    /* Also apply for screen, because it might be transporting xterm-like
-     * sequences. Yes, this sucks. We shouldn't need to rely on this behaviour
-     * but there's no other way to know, and if we don't then we won't
-     * recognise its sequences.
-     */
-  }
-  else
-    return NULL;
-
-  // Excellent - we'll continue
-
   if(!keyinfo_initialised)
     if(!register_keys())
       return NULL;
