@@ -6,15 +6,39 @@
 
 // There are 64 codes 0x40 - 0x7F
 static int keyinfo_initialised = 0;
-static struct keyinfo csi_ss3s[64];
 static struct keyinfo ss3s[64];
 static char ss3_kpalts[64];
-static struct keyinfo csifuncs[35]; /* This value must be increased if more CSI function keys are added */
-#define NCSIFUNCS (sizeof(csifuncs)/sizeof(csifuncs[0]))
 
 typedef struct {
   TermKey *tk;
 } TermKeyCsi;
+
+typedef TermKeyResult CsiHandler(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args);
+static CsiHandler *csi_handlers[64];
+
+/*
+ * Handler for CSI/SS3 cmd keys
+ */
+
+static struct keyinfo csi_ss3s[64];
+
+static TermKeyResult handle_csi_ss3_full(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+{
+  if(args > 1 && arg[1] != -1)
+    key->modifiers = arg[1] - 1;
+  else
+    key->modifiers = 0;
+
+  key->type = csi_ss3s[cmd - 0x40].type;
+  key->code.sym = csi_ss3s[cmd - 0x40].sym;
+  key->modifiers &= ~(csi_ss3s[cmd - 0x40].modifier_mask);
+  key->modifiers |= csi_ss3s[cmd - 0x40].modifier_set;
+
+  if(key->code.sym == TERMKEY_SYM_UNKNOWN)
+    return TERMKEY_RES_NONE;
+
+  return TERMKEY_RES_KEY;
+}
 
 static void register_csi_ss3_full(TermKeyType type, TermKeySym sym, int modifier_set, int modifier_mask, unsigned char cmd)
 {
@@ -26,12 +50,18 @@ static void register_csi_ss3_full(TermKeyType type, TermKeySym sym, int modifier
   csi_ss3s[cmd - 0x40].sym = sym;
   csi_ss3s[cmd - 0x40].modifier_set = modifier_set;
   csi_ss3s[cmd - 0x40].modifier_mask = modifier_mask;
+
+  csi_handlers[cmd - 0x40] = &handle_csi_ss3_full;
 }
 
 static void register_csi_ss3(TermKeyType type, TermKeySym sym, unsigned char cmd)
 {
   register_csi_ss3_full(type, sym, 0, 0, cmd);
 }
+
+/*
+ * Handler for SS3 keys with kpad alternate representations
+ */
 
 static void register_ss3kpalt(TermKeyType type, TermKeySym sym, unsigned char cmd, char kpalt)
 {
@@ -46,6 +76,46 @@ static void register_ss3kpalt(TermKeyType type, TermKeySym sym, unsigned char cm
   ss3_kpalts[cmd - 0x40] = kpalt;
 }
 
+/*
+ * Handler for CSI number ~ function keys
+ */
+
+static struct keyinfo csifuncs[35]; /* This value must be increased if more CSI function keys are added */
+#define NCSIFUNCS (sizeof(csifuncs)/sizeof(csifuncs[0]))
+
+static TermKeyResult handle_csifunc(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+{
+  if(args > 1 && arg[1] != -1)
+    key->modifiers = arg[1] - 1;
+  else
+    key->modifiers = 0;
+
+  key->type = TERMKEY_TYPE_KEYSYM;
+
+  if(arg[0] == 27) {
+    int mod = key->modifiers;
+    (*tk->method.emit_codepoint)(tk, arg[2], key);
+    key->modifiers |= mod;
+  }
+  else if(arg[0] >= 0 && arg[0] < NCSIFUNCS) {
+    key->type = csifuncs[arg[0]].type;
+    key->code.sym = csifuncs[arg[0]].sym;
+    key->modifiers &= ~(csifuncs[arg[0]].modifier_mask);
+    key->modifiers |= csifuncs[arg[0]].modifier_set;
+  }
+  else
+    key->code.sym = TERMKEY_SYM_UNKNOWN;
+
+  if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
+#ifdef DEBUG
+    fprintf(stderr, "CSI: Unknown function key %ld\n", arg[0]);
+#endif
+    return TERMKEY_RES_NONE;
+  }
+
+  return TERMKEY_RES_KEY;
+}
+
 static void register_csifunc(TermKeyType type, TermKeySym sym, int number)
 {
   if(number >= NCSIFUNCS) {
@@ -56,6 +126,65 @@ static void register_csifunc(TermKeyType type, TermKeySym sym, int number)
   csifuncs[number].sym = sym;
   csifuncs[number].modifier_set = 0;
   csifuncs[number].modifier_mask = 0;
+
+  csi_handlers['~' - 0x40] = &handle_csifunc;
+}
+
+/*
+ * Handler for CSI u extended Unicode keys
+ */
+
+static TermKeyResult handle_csi_unicode(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+{
+  if(args > 1 && arg[1] != -1)
+    key->modifiers = arg[1] - 1;
+  else
+    key->modifiers = 0;
+
+  int mod = key->modifiers;
+  key->type = TERMKEY_TYPE_KEYSYM;
+  (*tk->method.emit_codepoint)(tk, arg[0], key);
+  key->modifiers |= mod;
+
+  return TERMKEY_RES_KEY;
+}
+
+/*
+ * Handler for CSI M / CSI m mouse events in SRG and rxvt encodings
+ * Note: This does not handle X10 encoding
+ */
+
+static TermKeyResult handle_csi_mouse(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+{
+  int initial = cmd >> 8;
+  cmd &= 0xff;
+
+  if(!initial && args >= 3) { // rxvt protocol
+    key->code.mouse[0] = arg[0];
+
+    key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
+    key->code.mouse[0] &= ~0x1c;
+
+    termkey_key_set_linecol(key, arg[1], arg[2]);
+
+    return TERMKEY_RES_KEY;
+  }
+
+  if(initial == '<' && args >= 3) { // SGR protocol
+    key->code.mouse[0] = arg[0];
+
+    key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
+    key->code.mouse[0] &= ~0x1c;
+
+    termkey_key_set_linecol(key, arg[1], arg[2]);
+
+    if(cmd == 'm') // release
+      key->code.mouse[3] |= 0x80;
+
+    return TERMKEY_RES_KEY;
+  }
+
+  return TERMKEY_RES_NONE;
 }
 
 static int register_keys(void)
@@ -133,6 +262,11 @@ static int register_keys(void)
   register_csifunc(TERMKEY_TYPE_FUNCTION, 18, 32);
   register_csifunc(TERMKEY_TYPE_FUNCTION, 19, 33);
   register_csifunc(TERMKEY_TYPE_FUNCTION, 20, 34);
+
+  csi_handlers['u' - 0x40] = &handle_csi_unicode;
+
+  csi_handlers['M' - 0x40] = &handle_csi_mouse;
+  csi_handlers['m' - 0x40] = &handle_csi_mouse;
 
   keyinfo_initialised = 1;
   return 1;
@@ -227,70 +361,8 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
 
   args++;
 
-  if(args > 1 && arg[1] != -1)
-    key->modifiers = arg[1] - 1;
-  else
-    key->modifiers = 0;
-
-  if(cmd == '~') {
-    key->type = TERMKEY_TYPE_KEYSYM;
-
-    if(arg[0] == 27) {
-      int mod = key->modifiers;
-      (*tk->method.emit_codepoint)(tk, arg[2], key);
-      key->modifiers |= mod;
-    }
-    else if(arg[0] >= 0 && arg[0] < NCSIFUNCS) {
-      key->type = csifuncs[arg[0]].type;
-      key->code.sym = csifuncs[arg[0]].sym;
-      key->modifiers &= ~(csifuncs[arg[0]].modifier_mask);
-      key->modifiers |= csifuncs[arg[0]].modifier_set;
-    }
-    else
-      key->code.sym = TERMKEY_SYM_UNKNOWN;
-
-    if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
-#ifdef DEBUG
-      fprintf(stderr, "CSI: Unknown function key %ld\n", arg[0]);
-#endif
-      return TERMKEY_RES_NONE;
-    }
-  }
-  else if(cmd == 'u') {
-    int mod = key->modifiers;
-    key->type = TERMKEY_TYPE_KEYSYM;
-    (*tk->method.emit_codepoint)(tk, arg[0], key);
-    key->modifiers |= mod;
-  }
-  else if(cmd == 'M' || (initial == '<' && cmd == 'm')) {
+  if(cmd == 'M' && args < 3) { // Mouse in X10 encoding consumes the next 3 bytes also
     size_t csi_len = csi_end + 1;
-
-    if(!initial && args >= 3) { // rxvt protocol
-      key->code.mouse[0] = arg[0];
-
-      key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
-      key->code.mouse[0] &= ~0x1c;
-
-      termkey_key_set_linecol(key, arg[1], arg[2]);
-
-      *nbytep = csi_len;
-      return TERMKEY_RES_KEY;
-    }
-
-    if(initial == '<' && args >= 3) { // SGR protocol
-      key->code.mouse[0] = arg[0];
-
-      key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
-      key->code.mouse[0] &= ~0x1c;
-
-      termkey_key_set_linecol(key, arg[1], arg[2]);
-
-      if(cmd == 'm') // release
-        key->code.mouse[3] |= 0x80;
-
-      *nbytep = csi_len;
-      return TERMKEY_RES_KEY;
-    }
 
     tk->buffstart += csi_len;
     tk->buffcount -= csi_len;
@@ -305,16 +377,16 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
 
     return mouse_result;
   }
-  else {
-    // We know from the logic above that cmd must be >= 0x40 and < 0x80
-    key->type = csi_ss3s[cmd - 0x40].type;
-    key->code.sym = csi_ss3s[cmd - 0x40].sym;
-    key->modifiers &= ~(csi_ss3s[cmd - 0x40].modifier_mask);
-    key->modifiers |= csi_ss3s[cmd - 0x40].modifier_set;
 
-    if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
+  TermKeyResult result = TERMKEY_RES_NONE;
+
+  // We know from the logic above that cmd must be >= 0x40 and < 0x80
+  if(csi_handlers[cmd - 0x40])
+    result = (*csi_handlers[cmd - 0x40])(tk, key, (initial<<8)|cmd, arg, args);
+
+  if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
 #ifdef DEBUG
-      switch(args) {
+    switch(args) {
       case 1:
         fprintf(stderr, "CSI: Unknown arg1=%ld cmd=%c\n", arg[0], (char)cmd);
         break;
@@ -327,15 +399,13 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
       default:
         fprintf(stderr, "CSI: Unknown arg1=%ld arg2=%ld arg3=%ld ... args=%d cmd=%c\n", arg[0], arg[1], arg[2], args, (char)cmd);
         break;
-      }
-#endif
-      return TERMKEY_RES_NONE;
     }
+#endif
+    return TERMKEY_RES_NONE;
   }
 
   *nbytep = csi_end + 1;
-
-  return TERMKEY_RES_KEY;
+  return result;
 }
 
 static TermKeyResult peekkey_ss3(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)
