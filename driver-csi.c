@@ -187,6 +187,21 @@ static TermKeyResult handle_csi_mouse(TermKey *tk, TermKeyKey *key, int cmd, lon
   return TERMKEY_RES_NONE;
 }
 
+/*
+ * Handler for CSI R position reports
+ */
+
+static TermKeyResult handle_csi_position(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+{
+  if(args < 2)
+    return TERMKEY_RES_NONE;
+
+  key->type = TERMKEY_TYPE_POSITION;
+  termkey_key_set_linecol(key, arg[0], arg[1]);
+
+  return TERMKEY_RES_KEY;
+}
+
 static int register_keys(void)
 {
   int i;
@@ -267,6 +282,8 @@ static int register_keys(void)
 
   csi_handlers['M' - 0x40] = &handle_csi_mouse;
   csi_handlers['m' - 0x40] = &handle_csi_mouse;
+
+  csi_handlers['R' - 0x40] = &handle_csi_position;
 
   keyinfo_initialised = 1;
   return 1;
