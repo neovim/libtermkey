@@ -911,11 +911,7 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
   if(button)
     *button = 0;
 
-  if(col)
-    *col  = (unsigned char)key->code.mouse[1] | ((unsigned char)key->code.mouse[3] & 0x0f) << 8;
-
-  if(line)
-    *line = (unsigned char)key->code.mouse[2] | ((unsigned char)key->code.mouse[3] & 0x70) << 4;
+  termkey_key_get_linecol(key, line, col);
 
   if(!event)
     return TERMKEY_RES_KEY;
