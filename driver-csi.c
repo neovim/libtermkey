@@ -160,6 +160,7 @@ static TermKeyResult handle_csi_mouse(TermKey *tk, TermKeyKey *key, int cmd, lon
   cmd &= 0xff;
 
   if(!initial && args >= 3) { // rxvt protocol
+    key->type = TERMKEY_TYPE_MOUSE;
     key->code.mouse[0] = arg[0];
 
     key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
@@ -171,6 +172,7 @@ static TermKeyResult handle_csi_mouse(TermKey *tk, TermKeyKey *key, int cmd, lon
   }
 
   if(initial == '<' && args >= 3) { // SGR protocol
+    key->type = TERMKEY_TYPE_MOUSE;
     key->code.mouse[0] = arg[0];
 
     key->modifiers     = (key->code.mouse[0] & 0x1c) >> 2;
