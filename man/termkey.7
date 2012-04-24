@@ -2,7 +2,9 @@
 .SH NAME
 termkey \- terminal keypress reading library
 .SH DESCRIPTION
-\fBtermkey\fP is a library that allows programs to read and interpret keypress and other events from a terminal. It understands encoding schemes used by terminals to encode keypresses, and UTF-8, allowing it to return events representing key events.
+\fBtermkey\fP is a library that allows programs to read and interpret keypress and other events from a terminal. It understands encoding schemes used by terminals to encode keypresses, and
+.SM UTF-8 ,
+allowing it to return events representing key events.
 .PP
 \fBtermkey\fP operates in a pseudo object-oriented fashion. It provides one function, \fBtermkey_new\fP(3), that returns a pointer to a newly-allocated structure. All other functions take this pointer as their first argument. A typical use of this library would consist of a call to \fBtermkey_new\fP() to construct a new instance to represent the \fIstdin\fP stream, then use the \fBtermkey_waitkey\fP(3) function to wait for and interpret key press events. The \fBtermkey_destroy\fP(3) function can be used to deallocate resources used by the instance if the program has finished using it.
 .SS Reading Events
@@ -66,7 +68,7 @@ Details of the behaviour of a \fBtermkey\fP instance are controlled by two bitma
 The following control flags are recognised.
 .TP
 .B TERMKEY_FLAG_NOINTERPRET
-Do not attempt to interpret \fBC0\fP codes into keysyms. Instead report them as plain "Ctrl-letter" events.
+Do not attempt to interpret \fIC0\fP codes into keysyms. Instead report them as plain \fICtrl-letter\fP events.
 .TP
 .B TERMKEY_FLAG_CONVERTKP
 Convert xterm's alternative keypad symbols into the plain
@@ -74,10 +76,14 @@ Convert xterm's alternative keypad symbols into the plain
 codes they would represent.
 .TP
 .B TERMKEY_FLAG_RAW
-Ignore locale settings; do not attempt to recombine UTF-8 sequences. Instead report only raw values.
+Ignore locale settings; do not attempt to recombine
+.SM UTF-8
+sequences. Instead report only raw values.
 .TP
 .B TERMKEY_FLAG_UTF8
-Ignore locale settings; force UTF-8 recombining on. This flag overrides \fBTERMKEY_FLAG_RAW\fP.
+Ignore locale settings; force 
+.SM UTF-8
+recombining on. This flag overrides \fBTERMKEY_FLAG_RAW\fP.
 .TP
 .B TERMKEY_FLAG_NOTERMIOS
 Even if the terminal file descriptor \fIfd\fP represents a
@@ -96,20 +102,34 @@ Without this flag, IO operations are retried when interrupted by a signal (\fBEI
 The following canonicalisation flags are recognised.
 .TP
 .B TERMKEY_CANON_SPACESYMBOL
-If this flag is set then a Unicode space character is represented using the \fBTERMKEY_SYM_SPACE\fP symbol. If this flag is not set, it is represented by the U+0020 Unicode codepoint.
+If this flag is set then a Unicode space character is represented using the \fBTERMKEY_SYM_SPACE\fP symbol. If this flag is not set, it is represented by the \f(CWU+0020\fP Unicode codepoint.
 .TP
 .B TERMKEY_CANON_DELBS
-If this flag is set then an ASCII DEL character is represented by the \fBTERMKEY_SYM_BACKSPACE\fP symbol. If not, it is represented by \fBTERMKEY_SYM_DEL\fP. An ASCII BS character is always represented by \fBTERMKEY_SYM_BACKSPACE\fP, regardless of this flag.
+If this flag is set then an 
+.SM ASCII
+.SM DEL
+character is represented by the \fBTERMKEY_SYM_BACKSPACE\fP symbol. If not, it is represented by \fBTERMKEY_SYM_DEL\fP. An
+.SM ASCII
+.SM BS
+character is always represented by \fBTERMKEY_SYM_BACKSPACE\fP, regardless of this flag.
 .SS Multi-byte Events
-Special keys, mouse events, and UTF-8 encoded Unicode text, are all represented by more than one byte. If the start of a multi-byte sequence is seen by \fBtermkey_waitkey\fP() it will wait a short time to see if the remainder of the sequence arrives. If the sequence remains unfinished after this timeout, it will be returned in its incomplete state. Partial escape sequences are returned as an Escape key (\fBTERMKEY_SYM_ESCAPE\fP) followed by the text contained in the sequence. Partial UTF-8 sequences are returned as the Unicode replacement character, U+FFFD.
+Special keys, mouse events, and
+.SM UTF-8
+encoded Unicode text, are all represented by more than one byte. If the start of a multi-byte sequence is seen by \fBtermkey_waitkey\fP() it will wait a short time to see if the remainder of the sequence arrives. If the sequence remains unfinished after this timeout, it will be returned in its incomplete state. Partial escape sequences are returned as an Escape key (\fBTERMKEY_SYM_ESCAPE\fP) followed by the text contained in the sequence. Partial
+.SM UTF-8
+sequences are returned as the Unicode replacement character, \f(CWU+FFFD\fP.
 .PP
 The amount of time that the \fBtermkey\fP instance will wait is set by \fBtermkey_set_waittime\fP(3), and is returned by \fBtermkey_get_waittime\fP(3). Initially it will be set to 50 miliseconds.
 .SS Mouse Events
 The \fBTERMKEY_TYPE_MOUSE\fP event type indicates a mouse event. The \fIcode\fP field of the event structure should be considered opaque, though \fImodifiers\fP will be valid. In order to obtain the details of the mouse event, call \fBtermkey_interpret_mouse\fP(3) passing the event structure and pointers to integers to store the result in. 
 .PP
-\fBtermkey\fP recognises three mouse protocols: the original X10 protocol (\f(CWCSI M\fP followed by three bytes), SGR encoding (\f(CWCSI < ... M\fP, as requested by \f(CWCSI ? 1006 h\fP), and rxvt encoding (\f(CWCSI ... M\fP, as requested by \f(CWCSI ? 1015 h\fP). Which encoding is in use is inferred automatically by \fBtermkey\fP, and does not need to be specified explicitly.
+\fBtermkey\fP recognises three mouse protocols: the original
+.SM X10
+protocol (\f(CWCSI M\fP followed by three bytes),
+.SM SGR
+encoding (\f(CWCSI < ... M\fP, as requested by \f(CWCSI ? 1006 h\fP), and rxvt encoding (\f(CWCSI ... M\fP, as requested by \f(CWCSI ? 1015 h\fP). Which encoding is in use is inferred automatically by \fBtermkey\fP, and does not need to be specified explicitly.
 .SS Position Events
-The \fBTERMKEY_TYPE_POSITION\fP event type indicates a cursor position report. This is typically sent by a terminal in response to the Report Cursor Position command (\f(CWCSI 6n\fP). The event bytes are opaque, but can be obtained by calling \fBtermkey_interpret_position\fP(3) passing the event structure and pointers to integers to store the result in.
+The \fBTERMKEY_TYPE_POSITION\fP event type indicates a cursor position report. This is typically sent by a terminal in response to the Report Cursor Position command (\f(CWCSI 6 n\fP). The event bytes are opaque, but can be obtained by calling \fBtermkey_interpret_position\fP(3) passing the event structure and pointers to integers to store the result in.
 .SH "SEE ALSO"
 .BR termkey_new (3),
 .BR termkey_waitkey (3),

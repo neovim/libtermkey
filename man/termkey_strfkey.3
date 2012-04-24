@@ -16,19 +16,19 @@ Link with \fI-ltermkey\fP.
 The \fIformat\fP argument specifies the format of the output, as a bitmask of the following constants:
 .TP
 .B TERMKEY_FORMAT_LONGMOD
-Print full modifier names e.g. "Shift-" instead of abbreviating to "S-".
+Print full modifier names e.g. "\f(CWShift-\fP" instead of abbreviating to "\f(CWS-\fP".
 .TP
 .B TERMKEY_FORMAT_CARETCTRL
-If the only modifier is \fBTERMKEY_MOD_CTRL\fP on a plain letter, render it as "^X" rather than "Ctrl-X".
+If the only modifier is \fBTERMKEY_MOD_CTRL\fP on a plain letter, render it as "\f(CW^X\fP" rather than "\f(CWCtrl-X\fP".
 .TP
 .B TERMKEY_FORMAT_ALTISMETA
-Use the name "Meta" or the letter "M" instead of "Alt" or "A".
+Use the name "\f(CWMeta\fP" or the letter "\f(CWM\fP" instead of "\f(CWAlt\fP" or "\f(CWA\fP".
 .TP
 .B TERMKEY_FORMAT_WRAPBRACKET
-If the key event is a special key instead of unmodified Unicode, wrap it in "<brackets>".
+If the key event is a special key instead of unmodified Unicode, wrap it in "\f(CW<brackets>\fP".
 .TP
 .B TERMKEY_FORMAT_MOUSE_POS
-If the event is a mouse event, include the position rendered as "@ (col,line)".
+If the event is a mouse event, include the position rendered as "\f(CW@ (col,line)\fP".
 .PP
 The following shortcuts are provided for common combinations of format bits:
 .TP
