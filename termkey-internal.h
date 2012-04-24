@@ -64,6 +64,28 @@ struct TermKey {
   } method;
 };
 
+static inline void termkey_key_get_linecol(const TermKeyKey *key, int *line, int *col)
+{
+  if(col)
+    *col  = (unsigned char)key->code.mouse[1] | ((unsigned char)key->code.mouse[3] & 0x0f) << 8;
+
+  if(line)
+    *line = (unsigned char)key->code.mouse[2] | ((unsigned char)key->code.mouse[3] & 0x70) << 4;
+}
+
+static inline void termkey_key_set_linecol(TermKeyKey *key, int line, int col)
+{
+  if(line > 0xfff)
+    line = 0xfff;
+
+  if(col > 0x7ff)
+    col = 0x7ff;
+
+  key->code.mouse[1] = (line & 0x0ff);
+  key->code.mouse[2] = (col & 0x0ff);
+  key->code.mouse[3] = (line & 0xf00) >> 8 | (col & 0x300) >> 4;
+}
+
 extern struct TermKeyDriver termkey_driver_csi;
 extern struct TermKeyDriver termkey_driver_ti;
 
