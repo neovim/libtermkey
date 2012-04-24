@@ -956,6 +956,16 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
   return TERMKEY_RES_KEY;
 }
 
+TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col)
+{
+  if(key->type != TERMKEY_TYPE_POSITION)
+    return TERMKEY_RES_NONE;
+
+  termkey_key_get_linecol(key, line, col);
+
+  return TERMKEY_RES_KEY;
+}
+
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key)
 {
   size_t nbytes = 0;
@@ -1297,6 +1307,9 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
       }
     }
     break;
+  case TERMKEY_TYPE_POSITION:
+    l = snprintf(buffer + pos, len - pos, "Position");
+    break;
   }
 
   if(l <= 0) return pos;
@@ -1394,18 +1407,32 @@ int termkey_keycmp(TermKey *tk, const TermKeyKey *key1p, const TermKeyKey *key2p
     case TERMKEY_TYPE_UNICODE:
       if(key1.code.codepoint != key2.code.codepoint)
         return key1.code.codepoint - key2.code.codepoint;
+      break;
     case TERMKEY_TYPE_KEYSYM:
       if(key1.code.sym != key2.code.sym)
         return key1.code.sym - key2.code.sym;
+      break;
     case TERMKEY_TYPE_FUNCTION:
       if(key1.code.number != key2.code.number)
         return key1.code.number - key2.code.number;
+      break;
     case TERMKEY_TYPE_MOUSE:
       {
         int cmp = strncmp(key1.code.mouse, key2.code.mouse, 4);
         if(cmp != 0)
           return cmp;
       }
+      break;
+    case TERMKEY_TYPE_POSITION:
+      {
+        int line1, col1, line2, col2;
+        termkey_interpret_position(tk, &key1, &line1, &col1);
+        termkey_interpret_position(tk, &key2, &line2, &col2);
+        if(line1 != line2)
+          return line1 - line2;
+        return col1 - col2;
+      }
+      break;
   }
 
   return key1.modifiers - key2.modifiers;
