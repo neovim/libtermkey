@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
   TermKey   *tk;
   TermKeyKey key;
 
-  plan_tests(27);
+  plan_tests(31);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -60,6 +60,14 @@ int main(int argc, char *argv[])
   is_int(key.modifiers,   0,                    "key.modifiers after Right");
 
   is_int(termkey_get_buffer_remaining(tk), 256, "buffer free 256 after completion");
+
+  termkey_push_bytes(tk, "\033[27;5u", 7);
+
+  is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY after Ctrl-Escape");
+
+  is_int(key.type,        TERMKEY_TYPE_KEYSYM, "key.type after Ctrl-Escape");
+  is_int(key.code.sym,    TERMKEY_SYM_ESCAPE,  "key.code.sym after Ctrl-Escape");
+  is_int(key.modifiers,   TERMKEY_KEYMOD_CTRL, "key.modifiers after Ctrl-Escape");
 
   termkey_destroy(tk);
 
