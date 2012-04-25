@@ -38,6 +38,8 @@ ifeq ($(shell pkg-config glib-2.0 && echo 1),1)
   DEMOS+=demo-glib
 endif
 
+DEMO_OBJECTS=$(DEMOS:=.lo)
+
 TESTSOURCES=$(wildcard t/[0-9]*.c)
 TESTFILES=$(TESTSOURCES:.c=.t)
 
@@ -91,9 +93,9 @@ clean-test:
 
 .PHONY: clean
 clean: clean-test
-	$(LIBTOOL) --mode=clean rm -f $(OBJECTS) demo.lo demo-async.lo
+	$(LIBTOOL) --mode=clean rm -f $(OBJECTS) $(DEMO_OBJECTS)
 	$(LIBTOOL) --mode=clean rm -f $(LIBRARY)
-	$(LIBTOOL) --mode=clean rm -rf demo demo-async
+	$(LIBTOOL) --mode=clean rm -rf $(DEMOS)
 
 .PHONY: install
 install: install-inc install-lib install-man
