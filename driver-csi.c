@@ -199,7 +199,7 @@ static TermKeyResult handle_csi_position(TermKey *tk, TermKeyKey *key, int cmd, 
     return TERMKEY_RES_NONE;
 
   key->type = TERMKEY_TYPE_POSITION;
-  termkey_key_set_linecol(key, arg[0], arg[1]);
+  termkey_key_set_linecol(key, arg[1], arg[0]);
 
   return TERMKEY_RES_KEY;
 }
