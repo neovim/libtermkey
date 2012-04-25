@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
 
   is_int(termkey_interpret_position(tk, &key, &line, &col), TERMKEY_RES_KEY, "interpret_position yields RES_KEY");
 
-  is_int(line,  7, "line for position report");
-  is_int(col,  15, "column for position report");
+  is_int(line, 15, "line for position report");
+  is_int(col,   7, "column for position report");
 
   termkey_destroy(tk);
 
