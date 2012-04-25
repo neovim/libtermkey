@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
         mouse = atoi(optarg);
       else
         mouse = 1000;
-      format |= TERMKEY_FORMAT_MOUSE_POS;
 
       break;
 
@@ -59,12 +58,31 @@ int main(int argc, char *argv[])
   while((ret = termkey_waitkey(tk, &key)) != TERMKEY_RES_EOF) {
     if(ret == TERMKEY_RES_KEY) {
       termkey_strfkey(tk, buffer, sizeof buffer, &key, format);
-      printf("%s\n", buffer);
+      if(key.type == TERMKEY_TYPE_MOUSE) {
+        int line, col;
+        termkey_interpret_mouse(tk, &key, NULL, NULL, &line, &col);
+        printf("%s at line=%d, col=%d)\n", buffer, line, col);
+      }
+      else if(key.type == TERMKEY_TYPE_POSITION) {
+        int line, col;
+        termkey_interpret_position(tk, &key, &line, &col);
+        printf("Cursor position report at line=%d, col=%d)\n", line, col);
+      }
+      else {
+        printf("%s\n", buffer);
+      }
 
-      if(key.type == TERMKEY_TYPE_UNICODE && 
+      if(key.type == TERMKEY_TYPE_UNICODE &&
          key.modifiers & TERMKEY_KEYMOD_CTRL &&
          (key.code.codepoint == 'C' || key.code.codepoint == 'c'))
         break;
+
+      if(key.type == TERMKEY_TYPE_UNICODE &&
+         key.modifiers == 0 &&
+         key.code.codepoint == '?') {
+        printf("\033[6n");
+        fflush(stdout);
+      }
     }
     else if(ret == TERMKEY_RES_ERROR) {
       if(errno != EINTR) {
