@@ -107,10 +107,9 @@ install-inc: termkey.h
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
 	sed "s,@LIBDIR@,$(LIBDIR),;s,@INCDIR@,$(INCDIR)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
 
-# rm the old binary first in case it's still in use
 install-lib: $(LIBRARY)
 	install -d $(DESTDIR)$(LIBDIR)
-	$(LIBTOOL) --mode=install cp --remove-destination libtermkey.la $(DESTDIR)$(LIBDIR)/libtermkey.la
+	$(LIBTOOL) --mode=install install libtermkey.la $(DESTDIR)$(LIBDIR)/libtermkey.la
 
 install-man:
 	install -d $(DESTDIR)$(MAN3DIR)
