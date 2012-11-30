@@ -287,6 +287,47 @@ TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int
   return TERMKEY_RES_KEY;
 }
 
+/*
+ * Handler for CSI $y mode status reports
+ */
+
+static TermKeyResult handle_csi_y(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+{
+  switch(cmd) {
+    case 'y'|'$'<<16:
+    case 'y'|'$'<<16 | '?'<<8:
+      if(args < 2)
+        return TERMKEY_RES_NONE;
+
+      key->type = TERMKEY_TYPE_MODEREPORT;
+      key->code.mouse[0] = (cmd >> 8);
+      key->code.mouse[1] = arg[0] >> 8;
+      key->code.mouse[2] = arg[0] & 0xff;
+      key->code.mouse[3] = arg[1];
+      return TERMKEY_RES_KEY;
+
+    default:
+      return TERMKEY_RES_NONE;
+  }
+}
+
+TermKeyResult termkey_interpret_modereport(TermKey *tk, const TermKeyKey *key, int *initial, int *mode, int *value)
+{
+  if(key->type != TERMKEY_TYPE_MODEREPORT)
+    return TERMKEY_RES_NONE;
+
+  if(initial)
+    *initial = key->code.mouse[0];
+
+  if(mode)
+    *mode = (key->code.mouse[1] << 8) | key->code.mouse[2];
+
+  if(value)
+    *value = key->code.mouse[3];
+
+  return TERMKEY_RES_KEY;
+}
+
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
 static TermKeyResult parse_csi(TermKey *tk, size_t introlen, size_t *csi_len, long args[], size_t *nargs, unsigned long *commandp)
@@ -449,6 +490,8 @@ static int register_keys(void)
   csi_handlers['m' - 0x40] = &handle_csi_m;
 
   csi_handlers['R' - 0x40] = &handle_csi_R;
+
+  csi_handlers['y' - 0x40] = &handle_csi_y;
 
   keyinfo_initialised = 1;
   return 1;

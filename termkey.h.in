@@ -97,6 +97,7 @@ typedef enum {
   TERMKEY_TYPE_KEYSYM,
   TERMKEY_TYPE_MOUSE,
   TERMKEY_TYPE_POSITION,
+  TERMKEY_TYPE_MODEREPORT,
   /* add other recognised types here */
 
   TERMKEY_TYPE_UNKNOWN_CSI = -1
@@ -204,6 +205,8 @@ TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname);
 TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col);
 
 TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col);
+
+TermKeyResult termkey_interpret_modereport(TermKey *tk, const TermKeyKey *key, int *initial, int *mode, int *value);
 
 TermKeyResult termkey_interpret_csi(TermKey *tk, const TermKeyKey *key, long args[], size_t *nargs, unsigned long *cmd);
 
