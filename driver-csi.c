@@ -134,19 +134,25 @@ static void register_csifunc(TermKeyType type, TermKeySym sym, int number)
  * Handler for CSI u extended Unicode keys
  */
 
-static TermKeyResult handle_csi_unicode(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+static TermKeyResult handle_csi_u(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
 {
-  if(args > 1 && arg[1] != -1)
-    key->modifiers = arg[1] - 1;
-  else
-    key->modifiers = 0;
+  switch(cmd) {
+    case 'u': {
+      if(args > 1 && arg[1] != -1)
+        key->modifiers = arg[1] - 1;
+      else
+        key->modifiers = 0;
 
-  int mod = key->modifiers;
-  key->type = TERMKEY_TYPE_KEYSYM;
-  (*tk->method.emit_codepoint)(tk, arg[0], key);
-  key->modifiers |= mod;
+      int mod = key->modifiers;
+      key->type = TERMKEY_TYPE_KEYSYM;
+      (*tk->method.emit_codepoint)(tk, arg[0], key);
+      key->modifiers |= mod;
 
-  return TERMKEY_RES_KEY;
+      return TERMKEY_RES_KEY;
+    }
+    default:
+      return TERMKEY_RES_NONE;
+  }
 }
 
 /*
@@ -154,10 +160,18 @@ static TermKeyResult handle_csi_unicode(TermKey *tk, TermKeyKey *key, int cmd, l
  * Note: This does not handle X10 encoding
  */
 
-static TermKeyResult handle_csi_mouse(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+static TermKeyResult handle_csi_m(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
 {
   int initial = cmd >> 8;
   cmd &= 0xff;
+
+  switch(cmd) {
+    case 'M':
+    case 'm':
+      break;
+    default:
+      return TERMKEY_RES_NONE;
+  }
 
   if(!initial && args >= 3) { // rxvt protocol
     key->type = TERMKEY_TYPE_MOUSE;
@@ -246,15 +260,20 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
  * Handler for CSI R position reports
  */
 
-static TermKeyResult handle_csi_position(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
+static TermKeyResult handle_csi_R(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
 {
-  if(args < 2)
-    return TERMKEY_RES_NONE;
+  switch(cmd) {
+    case 'R':
+      if(args < 2)
+        return TERMKEY_RES_NONE;
 
-  key->type = TERMKEY_TYPE_POSITION;
-  termkey_key_set_linecol(key, arg[1], arg[0]);
+      key->type = TERMKEY_TYPE_POSITION;
+      termkey_key_set_linecol(key, arg[1], arg[0]);
 
-  return TERMKEY_RES_KEY;
+      return TERMKEY_RES_KEY;
+    default:
+      return TERMKEY_RES_NONE;
+  }
 }
 
 TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col)
@@ -425,12 +444,12 @@ static int register_keys(void)
   register_csifunc(TERMKEY_TYPE_FUNCTION, 19, 33);
   register_csifunc(TERMKEY_TYPE_FUNCTION, 20, 34);
 
-  csi_handlers['u' - 0x40] = &handle_csi_unicode;
+  csi_handlers['u' - 0x40] = &handle_csi_u;
 
-  csi_handlers['M' - 0x40] = &handle_csi_mouse;
-  csi_handlers['m' - 0x40] = &handle_csi_mouse;
+  csi_handlers['M' - 0x40] = &handle_csi_m;
+  csi_handlers['m' - 0x40] = &handle_csi_m;
 
-  csi_handlers['R' - 0x40] = &handle_csi_position;
+  csi_handlers['R' - 0x40] = &handle_csi_R;
 
   keyinfo_initialised = 1;
   return 1;
