@@ -144,9 +144,11 @@ clean-built:
 	rm -f $(BUILTMAN) termkey.h
 
 termkey.h: termkey.h.in Makefile
+	rm -f $@
 	sed -e 's/@@VERSION_MAJOR@@/$(VERSION_MAJOR)/g' \
 	    -e 's/@@VERSION_MINOR@@/$(VERSION_MINOR)/g' \
 	    $< >$@
+	chmod a-w $@
 
 DISTDIR=libtermkey-$(VERSION)
 
