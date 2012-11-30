@@ -61,12 +61,12 @@ int main(int argc, char *argv[])
       if(key.type == TERMKEY_TYPE_MOUSE) {
         int line, col;
         termkey_interpret_mouse(tk, &key, NULL, NULL, &line, &col);
-        printf("%s at line=%d, col=%d)\n", buffer, line, col);
+        printf("%s at line=%d, col=%d\n", buffer, line, col);
       }
       else if(key.type == TERMKEY_TYPE_POSITION) {
         int line, col;
         termkey_interpret_position(tk, &key, &line, &col);
-        printf("Cursor position report at line=%d, col=%d)\n", line, col);
+        printf("Cursor position report at line=%d, col=%d\n", line, col);
       }
       else {
         printf("%s\n", buffer);
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
       if(key.type == TERMKEY_TYPE_UNICODE &&
          key.modifiers == 0 &&
          key.code.codepoint == '?') {
-        printf("\033[6n");
+        printf("\033[?6n");
         fflush(stdout);
       }
     }

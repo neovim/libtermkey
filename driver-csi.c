@@ -257,30 +257,23 @@ TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKe
 }
 
 /*
- * Handler for CSI R position reports
+ * Handler for CSI ? R position reports
  * A plain CSI R with no arguments is probably actually <F3>
  */
 
 static TermKeyResult handle_csi_R(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args)
 {
   switch(cmd) {
-    case 'R':
-      switch(args) {
-        case 0:
-          key->type = TERMKEY_TYPE_FUNCTION;
-          key->code.number = 3;
-          return TERMKEY_RES_KEY;
+    case 'R'|'?'<<8:
+      if(args < 2)
+        return TERMKEY_RES_NONE;
 
-        case 2:
-          key->type = TERMKEY_TYPE_POSITION;
-          termkey_key_set_linecol(key, arg[1], arg[0]);
-          return TERMKEY_RES_KEY;
+      key->type = TERMKEY_TYPE_POSITION;
+      termkey_key_set_linecol(key, arg[1], arg[0]);
+      return TERMKEY_RES_KEY;
 
-        default:
-          return TERMKEY_RES_NONE;
-      }
     default:
-      return TERMKEY_RES_NONE;
+      return handle_csi_ss3_full(tk, key, cmd, arg, args);
   }
 }
 
