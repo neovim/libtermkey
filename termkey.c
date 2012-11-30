@@ -189,6 +189,7 @@ static TermKey *termkey_alloc(void)
   tk->buffstart = 0;
   tk->buffcount = 0;
   tk->buffsize  = 256; /* bytes */
+  tk->hightide  = 0;
 
   tk->restore_termios_valid = 0;
 
@@ -743,6 +744,12 @@ static TermKeyResult peekkey(TermKey *tk, TermKeyKey *key, int force, size_t *nb
   print_buffer(tk);
   fprintf(stderr, "\n");
 #endif
+
+  if(tk->hightide) {
+    tk->buffstart += tk->hightide;
+    tk->buffcount -= tk->hightide;
+    tk->hightide = 0;
+  }
 
   TermKeyResult ret;
   struct TermKeyDriverNode *p;
@@ -1310,6 +1317,9 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   case TERMKEY_TYPE_POSITION:
     l = snprintf(buffer + pos, len - pos, "Position");
     break;
+  case TERMKEY_TYPE_UNKNOWN_CSI:
+    l = snprintf(buffer + pos, len - pos, "CSI %c", key->code.number & 0xff);
+    break;
   }
 
   if(l <= 0) return pos;
@@ -1413,6 +1423,7 @@ int termkey_keycmp(TermKey *tk, const TermKeyKey *key1p, const TermKeyKey *key2p
         return key1.code.sym - key2.code.sym;
       break;
     case TERMKEY_TYPE_FUNCTION:
+    case TERMKEY_TYPE_UNKNOWN_CSI:
       if(key1.code.number != key2.code.number)
         return key1.code.number - key2.code.number;
       break;
