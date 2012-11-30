@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
   tk = termkey_new_abstract("vt100", 0);
 
-  termkey_push_bytes(tk, "\e[15;7R", 7);
+  termkey_push_bytes(tk, "\e[?15;7R", 8);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for position report");
 
