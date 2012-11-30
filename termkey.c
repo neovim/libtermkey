@@ -1254,6 +1254,15 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   case TERMKEY_TYPE_POSITION:
     l = snprintf(buffer + pos, len - pos, "Position");
     break;
+  case TERMKEY_TYPE_MODEREPORT:
+    {
+      int initial, mode, value;
+      termkey_interpret_modereport(tk, key, &initial, &mode, &value);
+      if(initial)
+        l = snprintf(buffer + pos, len - pos, "Mode(%c%d=%d)", initial, mode, value);
+      else
+        l = snprintf(buffer + pos, len - pos, "Mode(%d=%d)", mode, value);
+    }
   case TERMKEY_TYPE_UNKNOWN_CSI:
     l = snprintf(buffer + pos, len - pos, "CSI %c", key->code.number & 0xff);
     break;
@@ -1381,6 +1390,17 @@ int termkey_keycmp(TermKey *tk, const TermKeyKey *key1p, const TermKeyKey *key2p
         return col1 - col2;
       }
       break;
+    case TERMKEY_TYPE_MODEREPORT:
+      {
+        int initial1, initial2, mode1, mode2, value1, value2;
+        termkey_interpret_modereport(tk, &key1, &initial1, &mode1, &value1);
+        termkey_interpret_modereport(tk, &key2, &initial2, &mode2, &value2);
+        if(initial1 != initial2)
+          return initial1 - initial2;
+        if(mode1 != mode2)
+          return mode1 - mode2;
+        return value1 - value2;
+      }
   }
 
   return key1.modifiers - key2.modifiers;
