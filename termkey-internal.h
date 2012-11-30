@@ -38,6 +38,8 @@ struct TermKey {
   size_t buffstart; // First offset in buffer
   size_t buffcount; // NUMBER of entires valid in buffer
   size_t buffsize; // Total malloc'ed size
+  size_t hightide; /* Position beyond buffstart at which peekkey() should next start
+                    * normally 0, but see also termkey_interpret_csi */
 
   struct termios restore_termios;
   char restore_termios_valid;
