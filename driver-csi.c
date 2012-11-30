@@ -189,6 +189,59 @@ static TermKeyResult handle_csi_mouse(TermKey *tk, TermKeyKey *key, int cmd, lon
   return TERMKEY_RES_NONE;
 }
 
+TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col)
+{
+  if(key->type != TERMKEY_TYPE_MOUSE)
+    return TERMKEY_RES_NONE;
+
+  if(button)
+    *button = 0;
+
+  termkey_key_get_linecol(key, line, col);
+
+  if(!event)
+    return TERMKEY_RES_KEY;
+
+  int btn = 0;
+
+  int code = key->code.mouse[0];
+
+  int drag = code & 0x20;
+
+  code &= ~0x3c;
+
+  switch(code) {
+  case 0:
+  case 1:
+  case 2:
+    *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
+    btn = code + 1;
+    break;
+
+  case 3:
+    *event = TERMKEY_MOUSE_RELEASE;
+    // no button hint
+    break;
+
+  case 64:
+  case 65:
+    *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
+    btn = code + 4 - 64;
+    break;
+
+  default:
+    *event = TERMKEY_MOUSE_UNKNOWN;
+  }
+
+  if(button)
+    *button = btn;
+
+  if(key->code.mouse[3] & 0x80)
+    *event = TERMKEY_MOUSE_RELEASE;
+
+  return TERMKEY_RES_KEY;
+}
+
 /*
  * Handler for CSI R position reports
  */
@@ -200,6 +253,16 @@ static TermKeyResult handle_csi_position(TermKey *tk, TermKeyKey *key, int cmd, 
 
   key->type = TERMKEY_TYPE_POSITION;
   termkey_key_set_linecol(key, arg[1], arg[0]);
+
+  return TERMKEY_RES_KEY;
+}
+
+TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col)
+{
+  if(key->type != TERMKEY_TYPE_POSITION)
+    return TERMKEY_RES_NONE;
+
+  termkey_key_get_linecol(key, line, col);
 
   return TERMKEY_RES_KEY;
 }
@@ -272,6 +335,18 @@ static TermKeyResult parse_csi(TermKey *tk, size_t introlen, size_t *csi_len, lo
   *csi_len = csi_end + 1;
 
   return TERMKEY_RES_KEY;
+}
+
+TermKeyResult termkey_interpret_csi(TermKey *tk, const TermKeyKey *key, long args[], size_t *nargs, unsigned long *cmd)
+{
+  size_t dummy;
+
+  if(tk->hightide == 0)
+    return TERMKEY_RES_NONE;
+  if(key->type != TERMKEY_TYPE_UNKNOWN_CSI)
+    return TERMKEY_RES_NONE;
+
+  return parse_csi(tk, 0, &dummy, args, nargs, cmd);
 }
 
 static int register_keys(void)
@@ -525,19 +600,6 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
   }
   else
     return TERMKEY_RES_NONE;
-}
-
-/* non-static */
-TermKeyResult termkey_interpret_csi(TermKey *tk, const TermKeyKey *key, long args[], size_t *nargs, unsigned long *cmd)
-{
-  size_t dummy;
-
-  if(tk->hightide == 0)
-    return TERMKEY_RES_NONE;
-  if(key->type != TERMKEY_TYPE_UNKNOWN_CSI)
-    return TERMKEY_RES_NONE;
-
-  return parse_csi(tk, 0, &dummy, args, nargs, cmd);
 }
 
 struct TermKeyDriver termkey_driver_csi = {
