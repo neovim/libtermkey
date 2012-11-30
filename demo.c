@@ -68,6 +68,18 @@ int main(int argc, char *argv[])
         termkey_interpret_position(tk, &key, &line, &col);
         printf("Cursor position report at line=%d, col=%d\n", line, col);
       }
+      else if(key.type == TERMKEY_TYPE_MODEREPORT) {
+        int initial, mode, value;
+        termkey_interpret_modereport(tk, &key, &initial, &mode, &value);
+        printf("Mode report %s mode %d = %d\n", initial ? "DEC" : "ANSI", mode, value);
+      }
+      else if(key.type == TERMKEY_TYPE_UNKNOWN_CSI) {
+        long args[16];
+        size_t nargs = 16;
+        unsigned long command;
+        termkey_interpret_csi(tk, &key, args, &nargs, &command);
+        printf("Unrecognised CSI %c %ld;%ld %c%c\n", (char)(command >> 8), args[0], args[1], (char)(command >> 16), (char)command);
+      }
       else {
         printf("%s\n", buffer);
       }
@@ -80,7 +92,8 @@ int main(int argc, char *argv[])
       if(key.type == TERMKEY_TYPE_UNICODE &&
          key.modifiers == 0 &&
          key.code.codepoint == '?') {
-        printf("\033[?6n");
+        // printf("\033[?6n"); // DECDSR 6 == request cursor position
+        printf("\033[?1$p"); // DECRQM == request mode, DEC origin mode
         fflush(stdout);
       }
     }
