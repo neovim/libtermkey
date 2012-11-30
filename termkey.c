@@ -910,69 +910,6 @@ static TermKeyResult peekkey_mouse(TermKey *tk, TermKeyKey *key, size_t *nbytep)
   return TERMKEY_RES_KEY;
 }
 
-TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col)
-{
-  if(key->type != TERMKEY_TYPE_MOUSE)
-    return TERMKEY_RES_NONE;
-
-  if(button)
-    *button = 0;
-
-  termkey_key_get_linecol(key, line, col);
-
-  if(!event)
-    return TERMKEY_RES_KEY;
-
-  int btn = 0;
-
-  int code = key->code.mouse[0];
-
-  int drag = code & 0x20;
-
-  code &= ~0x3c;
-
-  switch(code) {
-  case 0:
-  case 1:
-  case 2:
-    *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
-    btn = code + 1;
-    break;
-
-  case 3:
-    *event = TERMKEY_MOUSE_RELEASE;
-    // no button hint
-    break;
-
-  case 64:
-  case 65:
-    *event = drag ? TERMKEY_MOUSE_DRAG : TERMKEY_MOUSE_PRESS;
-    btn = code + 4 - 64;
-    break;
-
-  default:
-    *event = TERMKEY_MOUSE_UNKNOWN;
-  }
-
-  if(button)
-    *button = btn;
-
-  if(key->code.mouse[3] & 0x80)
-    *event = TERMKEY_MOUSE_RELEASE;
-
-  return TERMKEY_RES_KEY;
-}
-
-TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int *line, int *col)
-{
-  if(key->type != TERMKEY_TYPE_POSITION)
-    return TERMKEY_RES_NONE;
-
-  termkey_key_get_linecol(key, line, col);
-
-  return TERMKEY_RES_KEY;
-}
-
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key)
 {
   size_t nbytes = 0;
