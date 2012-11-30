@@ -204,6 +204,72 @@ static TermKeyResult handle_csi_position(TermKey *tk, TermKeyKey *key, int cmd, 
   return TERMKEY_RES_KEY;
 }
 
+#define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
+
+static TermKeyResult parse_csi(TermKey *tk, size_t introlen, size_t *csi_len, long args[], size_t *nargs, unsigned long *commandp)
+{
+  size_t csi_end = introlen;
+
+  while(csi_end < tk->buffcount) {
+    if(CHARAT(csi_end) >= 0x40 && CHARAT(csi_end) < 0x80)
+      break;
+    csi_end++;
+  }
+
+  if(csi_end >= tk->buffcount)
+    return TERMKEY_RES_AGAIN;
+
+  unsigned char cmd = CHARAT(csi_end);
+  *commandp = cmd;
+
+  char present = 0;
+  int argi = 0;
+
+  size_t p = introlen;
+
+  // See if there is an initial byte
+  if(CHARAT(p) >= '<' && CHARAT(p) <= '?') {
+    *commandp |= (CHARAT(p) << 8);
+    p++;
+  }
+
+  // Now attempt to parse out up number;number;... separated values
+  while(p < csi_end) {
+    unsigned char c = CHARAT(p);
+
+    if(c >= '0' && c <= '9') {
+      if(!present) {
+        args[argi] = c - '0';
+        present = 1;
+      }
+      else {
+        args[argi] = (args[argi] * 10) + c - '0';
+      }
+    }
+    else if(c == ';') {
+      if(!present)
+        args[argi] = -1;
+      present = 0;
+      argi++;
+
+      if(argi > 16)
+        break;
+    }
+
+    p++;
+  }
+
+  if(!present)
+    args[argi] = -1;
+
+  argi++;
+
+  *nargs = argi;
+  *csi_len = csi_end + 1;
+
+  return TERMKEY_RES_KEY;
+}
+
 static int register_keys(void)
 {
   int i;
@@ -313,19 +379,16 @@ static void free_driver(void *info)
   free(csi);
 }
 
-#define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
-
 static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)
 {
-  size_t csi_end = introlen;
+  size_t csi_len;
+  size_t args = 16;
+  long arg[16];
+  unsigned long cmd;
 
-  while(csi_end < tk->buffcount) {
-    if(CHARAT(csi_end) >= 0x40 && CHARAT(csi_end) < 0x80)
-      break;
-    csi_end++;
-  }
+  TermKeyResult ret = parse_csi(tk, introlen, &csi_len, arg, &args, &cmd);
 
-  if(csi_end >= tk->buffcount) {
+  if(ret == TERMKEY_RES_AGAIN) {
     if(!force)
       return TERMKEY_RES_AGAIN;
 
@@ -335,54 +398,7 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
     return TERMKEY_RES_KEY;
   }
 
-  unsigned char cmd = CHARAT(csi_end);
-  long arg[16];
-  char present = 0;
-  int args = 0;
-  int initial = 0;
-
-  size_t p = introlen;
-
-  // See if there is an initial byte
-  if(CHARAT(p) >= '<' && CHARAT(p) <= '?') {
-    initial = CHARAT(p);
-    p++;
-  }
-
-  // Now attempt to parse out up number;number;... separated values
-  while(p < csi_end) {
-    unsigned char c = CHARAT(p);
-
-    if(c >= '0' && c <= '9') {
-      if(!present) {
-        arg[args] = c - '0';
-        present = 1;
-      }
-      else {
-        arg[args] = (arg[args] * 10) + c - '0';
-      }
-    }
-    else if(c == ';') {
-      if(!present)
-        arg[args] = -1;
-      present = 0;
-      args++;
-
-      if(args > 16)
-        break;
-    }
-
-    p++;
-  }
-
-  if(!present)
-    arg[args] = -1;
-
-  args++;
-
   if(cmd == 'M' && args < 3) { // Mouse in X10 encoding consumes the next 3 bytes also
-    size_t csi_len = csi_end + 1;
-
     tk->buffstart += csi_len;
     tk->buffcount -= csi_len;
 
@@ -400,8 +416,8 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   TermKeyResult result = TERMKEY_RES_NONE;
 
   // We know from the logic above that cmd must be >= 0x40 and < 0x80
-  if(csi_handlers[cmd - 0x40])
-    result = (*csi_handlers[cmd - 0x40])(tk, key, (initial<<8)|cmd, arg, args);
+  if(csi_handlers[(cmd & 0xff) - 0x40])
+    result = (*csi_handlers[(cmd & 0xff) - 0x40])(tk, key, cmd, arg, args);
 
   if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
 #ifdef DEBUG
@@ -423,7 +439,7 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
     return TERMKEY_RES_NONE;
   }
 
-  *nbytep = csi_end + 1;
+  *nbytep = csi_len;
   return result;
 }
 
