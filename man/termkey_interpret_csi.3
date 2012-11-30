@@ -13,7 +13,11 @@ Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
 \fBtermkey_interpret_csi\fP() fills in variables in the passed pointers according to the unrecognised CSI sequence event found in \fIkey\fP. It should be called if \fBtermkey_getkey\fP(3) or similar have returned a key event with the type of \fBTERMKEY_TYPE_UNKNOWN_CSI\fP. Note that it is important to call this function as soon as possible after obtaining a \fBTERMKEY_TYPE_CSI\fP key event; specifically, before calling \fBtermkey_getkey\fP() or \fBtermkey_waitkey\fP() again, as a subsequent call will overwrite the buffer space currently containing this sequence.
 .PP
-The \fIargs\fP array will be filled with the numerical arguments of the CSI sequence. The number of elements available in this array should be given as the initial value of the value pointed to by \fInargs\fP, which will be adjusted to give the number of arguments actually found when the function returns. The \fIcmd\fP variable will contain the CSI command value. If a leading byte was found (such as '\f(CW$\fP') then it will be bitwise-ored with the command value, shifted up by 8 bits.
+The \fIargs\fP array will be filled with the numerical arguments of the CSI sequence. The number of elements available in this array should be given as the initial value of the value pointed to by \fInargs\fP, which will be adjusted to give the number of arguments actually found when the function returns. The \fIcmd\fP variable will contain the CSI command value. If a leading byte was found (such as '\f(CW?\fP') then it will be bitwise-ored with the command value, shifted up by 8 bits. If an intermediate byte was found (such as '\f(CW$\fP') then it will be bitwise-ored with the command value, shifted up by 16 bits.
+.nf
+.sp
+    *cmd = command | (initial << 8) | (intermediate << 16);
+.fi
 .SH "RETURN VALUE"
 If passed a \fIkey\fP event of the type \fBTERMKEY_TYPE_UNKNOWN_CSI\fP, this function will return \fBTERMKEY_RES_KEY\fP and will affect the variables whose pointers were passed in, as described above.
 .PP

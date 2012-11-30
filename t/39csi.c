@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
   size_t     nargs = 16;
   unsigned long command;
 
-  plan_tests(11);
+  plan_tests(15);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -31,7 +31,14 @@ int main(int argc, char *argv[])
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for CSI ? w");
   is_int(key.type, TERMKEY_TYPE_UNKNOWN_CSI, "key.type for unknown CSI");
   is_int(termkey_interpret_csi(tk, &key, args, &nargs, &command), TERMKEY_RES_KEY, "interpret_csi yields RES_KEY");
-  is_int(command, '?' << 8 | 'w', "command for unknown CSI");
+  is_int(command, '?'<<8 | 'w', "command for unknown CSI");
+
+  termkey_push_bytes(tk, "\e[?$x", 5);
+
+  is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for CSI ? $x");
+  is_int(key.type, TERMKEY_TYPE_UNKNOWN_CSI, "key.type for unknown CSI");
+  is_int(termkey_interpret_csi(tk, &key, args, &nargs, &command), TERMKEY_RES_KEY, "interpret_csi yields RES_KEY");
+  is_int(command, '$'<<16 | '?'<<8 | 'x', "command for unknown CSI");
 
   termkey_destroy(tk);
 

@@ -255,6 +255,10 @@ static TermKeyResult parse_csi(TermKey *tk, size_t introlen, size_t *csi_len, lo
       if(argi > 16)
         break;
     }
+    else if(c >= 0x20 && c <= 0x2f) {
+      *commandp |= c << 16;
+      break;
+    }
 
     p++;
   }
