@@ -345,10 +345,8 @@ static TermKeyResult parse_csi(TermKey *tk, size_t introlen, size_t *csi_len, lo
     p++;
   }
 
-  if(!present)
-    args[argi] = -1;
-
-  argi++;
+  if(present)
+    argi++;
 
   *nargs = argi;
   *csi_len = csi_end + 1;
