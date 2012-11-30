@@ -419,7 +419,7 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   if(csi_handlers[(cmd & 0xff) - 0x40])
     result = (*csi_handlers[(cmd & 0xff) - 0x40])(tk, key, cmd, arg, args);
 
-  if(key->code.sym == TERMKEY_SYM_UNKNOWN) {
+  if(result == TERMKEY_RES_NONE) {
 #ifdef DEBUG
     switch(args) {
       case 1:
@@ -436,7 +436,12 @@ static TermKeyResult peekkey_csi(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
         break;
     }
 #endif
-    return TERMKEY_RES_NONE;
+    key->type = TERMKEY_TYPE_UNKNOWN_CSI;
+    key->code.number = cmd;
+
+    tk->hightide = csi_len - introlen;
+    *nbytep = introlen; // Do not yet eat the data bytes
+    return TERMKEY_RES_KEY;
   }
 
   *nbytep = csi_len;
@@ -516,6 +521,19 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
   }
   else
     return TERMKEY_RES_NONE;
+}
+
+/* non-static */
+TermKeyResult termkey_interpret_csi(TermKey *tk, const TermKeyKey *key, long args[], size_t *nargs, unsigned long *cmd)
+{
+  size_t dummy;
+
+  if(tk->hightide == 0)
+    return TERMKEY_RES_NONE;
+  if(key->type != TERMKEY_TYPE_UNKNOWN_CSI)
+    return TERMKEY_RES_NONE;
+
+  return parse_csi(tk, 0, &dummy, args, nargs, cmd);
 }
 
 struct TermKeyDriver termkey_driver_csi = {
