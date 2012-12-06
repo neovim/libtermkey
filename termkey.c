@@ -141,6 +141,23 @@ static void print_key(TermKey *tk, TermKeyKey *key)
       fprintf(stderr, "Mouse ev=%d button=%d pos=(%d,%d)\n", ev, button, line, col);
     }
     break;
+  case TERMKEY_TYPE_POSITION:
+    {
+      int line, col;
+      termkey_interpret_position(tk, key, &line, &col);
+      fprintf(stderr, "Position report pos=(%d,%d)\n", line, col);
+    }
+    break;
+  case TERMKEY_TYPE_MODEREPORT:
+    {
+      int initial, mode, value;
+      termkey_interpret_modereport(tk, key, &initial, &mode, &value);
+      fprintf(stderr, "Mode report mode=%s %d val=%d\n", initial == '?' ? "DEC" : "ANSI", mode, value);
+    }
+    break;
+  case TERMKEY_TYPE_UNKNOWN_CSI:
+    fprintf(stderr, "unknown CSI\n");
+    break;
   }
 
   int m = key->modifiers;
