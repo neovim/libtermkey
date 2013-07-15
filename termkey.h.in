@@ -198,7 +198,7 @@ size_t termkey_push_bytes(TermKey *tk, const char *bytes, size_t len);
 
 TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *name);
 const char *termkey_get_keyname(TermKey *tk, TermKeySym sym);
-char       *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym);
+const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym);
 
 TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname); 
 
@@ -223,8 +223,8 @@ typedef enum {
 
 #define TERMKEY_FORMAT_VIM (TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_WRAPBRACKET)
 
-size_t  termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
-char   *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format);
+size_t      termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format);
+const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format);
 
 int termkey_keycmp(TermKey *tk, const TermKeyKey *key1, const TermKeyKey *key2);
 

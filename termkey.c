@@ -1113,7 +1113,7 @@ const char *termkey_get_keyname(TermKey *tk, TermKeySym sym)
   return "UNKNOWN";
 }
 
-char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)
+const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)
 {
   /* We store an array, so we can't do better than a linear search. Doesn't
    * matter because user won't be calling this too often */
@@ -1133,7 +1133,7 @@ char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)
 TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname)
 {
   TermKeySym sym;
-  char *endp = termkey_lookup_keyname(tk, keyname, &sym);
+  const char *endp = termkey_lookup_keyname(tk, keyname, &sym);
   if(!endp || endp[0])
     return TERMKEY_SYM_UNKNOWN;
   return sym;
@@ -1255,7 +1255,7 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
       int line, col;
       termkey_interpret_mouse(tk, key, &ev, &button, &line, &col);
 
-      static char *evnames[] = { "Unknown", "Press", "Drag", "Release" };
+      static const char *evnames[] = { "Unknown", "Press", "Drag", "Release" };
 
       l = snprintf(buffer + pos, len - pos, "Mouse%s(%d)",
           evnames[ev], button);
@@ -1297,7 +1297,7 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   return pos;
 }
 
-char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)
+const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)
 {
   struct modnames *mods = &modnames[!!(format & TERMKEY_FORMAT_LONGMOD) +
                                     !!(format & TERMKEY_FORMAT_ALTISMETA) * 2];
@@ -1340,7 +1340,7 @@ char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyForm
 
   size_t nbytes;
   ssize_t snbytes;
-  char *endstr;
+  const char *endstr;
 
   if((endstr = termkey_lookup_keyname(tk, str, &key->code.sym))) {
     key->type = TERMKEY_TYPE_KEYSYM;
@@ -1351,7 +1351,7 @@ char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyForm
     str += snbytes;
   }
   // Unicode must be last
-  else if(parse_utf8((unsigned char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY) {
+  else if(parse_utf8((unsigned const char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY) {
     key->type = TERMKEY_TYPE_UNICODE;
     fill_utf8(key);
     str += nbytes;
