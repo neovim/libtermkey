@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
   TermKey   *tk;
   TermKeySym sym;
-  char *end;
+  const char *end;
 
   plan_tests(10);
 
