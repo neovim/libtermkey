@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
   TermKey      *tk;
   TermKeyKey    key;
-  char         *endp;
+  const char   *endp;
 
 #define CLEAR_KEY do { key.type = -1; key.code.codepoint = -1; key.modifiers = -1; key.utf8[0] = 0; } while(0)
 
