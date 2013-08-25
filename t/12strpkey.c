@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
 #define CLEAR_KEY do { key.type = -1; key.code.codepoint = -1; key.modifiers = -1; key.utf8[0] = 0; } while(0)
 
-  plan_tests(53);
+  plan_tests(58);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -83,6 +83,14 @@ int main(int argc, char *argv[])
   is_int(key.code.codepoint, 'c',               "key.code.codepoint for unicode/c/ALT altismeta+longmod");
   is_int(key.modifiers,   TERMKEY_KEYMOD_ALT,   "key.modifiers for unicode/c/ALT altismeta+longmod");
   is_str(key.utf8,        "c",                  "key.utf8 for unicode/c/ALT altismeta+longmod");
+  is_str(endp, "", "consumed entire input for unicode/c/ALT altismeta+longmod");
+
+  CLEAR_KEY;
+  endp = termkey_strpkey(tk, "Meta c", &key, TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD);
+  is_int(key.type,        TERMKEY_TYPE_UNICODE, "key.type for unicode/c/ALT altismeta+long/lowermod");
+  is_int(key.code.codepoint, 'c',               "key.code.codepoint for unicode/c/ALT altismeta+long/lowermod");
+  is_int(key.modifiers,   TERMKEY_KEYMOD_ALT,   "key.modifiers for unicode/c/ALT altismeta+long/lowermod");
+  is_str(key.utf8,        "c",                  "key.utf8 for unicode/c/ALT altismeta+long/lowermod");
   is_str(endp, "", "consumed entire input for unicode/c/ALT altismeta+longmod");
 
   CLEAR_KEY;

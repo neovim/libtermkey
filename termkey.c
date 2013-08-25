@@ -1191,6 +1191,8 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   int wrapbracket = (format & TERMKEY_FORMAT_WRAPBRACKET) &&
                     (key->type != TERMKEY_TYPE_UNICODE || key->modifiers != 0);
 
+  char sep = (format & TERMKEY_FORMAT_SPACEMOD) ? ' ' : '-';
+
   if(format & TERMKEY_FORMAT_CARETCTRL && 
      key->type == TERMKEY_TYPE_UNICODE &&
      key->modifiers == TERMKEY_KEYMOD_CTRL) {
@@ -1219,19 +1221,19 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_ALT) {
-    l = snprintf(buffer + pos, len - pos, "%s-", mods->alt);
+    l = snprintf(buffer + pos, len - pos, "%s%c", mods->alt, sep);
     if(l <= 0) return pos;
     pos += l;
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_CTRL) {
-    l = snprintf(buffer + pos, len - pos, "%s-", mods->ctrl);
+    l = snprintf(buffer + pos, len - pos, "%s%c", mods->ctrl, sep);
     if(l <= 0) return pos;
     pos += l;
   }
 
   if(key->modifiers & TERMKEY_KEYMOD_SHIFT) {
-    l = snprintf(buffer + pos, len - pos, "%s-", mods->shift);
+    l = snprintf(buffer + pos, len - pos, "%s%c", mods->shift, sep);
     if(l <= 0) return pos;
     pos += l;
   }
@@ -1320,10 +1322,10 @@ const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermK
     return (char *)str;
   }
 
-  const char *hyphen;
+  const char *sep_at;
 
-  while((hyphen = strchr(str, '-'))) {
-    size_t n = hyphen - str;
+  while((sep_at = strchr(str, (format & TERMKEY_FORMAT_SPACEMOD) ? ' ' : '-'))) {
+    size_t n = sep_at - str;
 
     if(n == strlen(mods->alt) && strncmp(mods->alt, str, n) == 0)
       key->modifiers |= TERMKEY_KEYMOD_ALT;
@@ -1335,7 +1337,7 @@ const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermK
     else
       break;
 
-    str = hyphen + 1;
+    str = sep_at + 1;
   }
 
   size_t nbytes;

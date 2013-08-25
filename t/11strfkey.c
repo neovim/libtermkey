@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
   char       buffer[16];
   size_t     len;
 
-  plan_tests(28);
+  plan_tests(32);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -37,6 +37,11 @@ int main(int argc, char *argv[])
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_LONGMOD);
   is_int(len, 6, "length for unicode/b/CTRL longmod");
   is_str(buffer, "Ctrl-b", "buffer for unicode/b/CTRL longmod");
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key,
+      TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD);
+  is_int(len, 6, "length for unicode/b/CTRL longmod|spacemod");
+  is_str(buffer, "Ctrl b", "buffer for unicode/b/CTRL longmod|spacemod");
 
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_CARETCTRL);
   is_int(len, 2, "length for unicode/b/CTRL caretctrl");
@@ -78,6 +83,14 @@ int main(int argc, char *argv[])
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_WRAPBRACKET);
   is_int(len, 4, "length for sym/Up/0 wrapbracket");
   is_str(buffer, "<Up>", "buffer for sym/Up/0 wrapbracket");
+
+  key.type = TERMKEY_TYPE_KEYSYM;
+  key.code.sym = TERMKEY_SYM_PAGEUP;
+  key.modifiers = 0;
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key, 0);
+  is_int(len, 6, "length for sym/PageUp/0");
+  is_str(buffer, "PageUp", "buffer for sym/PageUp/0");
 
   key.type = TERMKEY_TYPE_FUNCTION;
   key.code.number = 5;
