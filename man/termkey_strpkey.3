@@ -23,6 +23,9 @@ If the only modifier is \fBTERMKEY_MOD_CTRL\fP on a plain letter, accept it as "
 .TP
 .B TERMKEY_FORMAT_ALTISMETA
 Use the name "\f(CWMeta\fP" or the letter "\f(CWM\fP" instead of "\f(CWAlt\fP" or "\f(CWA\fP".
+.TP
+.B TERMKEY_FORMAT_SPACEMOD
+Expect spaces instead of hyphens to separate the modifer name(s) from the base key name.
 .PP
 Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
 .PP
