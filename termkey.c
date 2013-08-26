@@ -217,7 +217,7 @@ static int snprint_cameltospaces(char *str, size_t size, const char *src)
 /* Similar to strcmp(str, strcamel, n) except that:
  *    it compares CamelCase in strcamel with space separated values in str;
  *    it takes char**s and updates them
- * n counts bytes of str, not strcamel
+ * n counts bytes of strcamel, not str
  */
 static int strpncmp_camel(const char **strp, const char **strcamelp, size_t n)
 {
