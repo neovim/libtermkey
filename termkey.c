@@ -198,19 +198,26 @@ static int snprint_cameltospaces(char *str, size_t size, const char *src)
 {
   int prev_lower = 0;
   size_t l = 0;
-  while(*src && l < size) {
+  while(*src && l < size - 1) {
     if(isupper(*src) && prev_lower) {
       if(str)
         str[l++] = ' ';
-      if(l >= size)
-        return -1;
+      if(l >= size - 1)
+        break;
     }
     prev_lower = islower(*src);
     str[l++] = tolower(*src++);
   }
-  if(l >= size)
-    return -1;
   str[l] = 0;
+  /* For consistency with snprintf, return the number of bytes that would have
+   * been written, excluding '\0' */
+  while(*src) {
+    if(isupper(*src) && prev_lower) {
+      l++;
+    }
+    prev_lower = islower(*src);
+    src++; l++;
+  }
   return l;
 }
 
