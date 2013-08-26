@@ -29,6 +29,9 @@ Expect spaces instead of hyphens to separate the modifer name(s) from the base k
 .TP
 .B TERMKEY_FORMAT_LOWERMOD
 Expect lowercase for the modifier name
+.TP
+.B TERMKEY_FORMAT_LOWERSPACE
+Expect lowercase with spaces in for the key name instead of camelCase (for example "\f(CWpage down\fP" instead of "\f(CWPageDown\fP").
 .PP
 Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
 .PP

@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
 #define CLEAR_KEY do { key.type = -1; key.code.codepoint = -1; key.modifiers = -1; key.utf8[0] = 0; } while(0)
 
-  plan_tests(58);
+  plan_tests(62);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -92,6 +92,14 @@ int main(int argc, char *argv[])
   is_int(key.modifiers,   TERMKEY_KEYMOD_ALT,   "key.modifiers for unicode/c/ALT altismeta+long/space+lowermod");
   is_str(key.utf8,        "c",                  "key.utf8 for unicode/c/ALT altismeta+long/space_lowermod");
   is_str(endp, "", "consumed entire input for unicode/c/ALT altismeta+long/space+lowermod");
+
+  CLEAR_KEY;
+  endp = termkey_strpkey(tk, "ctrl alt page up", &key, TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD|TERMKEY_FORMAT_LOWERMOD|TERMKEY_FORMAT_LOWERSPACE);
+  is_int(key.type,        TERMKEY_TYPE_KEYSYM, "key.type for sym/PageUp/CTRL+ALT long/space/lowermod+lowerspace");
+  is_int(key.code.sym,    TERMKEY_SYM_PAGEUP,  "key.code.codepoint for sym/PageUp/CTRL+ALT long/space/lowermod+lowerspace");
+  is_int(key.modifiers,   TERMKEY_KEYMOD_ALT | TERMKEY_KEYMOD_CTRL,
+                                               "key.modifiers for sym/PageUp/CTRL+ALT long/space/lowermod+lowerspace");
+  is_str(endp, "", "consumed entire input for sym/PageUp/CTRL+ALT long/space/lowermod+lowerspace");
 
   CLEAR_KEY;
   endp = termkey_strpkey(tk, "Up", &key, 0);
