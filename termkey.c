@@ -191,6 +191,63 @@ static const char *res2str(TermKeyResult res)
 }
 #endif
 
+/* Similar to snprintf(str, size, "%s", src) except it turns CamelCase into
+ * space separated values
+ */
+static int snprint_cameltospaces(char *str, size_t size, const char *src)
+{
+  int prev_lower = 0;
+  size_t l = 0;
+  while(*src && l < size) {
+    if(isupper(*src) && prev_lower) {
+      if(str)
+        str[l++] = ' ';
+      if(l >= size)
+        return -1;
+    }
+    prev_lower = islower(*src);
+    str[l++] = tolower(*src++);
+  }
+  if(l >= size)
+    return -1;
+  str[l] = 0;
+  return l;
+}
+
+/* Similar to strcmp(str, strcamel, n) except that:
+ *    it compares CamelCase in strcamel with space separated values in str;
+ *    it takes char**s and updates them
+ * n counts bytes of str, not strcamel
+ */
+static int strpncmp_camel(const char **strp, const char **strcamelp, size_t n)
+{
+  const char *str = *strp, *strcamel = *strcamelp;
+  int prev_lower = 0;
+
+  for( ; (*str || *strcamel) && n; n--) {
+    char b = tolower(*strcamel);
+    if(isupper(*strcamel) && prev_lower) {
+      if(*str != ' ')
+        break;
+      str++;
+      if(*str != b)
+        break;
+    }
+    else
+      if(*str != b)
+        break;
+
+    prev_lower = islower(*strcamel);
+
+    str++;
+    strcamel++;
+  }
+
+  *strp = str;
+  *strcamelp = strcamel;
+  return *str - *strcamel;
+}
+
 static TermKey *termkey_alloc(void)
 {
   TermKey *tk = malloc(sizeof(TermKey));
@@ -1114,7 +1171,7 @@ const char *termkey_get_keyname(TermKey *tk, TermKeySym sym)
   return "UNKNOWN";
 }
 
-const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)
+static const char *termkey_lookup_keyname_format(TermKey *tk, const char *str, TermKeySym *sym, TermKeyFormat format)
 {
   /* We store an array, so we can't do better than a linear search. Doesn't
    * matter because user won't be calling this too often */
@@ -1124,11 +1181,23 @@ const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym
     if(!thiskey)
       continue;
     size_t len = strlen(thiskey);
-    if(strncmp(str, thiskey, len) == 0)
-      return (char *)str + len;
+    if(format & TERMKEY_FORMAT_LOWERSPACE) {
+      const char *thisstr = str;
+      if(strpncmp_camel(&thisstr, &thiskey, len) == 0)
+          return thisstr;
+    }
+    else {
+      if(strncmp(str, thiskey, len) == 0)
+        return (char *)str + len;
+    }
   }
 
   return NULL;
+}
+
+const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym)
+{
+  return termkey_lookup_keyname_format(tk, str, sym, 0);
 }
 
 TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname)
@@ -1169,29 +1238,6 @@ static TermKeySym register_c0_full(TermKey *tk, TermKeySym sym, int modifier_set
 size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
 {
   return termkey_strfkey(tk, buffer, len, key, format);
-}
-
-/* Similar to snprintf(str, size, "%s", src) except it turns CamelCase into
- * space separated values
- */
-static int snprint_cameltospaces(char *str, size_t size, const char *src)
-{
-  int prev_lower = 0;
-  size_t l = 0;
-  while(*src && l < size) {
-    if(isupper(*src) && prev_lower) {
-      if(str)
-        str[l++] = ' ';
-      if(l >= size)
-        return -1;
-    }
-    prev_lower = islower(*src);
-    str[l++] = tolower(*src++);
-  }
-  if(l >= size)
-    return -1;
-  str[l] = 0;
-  return l;
 }
 
 static struct modnames {
@@ -1381,7 +1427,7 @@ const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermK
   ssize_t snbytes;
   const char *endstr;
 
-  if((endstr = termkey_lookup_keyname(tk, str, &key->code.sym))) {
+  if((endstr = termkey_lookup_keyname_format(tk, str, &key->code.sym, format))) {
     key->type = TERMKEY_TYPE_KEYSYM;
     str = endstr;
   }
