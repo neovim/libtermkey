@@ -200,7 +200,7 @@ TermKeySym termkey_register_keyname(TermKey *tk, TermKeySym sym, const char *nam
 const char *termkey_get_keyname(TermKey *tk, TermKeySym sym);
 const char *termkey_lookup_keyname(TermKey *tk, const char *str, TermKeySym *sym);
 
-TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname); 
+TermKeySym termkey_keyname2sym(TermKey *tk, const char *keyname);
 
 TermKeyResult termkey_interpret_mouse(TermKey *tk, const TermKeyKey *key, TermKeyMouseEvent *event, int *button, int *line, int *col);
 
