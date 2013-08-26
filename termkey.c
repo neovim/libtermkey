@@ -735,7 +735,7 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
       key->type = TERMKEY_TYPE_UNICODE;
       /* Generically modified Unicode ought not report the SHIFT state, or else
        * we get into complicationg trying to report Shift-; vs : and so on...
-       * In order to be able to represent Ctrl-Shift-A as CTRL modified 
+       * In order to be able to represent Ctrl-Shift-A as CTRL modified
        * unicode A, we need to call Ctrl-A simply 'a', lowercase
        */
       if(codepoint+0x40 >= 'A' && codepoint+0x40 <= 'Z')
@@ -1268,7 +1268,7 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
 
   char sep = (format & TERMKEY_FORMAT_SPACEMOD) ? ' ' : '-';
 
-  if(format & TERMKEY_FORMAT_CARETCTRL && 
+  if(format & TERMKEY_FORMAT_CARETCTRL &&
      key->type == TERMKEY_TYPE_UNICODE &&
      key->modifiers == TERMKEY_KEYMOD_CTRL) {
     long codepoint = key->code.codepoint;
