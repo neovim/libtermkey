@@ -86,12 +86,12 @@ int main(int argc, char *argv[])
   is_str(endp, "", "consumed entire input for unicode/c/ALT altismeta+longmod");
 
   CLEAR_KEY;
-  endp = termkey_strpkey(tk, "Meta c", &key, TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD);
-  is_int(key.type,        TERMKEY_TYPE_UNICODE, "key.type for unicode/c/ALT altismeta+long/lowermod");
-  is_int(key.code.codepoint, 'c',               "key.code.codepoint for unicode/c/ALT altismeta+long/lowermod");
-  is_int(key.modifiers,   TERMKEY_KEYMOD_ALT,   "key.modifiers for unicode/c/ALT altismeta+long/lowermod");
-  is_str(key.utf8,        "c",                  "key.utf8 for unicode/c/ALT altismeta+long/lowermod");
-  is_str(endp, "", "consumed entire input for unicode/c/ALT altismeta+longmod");
+  endp = termkey_strpkey(tk, "meta c", &key, TERMKEY_FORMAT_ALTISMETA|TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD|TERMKEY_FORMAT_LOWERMOD);
+  is_int(key.type,        TERMKEY_TYPE_UNICODE, "key.type for unicode/c/ALT altismeta+long/space+lowermod");
+  is_int(key.code.codepoint, 'c',               "key.code.codepoint for unicode/c/ALT altismeta+long/space+lowermod");
+  is_int(key.modifiers,   TERMKEY_KEYMOD_ALT,   "key.modifiers for unicode/c/ALT altismeta+long/space+lowermod");
+  is_str(key.utf8,        "c",                  "key.utf8 for unicode/c/ALT altismeta+long/space_lowermod");
+  is_str(endp, "", "consumed entire input for unicode/c/ALT altismeta+long/space+lowermod");
 
   CLEAR_KEY;
   endp = termkey_strpkey(tk, "Up", &key, 0);

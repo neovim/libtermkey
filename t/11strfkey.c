@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
   char       buffer[16];
   size_t     len;
 
-  plan_tests(32);
+  plan_tests(36);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -42,6 +42,16 @@ int main(int argc, char *argv[])
       TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD);
   is_int(len, 6, "length for unicode/b/CTRL longmod|spacemod");
   is_str(buffer, "Ctrl b", "buffer for unicode/b/CTRL longmod|spacemod");
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key,
+      TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_LOWERMOD);
+  is_int(len, 6, "length for unicode/b/CTRL longmod|lowermod");
+  is_str(buffer, "ctrl-b", "buffer for unicode/b/CTRL longmod|lowermod");
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key,
+      TERMKEY_FORMAT_LONGMOD|TERMKEY_FORMAT_SPACEMOD|TERMKEY_FORMAT_LOWERMOD);
+  is_int(len, 6, "length for unicode/b/CTRL longmod|spacemod|lowermode");
+  is_str(buffer, "ctrl b", "buffer for unicode/b/CTRL longmod|spacemod|lowermode");
 
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_CARETCTRL);
   is_int(len, 2, "length for unicode/b/CTRL caretctrl");
