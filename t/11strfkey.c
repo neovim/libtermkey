@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
   char       buffer[16];
   size_t     len;
 
-  plan_tests(36);
+  plan_tests(40);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -102,6 +102,10 @@ int main(int argc, char *argv[])
   is_int(len, 6, "length for sym/PageUp/0");
   is_str(buffer, "PageUp", "buffer for sym/PageUp/0");
 
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_LOWERSPACE);
+  is_int(len, 7, "length for sym/PageUp/0 lowerspace");
+  is_str(buffer, "page up", "buffer for sym/PageUp/0 lowerspace");
+
   key.type = TERMKEY_TYPE_FUNCTION;
   key.code.number = 5;
   key.modifiers = 0;
@@ -113,6 +117,10 @@ int main(int argc, char *argv[])
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_WRAPBRACKET);
   is_int(len, 4, "length for func/5/0 wrapbracket");
   is_str(buffer, "<F5>", "buffer for func/5/0 wrapbracket");
+
+  len = termkey_strfkey(tk, buffer, sizeof buffer, &key, TERMKEY_FORMAT_LOWERSPACE);
+  is_int(len, 2, "length for func/5/0 lowerspace");
+  is_str(buffer, "f5", "buffer for func/5/0 lowerspace");
 
   termkey_destroy(tk);
 

@@ -217,6 +217,7 @@ typedef enum {
   TERMKEY_FORMAT_WRAPBRACKET = 1 << 3, /* Wrap special keys in brackets like <Escape> */
   TERMKEY_FORMAT_SPACEMOD    = 1 << 4, /* M Foo instead of M-Foo */
   TERMKEY_FORMAT_LOWERMOD    = 1 << 5, /* meta or m instead of Meta or M */
+  TERMKEY_FORMAT_LOWERSPACE  = 1 << 6, /* page down instead of PageDown */
 
   TERMKEY_FORMAT_MOUSE_POS   = 1 << 8  /* Include mouse position if relevant; @ col,line */
 } TermKeyFormat;

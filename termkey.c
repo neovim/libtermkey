@@ -1,6 +1,7 @@
 #include "termkey.h"
 #include "termkey-internal.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <poll.h>
 #include <unistd.h>
@@ -1170,6 +1171,29 @@ size_t termkey_snprint_key(TermKey *tk, char *buffer, size_t len, TermKeyKey *ke
   return termkey_strfkey(tk, buffer, len, key, format);
 }
 
+/* Similar to snprintf(str, size, "%s", src) except it turns CamelCase into
+ * space separated values
+ */
+static int snprint_cameltospaces(char *str, size_t size, const char *src)
+{
+  int prev_lower = 0;
+  size_t l = 0;
+  while(*src && l < size) {
+    if(isupper(*src) && prev_lower) {
+      if(str)
+        str[l++] = ' ';
+      if(l >= size)
+        return -1;
+    }
+    prev_lower = islower(*src);
+    str[l++] = tolower(*src++);
+  }
+  if(l >= size)
+    return -1;
+  str[l] = 0;
+  return l;
+}
+
 static struct modnames {
   const char *shift, *alt, *ctrl;
 }
@@ -1250,10 +1274,17 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
     l = snprintf(buffer + pos, len - pos, "%s", key->utf8);
     break;
   case TERMKEY_TYPE_KEYSYM:
-    l = snprintf(buffer + pos, len - pos, "%s", termkey_get_keyname(tk, key->code.sym));
+    {
+      const char *name = termkey_get_keyname(tk, key->code.sym);
+      if(format & TERMKEY_FORMAT_LOWERSPACE)
+        l = snprint_cameltospaces(buffer + pos, len - pos, name);
+      else
+        l = snprintf(buffer + pos, len - pos, "%s", name);
+    }
     break;
   case TERMKEY_TYPE_FUNCTION:
-    l = snprintf(buffer + pos, len - pos, "F%d", key->code.number);
+    l = snprintf(buffer + pos, len - pos, "%c%d",
+        (format & TERMKEY_FORMAT_LOWERSPACE ? 'f' : 'F'), key->code.number);
     break;
   case TERMKEY_TYPE_MOUSE:
     {
