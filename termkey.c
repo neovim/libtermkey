@@ -1178,6 +1178,10 @@ modnames[] = {
   { "Shift", "Alt",  "Ctrl" }, // LONGMOD
   { "S",     "M",    "C" },    // ALTISMETA
   { "Shift", "Meta", "Ctrl" }, // ALTISMETA+LONGMOD
+  { "s",     "a",    "c" },    // LOWERMOD
+  { "shift", "alt",  "ctrl" }, // LOWERMOD+LONGMOD
+  { "s",     "m",    "c" },    // LOWERMOD+ALTISMETA
+  { "shift", "meta", "ctrl" }, // LOWERMOD+ALTISMETA+LONGMOD
 };
 
 size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, TermKeyFormat format)
@@ -1186,7 +1190,8 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
   size_t l = 0;
 
   struct modnames *mods = &modnames[!!(format & TERMKEY_FORMAT_LONGMOD) +
-                                    !!(format & TERMKEY_FORMAT_ALTISMETA) * 2];
+                                    !!(format & TERMKEY_FORMAT_ALTISMETA) * 2 +
+                                    !!(format & TERMKEY_FORMAT_LOWERMOD) * 4];
 
   int wrapbracket = (format & TERMKEY_FORMAT_WRAPBRACKET) &&
                     (key->type != TERMKEY_TYPE_UNICODE || key->modifiers != 0);
@@ -1302,7 +1307,8 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
 const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermKeyFormat format)
 {
   struct modnames *mods = &modnames[!!(format & TERMKEY_FORMAT_LONGMOD) +
-                                    !!(format & TERMKEY_FORMAT_ALTISMETA) * 2];
+                                    !!(format & TERMKEY_FORMAT_ALTISMETA) * 2 +
+                                    !!(format & TERMKEY_FORMAT_LOWERMOD) * 4];
 
   key->modifiers = 0;
 
