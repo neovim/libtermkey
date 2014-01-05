@@ -60,28 +60,28 @@ MAN7DIR=$(MANDIR)/man7
 all: $(LIBRARY) $(DEMOS)
 
 %.lo: %.c termkey.h termkey-internal.h
-	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $<
+	$(LIBTOOL) --mode=compile --tag=CC cc $(CFLAGS) -o $@ -c $<
 
 $(LIBRARY): $(OBJECTS)
-	$(LIBTOOL) --mode=link --tag=CC gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) $(LDFLAGS) -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC cc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) $(LDFLAGS) -o $@ $^
 
 demo: $(LIBRARY) demo.lo
-	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC cc -o $@ $^
 
 demo-async: $(LIBRARY) demo-async.lo
-	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC cc -o $@ $^
 
 demo-glib.lo: demo-glib.c termkey.h
-	$(LIBTOOL) --mode=compile --tag=CC gcc -o $@ -c $< $(shell pkg-config glib-2.0 --cflags)
+	$(LIBTOOL) --mode=compile --tag=CC cc -o $@ -c $< $(shell pkg-config glib-2.0 --cflags)
 
 demo-glib: $(LIBRARY) demo-glib.lo
-	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^ $(shell pkg-config glib-2.0 --libs)
+	$(LIBTOOL) --mode=link --tag=CC cc -o $@ $^ $(shell pkg-config glib-2.0 --libs)
 
 t/%.t: t/%.c $(LIBRARY) t/taplib.lo
-	$(LIBTOOL) --mode=link --tag=CC gcc -o $@ $^
+	$(LIBTOOL) --mode=link --tag=CC cc -o $@ $^
 
 t/taplib.lo: t/taplib.c
-	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $^
+	$(LIBTOOL) --mode=compile --tag=CC cc $(CFLAGS) -o $@ -c $^
 
 .PHONY: test
 test: $(TESTFILES)
