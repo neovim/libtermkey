@@ -382,19 +382,10 @@ TermKey *termkey_new(int fd, int flags)
   tk->fd = fd;
 
   if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
-    int locale_is_utf8 = 0;
     char *e;
 
-    if((e = getenv("LANG")) && strstr(e, "UTF-8"))
-      locale_is_utf8 = 1;
-
-    if(!locale_is_utf8 && (e = getenv("LC_MESSAGES")) && strstr(e, "UTF-8"))
-      locale_is_utf8 = 1;
-
-    if(!locale_is_utf8 && (e = getenv("LC_ALL")) && strstr(e, "UTF-8"))
-      locale_is_utf8 = 1;
-
-    if(locale_is_utf8)
+    if(((e = getenv("LANG")) || (e = getenv("LC_MESSAGES")) || (e = getenv("LC_ALL"))) &&
+       strstr(e, "UTF-8"))
       flags |= TERMKEY_FLAG_UTF8;
     else
       flags |= TERMKEY_FLAG_RAW;
