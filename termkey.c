@@ -385,7 +385,7 @@ TermKey *termkey_new(int fd, int flags)
     char *e;
 
     if(((e = getenv("LANG")) || (e = getenv("LC_MESSAGES")) || (e = getenv("LC_ALL"))) &&
-       strstr(e, "UTF-8"))
+       (strstr(e, ".UTF-8") || strstr(e, ".utf8")))
       flags |= TERMKEY_FLAG_UTF8;
     else
       flags |= TERMKEY_FLAG_RAW;
