@@ -6,8 +6,11 @@
 #include <poll.h>
 #include <unistd.h>
 #include <string.h>
+#include <strings.h>
 
 #include <stdio.h>
+
+#define strcaseeq(a,b) (strcasecmp(a,b) == 0)
 
 void termkey_check_version(int major, int minor)
 {
@@ -384,8 +387,12 @@ TermKey *termkey_new(int fd, int flags)
   if(!(flags & (TERMKEY_FLAG_RAW|TERMKEY_FLAG_UTF8))) {
     char *e;
 
+    /* Most OSes will set .UTF-8. Some will set .utf8. Try to be fairly
+     * generous in parsing these
+     */
     if(((e = getenv("LANG")) || (e = getenv("LC_MESSAGES")) || (e = getenv("LC_ALL"))) &&
-       (strstr(e, ".UTF-8") || strstr(e, ".utf8")))
+       (e = strchr(e, '.')) && e++ &&
+       (strcaseeq(e, "UTF-8") || strcaseeq(e, "UTF8")))
       flags |= TERMKEY_FLAG_UTF8;
     else
       flags |= TERMKEY_FLAG_RAW;
