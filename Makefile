@@ -11,25 +11,25 @@ endif
 override CFLAGS +=-Wall -std=c99
 
 ifeq ($(DEBUG),1)
-  CFLAGS +=-ggdb -DDEBUG
+  override CFLAGS +=-ggdb -DDEBUG
 endif
 
 ifeq ($(PROFILE),1)
-  CFLAGS +=-pg
-  LDFLAGS+=-pg
+  override CFLAGS +=-pg
+  override LDFLAGS+=-pg
 endif
 
 ifeq ($(shell pkg-config --atleast-version=0.1.0 unibilium && echo 1),1)
-  CFLAGS +=$(shell pkg-config --cflags unibilium) -DHAVE_UNIBILIUM
-  LDFLAGS+=$(shell pkg-config --libs   unibilium)
+  override CFLAGS +=$(shell pkg-config --cflags unibilium) -DHAVE_UNIBILIUM
+  override LDFLAGS+=$(shell pkg-config --libs   unibilium)
 else ifeq ($(shell pkg-config tinfo && echo 1),1)
-  CFLAGS +=$(shell pkg-config --cflags tinfo)
-  LDFLAGS+=$(shell pkg-config --libs   tinfo)
+  override CFLAGS +=$(shell pkg-config --cflags tinfo)
+  override LDFLAGS+=$(shell pkg-config --libs   tinfo)
 else ifeq ($(shell pkg-config ncursesw && echo 1),1)
-  CFLAGS +=$(shell pkg-config --cflags ncursesw)
-  LDFLAGS+=$(shell pkg-config --libs   ncursesw)
+  override CFLAGS +=$(shell pkg-config --cflags ncursesw)
+  override LDFLAGS+=$(shell pkg-config --libs   ncursesw)
 else
-  LDFLAGS+=-lncurses
+  override LDFLAGS+=-lncurses
 endif
 
 OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
