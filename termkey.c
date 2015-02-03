@@ -316,10 +316,9 @@ static int termkey_init(TermKey *tk, const char *term)
     if(termkey_register_keyname(tk, keynames[i].sym, keynames[i].name) == -1)
       goto abort_free_keynames;
 
-  register_c0(tk, TERMKEY_SYM_BACKSPACE, 0x08, NULL);
-  register_c0(tk, TERMKEY_SYM_TAB,       0x09, NULL);
-  register_c0(tk, TERMKEY_SYM_ENTER,     0x0d, NULL);
-  register_c0(tk, TERMKEY_SYM_ESCAPE,    0x1b, NULL);
+  register_c0(tk, TERMKEY_SYM_TAB,    0x09, NULL);
+  register_c0(tk, TERMKEY_SYM_ENTER,  0x0d, NULL);
+  register_c0(tk, TERMKEY_SYM_ESCAPE, 0x1b, NULL);
 
   struct TermKeyDriverNode *tail = NULL;
 
