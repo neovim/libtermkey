@@ -21,15 +21,15 @@ ifeq ($(PROFILE),1)
   override LDFLAGS+=-pg
 endif
 
-ifeq ($(call pkg-config, --atleast-version=0.1.0 unibilium && echo 1),1)
-  override CFLAGS +=$(call pkg-config, --cflags unibilium) -DHAVE_UNIBILIUM
-  override LDFLAGS+=$(call pkg-config, --libs   unibilium)
-else ifeq ($(call pkg-config, tinfo && echo 1),1)
-  override CFLAGS +=$(call pkg-config, --cflags tinfo)
-  override LDFLAGS+=$(call pkg-config, --libs   tinfo)
-else ifeq ($(call pkg-config, ncursesw && echo 1),1)
-  override CFLAGS +=$(call pkg-config, --cflags ncursesw)
-  override LDFLAGS+=$(call pkg-config, --libs   ncursesw)
+ifeq ($(call pkgconfig, --atleast-version=0.1.0 unibilium && echo 1),1)
+  override CFLAGS +=$(call pkgconfig, --cflags unibilium) -DHAVE_UNIBILIUM
+  override LDFLAGS+=$(call pkgconfig, --libs   unibilium)
+else ifeq ($(call pkgconfig, tinfo && echo 1),1)
+  override CFLAGS +=$(call pkgconfig, --cflags tinfo)
+  override LDFLAGS+=$(call pkgconfig, --libs   tinfo)
+else ifeq ($(call pkgconfig, ncursesw && echo 1),1)
+  override CFLAGS +=$(call pkgconfig, --cflags ncursesw)
+  override LDFLAGS+=$(call pkgconfig, --libs   ncursesw)
 else
   override LDFLAGS+=-lncurses
 endif
@@ -39,7 +39,7 @@ LIBRARY=libtermkey.la
 
 DEMOS=demo demo-async
 
-ifeq ($(call pkg-config, glib-2.0 && echo 1),1)
+ifeq ($(call pkgconfig, glib-2.0 && echo 1),1)
   DEMOS+=demo-glib
 endif
 
@@ -77,10 +77,10 @@ demo-async: $(LIBRARY) demo-async.lo
 	$(LIBTOOL) --mode=link --tag=CC $(CC) -o $@ $^
 
 demo-glib.lo: demo-glib.c termkey.h
-	$(LIBTOOL) --mode=compile --tag=CC $(CC) -o $@ -c $< $(call pkg-config, glib-2.0 --cflags)
+	$(LIBTOOL) --mode=compile --tag=CC $(CC) -o $@ -c $< $(call pkgconfig, glib-2.0 --cflags)
 
 demo-glib: $(LIBRARY) demo-glib.lo
-	$(LIBTOOL) --mode=link --tag=CC $(CC) -o $@ $^ $(call pkg-config, glib-2.0 --libs)
+	$(LIBTOOL) --mode=link --tag=CC $(CC) -o $@ $^ $(call pkgconfig, glib-2.0 --libs)
 
 t/%.t: t/%.c $(LIBRARY) t/taplib.lo
 	$(LIBTOOL) --mode=link --tag=CC $(CC) -o $@ $^
