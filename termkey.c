@@ -729,7 +729,13 @@ static TermKeyResult parse_utf8(const unsigned char *bytes, size_t len, long *cp
 
 static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
 {
-  if(codepoint < 0x20) {
+  if(codepoint == 0) {
+    // ASCII NUL = Ctrl-Space
+    key->type = TERMKEY_TYPE_KEYSYM;
+    key->code.sym = TERMKEY_SYM_SPACE;
+    key->modifiers = TERMKEY_KEYMOD_CTRL;
+  }
+  else if(codepoint < 0x20) {
     // C0 range
     key->code.codepoint = 0;
     key->modifiers = 0;
