@@ -239,7 +239,7 @@ static int load_terminfo(TermKeyTI *ti, const char *term)
    * time we want to use it
    */
 #ifdef HAVE_UNIBILIUM
-  const char *keypad_xmit = unibi_get_str(unibi, unibi_pkey_xmit);
+  const char *keypad_xmit = unibi_get_str(unibi, unibi_keypad_xmit);
 #endif
 
   if(keypad_xmit)
@@ -248,7 +248,7 @@ static int load_terminfo(TermKeyTI *ti, const char *term)
     ti->start_string = NULL;
 
 #ifdef HAVE_UNIBILIUM
-  const char *keypad_local = unibi_get_str(unibi, unibi_pkey_local);
+  const char *keypad_local = unibi_get_str(unibi, unibi_keypad_local);
 #endif
 
   if(keypad_local)
