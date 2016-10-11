@@ -799,15 +799,15 @@ void termkey_canonicalise(TermKey *tk, TermKeyKey *key)
   int flags = tk->canonflags;
 
   if(flags & TERMKEY_CANON_SPACESYMBOL) {
-    if(key->type == TERMKEY_TYPE_UNICODE && key->code.number == 0x20) {
+    if(key->type == TERMKEY_TYPE_UNICODE && key->code.codepoint == 0x20) {
       key->type     = TERMKEY_TYPE_KEYSYM;
       key->code.sym = TERMKEY_SYM_SPACE;
     }
   }
   else {
     if(key->type == TERMKEY_TYPE_KEYSYM && key->code.sym == TERMKEY_SYM_SPACE) {
-      key->type        = TERMKEY_TYPE_UNICODE;
-      key->code.number = 0x20;
+      key->type           = TERMKEY_TYPE_UNICODE;
+      key->code.codepoint = 0x20;
       fill_utf8(key);
     }
   }
