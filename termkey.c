@@ -404,7 +404,7 @@ TermKey *termkey_new(int fd, int flags)
   if(!termkey_init(tk, term))
     goto abort;
 
-  if(!termkey_start(tk))
+  if(!(flags & TERMKEY_FLAG_NOSTART) && !termkey_start(tk))
     goto abort;
 
   return tk;
@@ -429,9 +429,14 @@ TermKey *termkey_new_abstract(const char *term, int flags)
     return NULL;
   }
 
-  termkey_start(tk);
+  if(!(flags & TERMKEY_FLAG_NOSTART) && !termkey_start(tk))
+    goto abort;
 
   return tk;
+
+abort:
+  free(tk);
+  return NULL;
 }
 
 void termkey_free(TermKey *tk)
