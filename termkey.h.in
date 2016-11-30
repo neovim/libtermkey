@@ -167,6 +167,10 @@ TermKey *termkey_new_abstract(const char *term, int flags);
 void     termkey_free(TermKey *tk);
 void     termkey_destroy(TermKey *tk);
 
+/* Mostly-undocumented hooks for doing evil evil things */
+typedef const char *TermKey_Terminfo_Getstr_Hook(const char *name, const char *value, void *data);
+void termkey_hook_terminfo_getstr(TermKey *tk, TermKey_Terminfo_Getstr_Hook *hookfn, void *data);
+
 int termkey_start(TermKey *tk);
 int termkey_stop(TermKey *tk);
 int termkey_is_started(TermKey *tk);

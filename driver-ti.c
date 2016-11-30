@@ -210,6 +210,10 @@ static int load_terminfo(TermKeyTI *ti)
 #else
     const char *value = tigetstr(strnames[i]);
 #endif
+
+    if(ti->tk->ti_getstr_hook)
+      value = (ti->tk->ti_getstr_hook)(name, value, ti->tk->ti_getstr_hook_data);
+
     if(!value || value == (char*)-1)
       continue;
 
