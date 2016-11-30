@@ -278,6 +278,9 @@ static TermKey *termkey_alloc(void)
 
   tk->restore_termios_valid = 0;
 
+  tk->ti_getstr_hook = NULL;
+  tk->ti_getstr_hook_data = NULL;
+
   tk->waittime = 50; /* msec */
 
   tk->is_closed = 0;
@@ -461,6 +464,12 @@ void termkey_destroy(TermKey *tk)
     termkey_stop(tk);
 
   termkey_free(tk);
+}
+
+void termkey_hook_terminfo_getstr(TermKey *tk, TermKey_Terminfo_Getstr_Hook *hookfn, void *data)
+{
+  tk->ti_getstr_hook = hookfn;
+  tk->ti_getstr_hook_data = data;
 }
 
 int termkey_start(TermKey *tk)
