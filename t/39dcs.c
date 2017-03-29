@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
   TermKeyKey key;
   const char *str;
 
-  plan_tests(18);
+  plan_tests(23);
 
   tk = termkey_new_abstract("xterm", 0);
 
@@ -49,6 +49,17 @@ int main(int argc, char *argv[])
   is_str(str, "15;abc", "termkey_interpret_string() yields correct string");
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_NONE, "getkey again yields RES_NONE");
+
+  // False alarm
+  termkey_push_bytes(tk, "\eP", 2);
+
+  is_int(termkey_getkey(tk, &key), TERMKEY_RES_AGAIN, "getkey yields RES_AGAIN for false alarm");
+
+  is_int(termkey_getkey_force(tk, &key), TERMKEY_RES_KEY, "getkey_forvce yields RES_KEY for false alarm");
+
+  is_int(key.type,           TERMKEY_TYPE_UNICODE, "key.type for false alarm");
+  is_int(key.code.codepoint, 'P',                  "key.code.codepoint for false alarm");
+  is_int(key.modifiers,      TERMKEY_KEYMOD_ALT,   "key.modifiers for false alarm");
 
   termkey_destroy(tk);
 
