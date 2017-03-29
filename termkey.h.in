@@ -98,6 +98,8 @@ typedef enum {
   TERMKEY_TYPE_MOUSE,
   TERMKEY_TYPE_POSITION,
   TERMKEY_TYPE_MODEREPORT,
+  TERMKEY_TYPE_DCS,
+  TERMKEY_TYPE_OSC,
   /* add other recognised types here */
 
   TERMKEY_TYPE_UNKNOWN_CSI = -1
@@ -214,6 +216,8 @@ TermKeyResult termkey_interpret_position(TermKey *tk, const TermKeyKey *key, int
 TermKeyResult termkey_interpret_modereport(TermKey *tk, const TermKeyKey *key, int *initial, int *mode, int *value);
 
 TermKeyResult termkey_interpret_csi(TermKey *tk, const TermKeyKey *key, long args[], size_t *nargs, unsigned long *cmd);
+
+TermKeyResult termkey_interpret_string(TermKey *tk, const TermKeyKey *key, const char **strp);
 
 typedef enum {
   TERMKEY_FORMAT_LONGMOD     = 1 << 0, /* Shift-... instead of S-... */

@@ -55,6 +55,12 @@ a cursor position report. The \fIcode\fP structure should be considered opaque; 
 .B TERMKEY_TYPE_MODEREPORT
 an ANSI or DEC mode value report. The \fIcode\fP structure should be considered opaque; \fBtermkey_interpret_modereport\fP(3) may be used to interpret it.
 .TP
+.B TERMKEY_TYPE_DCS
+a DCS sequence including its terminator. The \fIcode\fP structure should be considered opaque; \fBtermkey_interpret_string\fP(3) may be used to interpret it.
+.TP
+.B TERMKEY_TYPE_OSC
+a OSC sequence including its terminator. The \fIcode\fP structure should be considered opaque; \fBtermkey_interpret_string\fP(3) may be used to interpret it.
+.TP
 .B TERMKEY_TYPE_UNKNOWN_CSI
 an unrecognised CSI sequence. The \fIcode\fP structure should be considered opaque; \fBtermkey_interpret_csi\fP(3) may be used to interpret it.
 .PP
@@ -140,6 +146,8 @@ encoding (\f(CWCSI < ... M\fP, as requested by \f(CWCSI ? 1006 h\fP), and rxvt e
 The \fBTERMKEY_TYPE_POSITION\fP event type indicates a cursor position report. This is typically sent by a terminal in response to the Report Cursor Position command (\f(CWCSI ? 6 n\fP). The event bytes are opaque, but can be obtained by calling \fBtermkey_interpret_position\fP(3) passing the event structure and pointers to integers to store the result in. Note that only a DEC CPR sequence (\f(CWCSI ? R\fP) is recognised, and not the non-DEC prefixed \f(CWCSI R\fP because the latter could be interpreted as the \f(CWF3\fP function key instead.
 .SS Mode Reports
 The \fBTERMKEY_TYPE_MODEREPORT\fP event type indicates an ANSI or DEC mode report. This is typically sent by a terminal in response to the Request Mode command (\f(CWCSI $p\fP or \f(CWCSI ? $p\fP). The event bytes are opaque, but can be obtained by calling \fBtermkey_interpret_modereport\fP(3) passing the event structure and pointers to integers to store the result in.
+.SS Control Strings
+The \fBTERMKEY_TYPE_DCS\fP and \fBTERMKEY_TYPE_OSC\fP event types indicate a DCS or OSC control string. These are typically sent by the terminal in response of similar kinds of strings being sent as queries by the application. The event bytes are opaque, but the body of the string itself can be obtained by calling \fBtermkey_interpret_string\fP(3) immediately after this event is received. The underlying \fBtermkey\fP instance itself can only store one pending string, so the application should be sure to call this function in a timely manner soon after the event is received; at the very least, before calling any other functions that will insert bytes into or remove key events from the instance.
 .SS Unrecognised CSIs
 The \fBTERMKEY_TYPE_UNKNOWN_CSI\fP event type indicates a CSI sequence that the \fBtermkey\fP does not recognise. It will have been extracted from the stream, but is available to the application to inspect by calling \fBtermkey_interpret_csi\fP(3). It is important that if the application wishes to inspect this sequence it is done immediately, before any other IO operations on the \fBtermkey\fP instance (specifically, before calling \fBtermkey_waitkey\fP() or \fBtermkey_getkey\fP() again), otherwise the buffer space consumed by the sequence will be overwritten. Other types of key event do not suffer this limitation as the \fBTermKeyKey\fP structure is sufficient to contain all the information required.
 .SH "SEE ALSO"
