@@ -644,23 +644,29 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
 
   TermKeyCsi *csi = info;
 
-  // Now we're sure at least 1 byte is valid
-  unsigned char b0 = CHARAT(0);
+  switch(CHARAT(0)) {
+    case 0x1b:
+      if(tk->buffcount < 2)
+        return TERMKEY_RES_NONE;
 
-  if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == '[') {
-    return peekkey_csi(tk, csi, 2, key, force, nbytep);
+      switch(CHARAT(1)) {
+        case 0x4f: // ESC-prefixed SS3
+          return peekkey_ss3(tk, csi, 2, key, force, nbytep);
+
+        case 0x5b: // ESC-prefixed CSI
+          return peekkey_csi(tk, csi, 2, key, force, nbytep);
+      }
+
+      return TERMKEY_RES_NONE;
+
+    case 0x8f: // SS3
+      return peekkey_ss3(tk, csi, 1, key, force, nbytep);
+
+    case 0x9b: // CSI
+      return peekkey_csi(tk, csi, 1, key, force, nbytep);
   }
-  else if(b0 == 0x1b && tk->buffcount > 1 && CHARAT(1) == 'O') {
-    return peekkey_ss3(tk, csi, 2, key, force, nbytep);
-  }
-  else if(b0 == 0x8f) {
-    return peekkey_ss3(tk, csi, 1, key, force, nbytep);
-  }
-  else if(b0 == 0x9b) {
-    return peekkey_csi(tk, csi, 1, key, force, nbytep);
-  }
-  else
-    return TERMKEY_RES_NONE;
+
+  return TERMKEY_RES_NONE;
 }
 
 struct TermKeyDriver termkey_driver_csi = {
