@@ -1,0 +1,24 @@
+.TH TERMKEY_INTERPRET_STRING 3
+.SH NAME
+termkey_interpret_string \- fetch stored control string
+.SH SYNOPSIS
+.nf
+.B #include <termkey.h>
+.sp
+.BI "TermKeyResult termkey_interpret_string(TermKey *" tk ", const TermKeyKey *" key ", "
+.BI "    const char **" strp );
+.fi
+.sp
+Link with \fI-ltermkey\fP.
+.SH DESCRIPTION
+\fBtermkey_interpret_string\fP() fetches the string stored in the \fBTermKey\fP instance from the most recently received \fBTERMKEY_TYPE_DCS\fP or \fBTERMKEY_TYPE_OSC\fP event. Note that it is important to call this function as soon as possible after obtaining a one of these string key event; specifically, before calling \fBtermkey_getkey\fP() or \fBtermkey_waitkey\fP() again, as a subsequent call will overwrite the buffer space currently containing this string.
+.PP
+The string pointer whose address is given by \fIstrp\fP will be set to point at the actual stored string in the instance. The caller is free to read this string (which will be correctly NUL-terminated), but should not modify it. It is not necessary to \fBfree\fP() the pointer; the containing \fBTermKey\fP instance will do that.
+.SH "RETURN VALUE"
+If passed the most recent \fIkey\fP event of the type \fBTERMKEY_TYPE_DCS\fP or \fBTERMKEY_TYPE_OSC\fP, this function will return \fBTERMKEY_RES_KEY\fP and will affect the variables whose pointers were passed in, as described above.
+.PP
+For other event types, or stale events, it will return \fBTERMKEY_RES_NONE\fP, and its effects on any variables whose pointers were passed in are undefined.
+.SH "SEE ALSO"
+.BR termkey_waitkey (3),
+.BR termkey_getkey (3),
+.BR termkey (7)

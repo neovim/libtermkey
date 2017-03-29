@@ -11,6 +11,8 @@ static char ss3_kpalts[64];
 
 typedef struct {
   TermKey *tk;
+  int saved_string_id;
+  char *saved_string;
 } TermKeyCsi;
 
 typedef TermKeyResult CsiHandler(TermKey *tk, TermKeyKey *key, int cmd, long *arg, int args);
@@ -508,6 +510,8 @@ static void *new_driver(TermKey *tk, const char *term)
     return NULL;
 
   csi->tk = tk;
+  csi->saved_string_id = 0;
+  csi->saved_string = NULL;
 
   return csi;
 }
@@ -515,6 +519,9 @@ static void *new_driver(TermKey *tk, const char *term)
 static void free_driver(void *info)
 {
   TermKeyCsi *csi = info;
+
+  if(csi->saved_string)
+    free(csi->saved_string);
 
   free(csi);
 }
@@ -637,6 +644,52 @@ static TermKeyResult peekkey_ss3(TermKey *tk, TermKeyCsi *csi, size_t introlen, 
   return TERMKEY_RES_KEY;
 }
 
+static TermKeyResult peekkey_ctrlstring(TermKey *tk, TermKeyCsi *csi, size_t introlen, TermKeyKey *key, int force, size_t *nbytep)
+{
+  size_t str_end = introlen;
+
+  while(str_end < tk->buffcount) {
+    if(CHARAT(str_end) == 0x9c) // ST
+      break;
+    if(CHARAT(str_end) == 0x1b &&
+       (str_end + 1) < tk->buffcount &&
+       CHARAT(str_end+1) == 0x5c) // ESC-prefixed ST
+      break;
+
+    str_end++;
+  }
+
+  if(str_end >= tk->buffcount)
+    return TERMKEY_RES_AGAIN;
+
+#ifdef DEBUG
+  fprintf(stderr, "Found a control string: %*s",
+      str_end - introlen, tk->buffer + introlen);
+#endif
+
+  *nbytep = str_end + 1;
+  if(CHARAT(str_end) == 0x1b)
+    (*nbytep)++;
+
+  if(csi->saved_string)
+    free(csi->saved_string);
+
+  size_t len = str_end - introlen;
+
+  csi->saved_string_id++;
+  csi->saved_string = malloc(len + 1);
+
+  strncpy(csi->saved_string, (char *)tk->buffer + introlen, len);
+  csi->saved_string[len] = 0;
+
+  key->type = (CHARAT(introlen-1) & 0x1f) == 0x10 ?
+    TERMKEY_TYPE_DCS : TERMKEY_TYPE_OSC;
+  key->code.number = csi->saved_string_id;
+  key->modifiers = 0;
+
+  return TERMKEY_RES_KEY;
+}
+
 static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force, size_t *nbytep)
 {
   if(tk->buffcount == 0)
@@ -653,6 +706,10 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
         case 0x4f: // ESC-prefixed SS3
           return peekkey_ss3(tk, csi, 2, key, force, nbytep);
 
+        case 0x50: // ESC-prefixed DCS
+        case 0x5d: // ESC-prefixed OSC
+          return peekkey_ctrlstring(tk, csi, 2, key, force, nbytep);
+
         case 0x5b: // ESC-prefixed CSI
           return peekkey_csi(tk, csi, 2, key, force, nbytep);
       }
@@ -661,6 +718,10 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
 
     case 0x8f: // SS3
       return peekkey_ss3(tk, csi, 1, key, force, nbytep);
+
+    case 0x90: // DCS
+    case 0x9d: // OSC
+      return peekkey_ctrlstring(tk, csi, 1, key, force, nbytep);
 
     case 0x9b: // CSI
       return peekkey_csi(tk, csi, 1, key, force, nbytep);
@@ -677,3 +738,27 @@ struct TermKeyDriver termkey_driver_csi = {
 
   .peekkey = peekkey,
 };
+
+TermKeyResult termkey_interpret_string(TermKey *tk, const TermKeyKey *key, const char **strp)
+{
+  struct TermKeyDriverNode *p;
+  for(p = tk->drivers; p; p = p->next)
+    if(p->driver == &termkey_driver_csi)
+      break;
+
+  if(!p)
+    return TERMKEY_RES_NONE;
+
+  if(key->type != TERMKEY_TYPE_DCS &&
+     key->type != TERMKEY_TYPE_OSC)
+    return TERMKEY_RES_NONE;
+
+  TermKeyCsi *csi = p->info;
+
+  if(csi->saved_string_id != key->code.number)
+    return TERMKEY_RES_NONE;
+
+  *strp = csi->saved_string;
+
+  return TERMKEY_RES_KEY;
+}

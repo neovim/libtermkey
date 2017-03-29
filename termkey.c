@@ -159,6 +159,12 @@ static void print_key(TermKey *tk, TermKeyKey *key)
       fprintf(stderr, "Mode report mode=%s %d val=%d\n", initial == '?' ? "DEC" : "ANSI", mode, value);
     }
     break;
+  case TERMKEY_TYPE_DCS:
+    fprintf(stderr, "Device Control String");
+    break;
+  case TERMKEY_TYPE_OSC:
+    fprintf(stderr, "Operating System Control");
+    break;
   case TERMKEY_TYPE_UNKNOWN_CSI:
     fprintf(stderr, "unknown CSI\n");
     break;
@@ -1392,6 +1398,12 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
       else
         l = snprintf(buffer + pos, len - pos, "Mode(%d=%d)", mode, value);
     }
+  case TERMKEY_TYPE_DCS:
+    l = snprintf(buffer + pos, len - pos, "DCS");
+    break;
+  case TERMKEY_TYPE_OSC:
+    l = snprintf(buffer + pos, len - pos, "OSC");
+    break;
   case TERMKEY_TYPE_UNKNOWN_CSI:
     l = snprintf(buffer + pos, len - pos, "CSI %c", key->code.number & 0xff);
     break;
@@ -1520,6 +1532,9 @@ int termkey_keycmp(TermKey *tk, const TermKeyKey *key1p, const TermKeyKey *key2p
         return col1 - col2;
       }
       break;
+    case TERMKEY_TYPE_DCS:
+    case TERMKEY_TYPE_OSC:
+      return key1p - key2p;
     case TERMKEY_TYPE_MODEREPORT:
       {
         int initial1, initial2, mode1, mode2, value1, value2;
