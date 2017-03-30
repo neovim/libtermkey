@@ -664,7 +664,7 @@ static TermKeyResult peekkey_ctrlstring(TermKey *tk, TermKeyCsi *csi, size_t int
 
 #ifdef DEBUG
   fprintf(stderr, "Found a control string: %*s",
-      str_end - introlen, tk->buffer + introlen);
+      str_end - introlen, tk->buffer + tk->buffstart + introlen);
 #endif
 
   *nbytep = str_end + 1;
@@ -679,7 +679,7 @@ static TermKeyResult peekkey_ctrlstring(TermKey *tk, TermKeyCsi *csi, size_t int
   csi->saved_string_id++;
   csi->saved_string = malloc(len + 1);
 
-  strncpy(csi->saved_string, (char *)tk->buffer + introlen, len);
+  strncpy(csi->saved_string, (char *)tk->buffer + tk->buffstart + introlen, len);
   csi->saved_string[len] = 0;
 
   key->type = (CHARAT(introlen-1) & 0x1f) == 0x10 ?
