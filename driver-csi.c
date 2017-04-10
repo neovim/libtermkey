@@ -158,7 +158,7 @@ static TermKeyResult handle_csi_u(TermKey *tk, TermKeyKey *key, int cmd, long *a
 }
 
 /*
- * Handler for CSI M / CSI m mouse events in SRG and rxvt encodings
+ * Handler for CSI M / CSI m mouse events in SGR and rxvt encodings
  * Note: This does not handle X10 encoding
  */
 
