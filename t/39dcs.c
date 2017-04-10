@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_AGAIN, "getkey yields RES_AGAIN for false alarm");
 
-  is_int(termkey_getkey_force(tk, &key), TERMKEY_RES_KEY, "getkey_forvce yields RES_KEY for false alarm");
+  is_int(termkey_getkey_force(tk, &key), TERMKEY_RES_KEY, "getkey_force yields RES_KEY for false alarm");
 
   is_int(key.type,           TERMKEY_TYPE_UNICODE, "key.type for false alarm");
   is_int(key.code.codepoint, 'P',                  "key.code.codepoint for false alarm");

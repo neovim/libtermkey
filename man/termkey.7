@@ -72,7 +72,7 @@ Key events that represent special keys (\fItype\fP is \fBTERMKEY_TYPE_KEYSYM\fP)
 .PP
 A pair of functions are also provided to convert between key events and strings. \fBtermkey_strfkey\fP(3) converts a key event into a string, and \fBtermkey_strpkey\fP(3) parses a string turning it into a key event.
 .PP
-Key events may be compared for equallity or ordering by using \fBtermkey_keycmp\fP(3).
+Key events may be compared for equality or ordering by using \fBtermkey_keycmp\fP(3).
 .SS Control Flags
 Details of the behaviour of a \fBtermkey\fP instance are controlled by two bitmasks of flags. \fBtermkey_set_flags\fP(3) and \fBtermkey_get_flags\fP(3) set or return the flags used to control the general behaviour, and \fBtermkey_set_canonflags\fP(3) and \fBtermkey_get_canonflags\fP(3) set or return the flags that control the key value canonicalisation behaviour performed by \fBtermkey_canonicalise\fP(3).
 .PP

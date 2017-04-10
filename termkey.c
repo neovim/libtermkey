@@ -114,7 +114,7 @@ static struct {
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
 #ifdef DEBUG
-/* Some internal deubgging functions */
+/* Some internal debugging functions */
 
 static void print_buffer(TermKey *tk)
 {
@@ -768,12 +768,12 @@ static void emit_codepoint(TermKey *tk, long codepoint, TermKeyKey *key)
     if(!key->code.sym) {
       key->type = TERMKEY_TYPE_UNICODE;
       /* Generically modified Unicode ought not report the SHIFT state, or else
-       * we get into complicationg trying to report Shift-; vs : and so on...
+       * we get into complications trying to report Shift-; vs : and so on...
        * In order to be able to represent Ctrl-Shift-A as CTRL modified
        * unicode A, we need to call Ctrl-A simply 'a', lowercase
        */
       if(codepoint+0x40 >= 'A' && codepoint+0x40 <= 'Z')
-        // it's a letter - use lowecase instead
+        // it's a letter - use lowercase instead
         key->code.codepoint = codepoint + 0x60;
       else
         key->code.codepoint = codepoint + 0x40;
@@ -1307,7 +1307,7 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
      key->modifiers == TERMKEY_KEYMOD_CTRL) {
     long codepoint = key->code.codepoint;
 
-    // Handle some of the special casesfirst
+    // Handle some of the special cases first
     if(codepoint >= 'a' && codepoint <= 'z') {
       l = snprintf(buffer + pos, len - pos, wrapbracket ? "<^%c>" : "^%c", (char)codepoint - 0x20);
       if(l <= 0) return pos;
