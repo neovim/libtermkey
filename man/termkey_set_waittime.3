@@ -11,11 +11,11 @@ termkey_set_waittime, termkey_get_waittime \- control the wait time for multibyt
 .sp
 Link with \fI-ltermkey\fP.
 .SH DESCRIPTION
-\fBtermkey_set_waittime\fP() sets the number of miliseconds that \fBtermkey_waitkey\fP(3) will wait for the remaining bytes of a multibyte sequence if it detects the start of a partially-complete one.
+\fBtermkey_set_waittime\fP() sets the number of milliseconds that \fBtermkey_waitkey\fP(3) will wait for the remaining bytes of a multibyte sequence if it detects the start of a partially-complete one.
 .PP
 \fBtermkey_get_waittime\fP() returns the value set by the last call to \fBtermkey_set_waittime\fP(), or the default value if a different has not been set.
 .SH "RETURN VALUE"
-\fBtermkey_set_waittime\fP() returns no value. \fBtermkey_get_waittime\fP() returns the current wait time in miliseconds.
+\fBtermkey_set_waittime\fP() returns no value. \fBtermkey_get_waittime\fP() returns the current wait time in milliseconds.
 .SH "SEE ALSO"
 .BR termkey_getkey (3),
 .BR termkey_waitkey (3),

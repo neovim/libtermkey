@@ -10,7 +10,7 @@
 # include <curses.h>
 # include <term.h>
 
-/* curses.h has just poluted our namespace. We want this back */
+/* curses.h has just polluted our namespace. We want this back */
 # undef buttons
 #endif
 

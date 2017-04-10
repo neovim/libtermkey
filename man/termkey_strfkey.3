@@ -47,7 +47,7 @@ Shortcut to set \fBALTISMETA\fP and \fBWRAPBRACKET\fP, to give an output close t
 .B TERMKEY_FORMAT_URWID
 Shortcut to set \fBALTISMETA\fP, \fBLONGMOD\fP, \fBLOWERMOD\fP, \fBSPACEMOD\fP and \fBLOWERSPACE\fP, to give an output close to the format the \fIurwid\fP python library uses.
 .PP
-When formatting a \fBTERMKEY_TYPE_UNICODE\fP key structure, this function uses the \fIutf8\fP member. If this member contains an empty string (i.e. its first character is 0) then this member will be prefilled by the function from the \fIcode.number\fP member. This can be convenient when the key structure is being constructed programatically by user code.
+When formatting a \fBTERMKEY_TYPE_UNICODE\fP key structure, this function uses the \fIutf8\fP member. If this member contains an empty string (i.e. its first character is 0) then this member will be prefilled by the function from the \fIcode.number\fP member. This can be convenient when the key structure is being constructed programmatically by user code.
 .SH "RETURN VALUE"
 \fBtermkey_strfkey\fP() returns the number of characters written to \fIbuffer\fP.
 .SH "SEE ALSO"
