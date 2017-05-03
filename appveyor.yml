@@ -1,0 +1,15 @@
+version: '{build}'
+install:
+- C:\msys64\usr\bin\bash -lc "pacman --verbose --noconfirm -Su"
+- C:\msys64\usr\bin\bash -lc "pacman --verbose --noconfirm --needed -S mingw-w64-x86_64-cmake mingw-w64-x86_64-unibilium"
+build_script:
+  # We cannot have sh.exe in the PATH (MinGW)
+- set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+  # Ignore msys path
+- set PATH=C:\msys64\mingw64\bin;C:\Windows\System32;C:\Windows;%PATH%
+  # Fixes issues with some toolchains where cc is called instead of gcc
+- set CC=gcc
+- mkdir build
+- cd build
+- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+- mingw32-make VERBOSE=1
