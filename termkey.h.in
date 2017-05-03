@@ -197,7 +197,9 @@ void termkey_canonicalise(TermKey *tk, TermKeyKey *key);
 
 TermKeyResult termkey_getkey(TermKey *tk, TermKeyKey *key);
 TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key);
+#ifndef _WIN32
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key);
+#endif
 
 TermKeyResult termkey_advisereadable(TermKey *tk);
 

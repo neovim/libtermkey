@@ -12,6 +12,11 @@ endif
 
 override CFLAGS +=-Wall -std=c99
 
+HAVE_TERMIOS ?= 1
+ifeq ($(HAVE_TERMIOS),1)
+  override CFLAGS += -DHAVE_TERMIOS
+endif
+
 ifeq ($(DEBUG),1)
   override CFLAGS +=-ggdb -DDEBUG
 endif
