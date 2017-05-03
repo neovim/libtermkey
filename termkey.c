@@ -3,14 +3,20 @@
 
 #include <ctype.h>
 #include <errno.h>
-#include <poll.h>
-#include <unistd.h>
+#ifndef _WIN32
+# include <poll.h>
+# include <unistd.h>
+# include <strings.h>
+#endif
 #include <string.h>
-#include <strings.h>
 
 #include <stdio.h>
 
-#define strcaseeq(a,b) (strcasecmp(a,b) == 0)
+#ifdef _MSC_VER
+# define strcaseeq(a,b) (_stricmp(a,b) == 0)
+#else
+# define strcaseeq(a,b) (strcasecmp(a,b) == 0)
+#endif
 
 void termkey_check_version(int major, int minor)
 {
@@ -276,7 +282,9 @@ static TermKey *termkey_alloc(void)
   tk->buffsize  = 256; /* bytes */
   tk->hightide  = 0;
 
+#ifdef HAVE_TERMIOS
   tk->restore_termios_valid = 0;
+#endif
 
   tk->waittime = 50; /* msec */
 
@@ -463,6 +471,7 @@ int termkey_start(TermKey *tk)
   if(tk->is_started)
     return 1;
 
+#ifdef HAVE_TERMIOS
   if(tk->fd != -1 && !(tk->flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
     if(tcgetattr(tk->fd, &termios) == 0) {
@@ -497,6 +506,7 @@ int termkey_start(TermKey *tk)
       tcsetattr(tk->fd, TCSANOW, &termios);
     }
   }
+#endif
 
   struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next)
@@ -522,8 +532,10 @@ int termkey_stop(TermKey *tk)
     if(p->driver->stop_driver)
       (*p->driver->stop_driver)(tk, p->info);
 
+#ifdef HAVE_TERMIOS
   if(tk->restore_termios_valid)
     tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
+#endif
 
   tk->is_started = 0;
 
@@ -1026,6 +1038,7 @@ TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key)
   return ret;
 }
 
+#ifndef _WIN32
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
 {
   if(tk->fd == -1) {
@@ -1085,6 +1098,7 @@ retry:
 
   /* UNREACHABLE */
 }
+#endif
 
 TermKeyResult termkey_advisereadable(TermKey *tk)
 {

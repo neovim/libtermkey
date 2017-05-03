@@ -4,7 +4,14 @@
 #include "termkey.h"
 
 #include <stdint.h>
-#include <termios.h>
+#ifdef HAVE_TERMIOS
+# include <termios.h>
+#endif
+
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 struct TermKeyDriver
 {
@@ -41,8 +48,10 @@ struct TermKey {
   size_t hightide; /* Position beyond buffstart at which peekkey() should next start
                     * normally 0, but see also termkey_interpret_csi */
 
+#ifdef HAVE_TERMIOS
   struct termios restore_termios;
   char restore_termios_valid;
+#endif
 
   int waittime; // msec
 

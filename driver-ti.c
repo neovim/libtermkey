@@ -17,7 +17,9 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
+#ifndef _WIN32
+# include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -309,8 +311,10 @@ static int start_driver(TermKey *tk, void *info)
   if(fstat(tk->fd, &statbuf) == -1)
     return 0;
 
+#ifndef _WIN32
   if(S_ISFIFO(statbuf.st_mode))
     return 1;
+#endif
 
   // Can't call putp or tputs because they suck and don't give us fd control
   len = strlen(start_string);
@@ -338,8 +342,10 @@ static int stop_driver(TermKey *tk, void *info)
   if(fstat(tk->fd, &statbuf) == -1)
     return 0;
 
+#ifndef _WIN32
   if(S_ISFIFO(statbuf.st_mode))
     return 1;
+#endif
 
   /* The terminfo database will contain keys in application cursor key mode.
    * We may need to enable that mode
