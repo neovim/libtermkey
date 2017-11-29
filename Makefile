@@ -110,7 +110,7 @@ install-inc: termkey.h
 	install -d $(DESTDIR)$(INCDIR)
 	install -m644 termkey.h $(DESTDIR)$(INCDIR)
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
-	sed "s,@LIBDIR@,$(LIBDIR),;s,@INCDIR@,$(INCDIR)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
+	LIBDIR=$(LIBDIR) INCDIR=$(INCDIR) sh termkey.pc.sh >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
 
 install-lib: $(LIBRARY)
 	install -d $(DESTDIR)$(LIBDIR)
@@ -164,7 +164,7 @@ distdir: all
 	cp t/*.c t/*.h __distdir/t
 	mkdir __distdir/man
 	cp man/*.[37] man/also __distdir/man
-	sed "s,@VERSION@,$(VERSION)," <termkey.pc.in >__distdir/termkey.pc.in
+	sed "s,@VERSION@,$(VERSION)," <termkey.pc.sh >__distdir/termkey.pc.sh
 	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
 	mv __distdir $(DISTDIR)
 
