@@ -32,10 +32,13 @@ Expect lowercase for the modifier name.
 .TP
 .B TERMKEY_FORMAT_LOWERSPACE
 Expect lowercase with spaces in for the key name instead of camelCase (for example "\f(CWpage down\fP" instead of "\f(CWPageDown\fP").
+.TP
+.B TERMKEY_FORMAT_MOUSE_POS
+Expect a mouse event to be followed by its position rendered as "\f(CW@ (col,line)\fP".
 .PP
 Before returning, this function canonicalises the \fIkey\fP structure according to the rules given for \fBtermkey_canonicalise\fP(3).
 .PP
-The \fBTERMKEY_FORMAT_WRAPBRACKET\fP and \fBTERMKEY_FORMAT_MOUSE_POS\fP options are currently not supported by \fBtermkey_strpkey\fP(). When returning a \fBTERMKEY_TYPE_UNICODE\fP key structure, this function will fill in the \fIutf8\fP member.
+The \fBTERMKEY_FORMAT_WRAPBRACKET\fP option is currently not supported by \fBtermkey_strpkey\fP(). When returning a \fBTERMKEY_TYPE_UNICODE\fP key structure, this function will fill in the \fIutf8\fP member.
 .SH "RETURN VALUE"
 After a successful parse, \fBtermkey_strpkey\fP() returns a pointer to the first character of the input it did not consume. If the input string contains more characters then this will point at the first character beyond. If the entire input string was consumed, then this will point at a null byte. If \fBtermkey_strpkey\fP() fails to parse, it returns \fBNULL\fP. After a failed parse, the \fIkey\fP structure may contain partial or invalid results. The structure will only be valid if the function returns a non-\fBNULL\fP result.
 .SH "SEE ALSO"

@@ -111,6 +111,9 @@ static struct {
   { 0, NULL },
 };
 
+// Mouse event names
+static const char *evnames[] = { "Unknown", "Press", "Drag", "Release" };
+
 #define CHARAT(i) (tk->buffer[tk->buffstart + (i)])
 
 #ifdef DEBUG
@@ -1373,8 +1376,6 @@ size_t termkey_strfkey(TermKey *tk, char *buffer, size_t len, TermKeyKey *key, T
       int line, col;
       termkey_interpret_mouse(tk, key, &ev, &button, &line, &col);
 
-      static const char *evnames[] = { "Unknown", "Press", "Drag", "Release" };
-
       l = snprintf(buffer + pos, len - pos, "Mouse%s(%d)",
           evnames[ev], button);
 
@@ -1466,6 +1467,8 @@ const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermK
   size_t nbytes;
   ssize_t snbytes;
   const char *endstr;
+  int button;
+  char event_name[32];
 
   if((endstr = termkey_lookup_keyname_format(tk, str, &key->code.sym, format))) {
     key->type = TERMKEY_TYPE_KEYSYM;
@@ -1475,13 +1478,48 @@ const char *termkey_strpkey(TermKey *tk, const char *str, TermKeyKey *key, TermK
     key->type = TERMKEY_TYPE_FUNCTION;
     str += snbytes;
   }
+  else if(sscanf(str, "Mouse%31[^(](%d)%zn", event_name, &button, &snbytes) == 2) {
+    str += snbytes;
+    key->type = TERMKEY_TYPE_MOUSE;
+
+    TermKeyMouseEvent ev = TERMKEY_MOUSE_UNKNOWN;
+    for(size_t i = 0; i < sizeof(evnames)/sizeof(evnames[0]); i++) {
+      if(strcmp(evnames[i], event_name) == 0) {
+        ev = TERMKEY_MOUSE_UNKNOWN + i;
+        break;
+      }
+    }
+
+    int code;
+    switch(ev) {
+    case TERMKEY_MOUSE_PRESS:
+    case TERMKEY_MOUSE_DRAG:
+      code = button - 1;
+      if(ev == TERMKEY_MOUSE_DRAG) {
+        code |= 0x20;
+      }
+      break;
+    case TERMKEY_MOUSE_RELEASE:
+      code = 3;
+      break;
+    default:
+      code = 128;
+      break;
+    }
+    key->code.mouse[0] = code;
+
+    unsigned int line = 0, col = 0;
+    if((format & TERMKEY_FORMAT_MOUSE_POS) && sscanf(str, " @ (%u,%u)%zn", &col, &line, &snbytes) == 2) {
+      str += snbytes;
+    }
+    termkey_key_set_linecol(key, col, line);
+  }
   // Unicode must be last
   else if(parse_utf8((unsigned const char *)str, strlen(str), &key->code.codepoint, &nbytes) == TERMKEY_RES_KEY) {
     key->type = TERMKEY_TYPE_UNICODE;
     fill_utf8(key);
     str += nbytes;
   }
-  // TODO: Consider mouse events?
   else
     return NULL;
 
