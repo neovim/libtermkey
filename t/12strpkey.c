@@ -5,11 +5,14 @@ int main(int argc, char *argv[])
 {
   TermKey      *tk;
   TermKeyKey    key;
+  TermKeyMouseEvent mouse;
+  int button, line, col;
   const char   *endp;
 
 #define CLEAR_KEY do { key.type = -1; key.code.codepoint = -1; key.modifiers = -1; key.utf8[0] = 0; } while(0)
+#define CLEAR_MOUSE do { CLEAR_KEY; mouse = -1; button = -1, line = -1; col = -1; } while(0)
 
-  plan_tests(62);
+  plan_tests(84);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -114,6 +117,48 @@ int main(int argc, char *argv[])
   is_int(key.code.number, 5,                     "key.code.number for func/5/0");
   is_int(key.modifiers,   0,                     "key.modifiers for func/5/0");
   is_str(endp, "", "consumed entire input for func/5/0");
+
+  CLEAR_MOUSE;
+  endp = termkey_strpkey(tk, "MousePress(1)", &key, 0);
+  termkey_interpret_mouse(tk, &key, &mouse, &button, &line, &col);
+  is_int(key.type,        TERMKEY_TYPE_MOUSE,    "key.type for mouse");
+  is_int(mouse,           TERMKEY_MOUSE_PRESS,   "mouse press event");
+  is_int(button,          1,                     "mouse button 1");
+  is_str(endp, "", "consumed entire input for MousePress(1)");
+
+  CLEAR_MOUSE;
+  endp = termkey_strpkey(tk, "MousePress(2) @ (3, 5)", &key, TERMKEY_FORMAT_MOUSE_POS);
+  termkey_interpret_mouse(tk, &key, &mouse, &button, &line, &col);
+  is_int(key.type,        TERMKEY_TYPE_MOUSE,    "key.type for mouse");
+  is_int(mouse,           TERMKEY_MOUSE_PRESS,   "mouse press event");
+  is_int(button,          2,                     "mouse button 2");
+  is_int(col,             3,                     "mouse column 3");
+  is_int(line,            5,                     "mouse line 5");
+  is_str(endp, "", "consumed entire input for MousePress(2) @ (3, 5)");
+
+  CLEAR_MOUSE;
+  endp = termkey_strpkey(tk, "MouseRelease(1)", &key, 0);
+  termkey_interpret_mouse(tk, &key, &mouse, &button, &line, &col);
+  is_int(key.type,        TERMKEY_TYPE_MOUSE,    "key.type for mouse");
+  is_int(mouse,           TERMKEY_MOUSE_RELEASE, "mouse release event");
+  is_int(button,          0,                     "mouse button 1 lost"); // TODO: can we recover it?
+  is_str(endp, "", "consumed entire input for MouseRelease(1)");
+
+  CLEAR_MOUSE;
+  endp = termkey_strpkey(tk, "MouseDrag(1)", &key, 0);
+  termkey_interpret_mouse(tk, &key, &mouse, &button, &line, &col);
+  is_int(key.type,        TERMKEY_TYPE_MOUSE,    "key.type for mouse");
+  is_int(mouse,           TERMKEY_MOUSE_DRAG,    "mouse drap event");
+  is_int(button,          1,                     "mouse button 1");
+  is_str(endp, "", "consumed entire input for MouseDrag(1)");
+
+  CLEAR_MOUSE;
+  endp = termkey_strpkey(tk, "MouseUnknown(1)", &key, 0);
+  termkey_interpret_mouse(tk, &key, &mouse, &button, &line, &col);
+  is_int(key.type,        TERMKEY_TYPE_MOUSE,    "key.type for mouse");
+  is_int(mouse,           TERMKEY_MOUSE_UNKNOWN, "mouse unknown event");
+  is_int(button,          0,                     "mouse button 1 lost");
+  is_str(endp, "", "consumed entire input for MouseUnknown(1)");
 
   termkey_destroy(tk);
 
