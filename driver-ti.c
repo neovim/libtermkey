@@ -152,7 +152,11 @@ static struct trie_node *compress_trie(struct trie_node *n)
       unsigned char min, max;
       // Find the real bounds
       for(min = 0; !nar->arr[min]; min++)
-        ;
+        if(min == 255 && !nar->arr[min]) {
+          free(nar);
+          return (struct trie_node_arr*)new_node_arr(1, 0);
+        }
+
       for(max = 0xff; !nar->arr[max]; max--)
         ;
 
