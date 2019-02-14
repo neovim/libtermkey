@@ -293,6 +293,8 @@ static void *new_driver(TermKey *tk, const char *term)
 
   ti->tk = tk;
   ti->root = NULL;
+  ti->start_string = NULL;
+  ti->stop_string = NULL;
 
 #ifdef HAVE_UNIBILIUM
   ti->unibi = unibi_from_term(term);
