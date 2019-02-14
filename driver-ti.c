@@ -276,8 +276,10 @@ static int load_terminfo(TermKeyTI *ti)
 
 #ifdef HAVE_UNIBILIUM
   unibi_destroy(unibi);
+  ti->unibi = NULL;
 #else
   free(ti->term);
+  ti->term = NULL;
 #endif
 
   ti->root = compress_trie(ti->root);
@@ -403,6 +405,14 @@ static void free_driver(void *info)
 
   if(ti->stop_string)
     free(ti->stop_string);
+
+#ifdef HAVE_UNIBILIUM
+  if(ti->unibi)
+    unibi_destroy(ti->unibi);
+#else
+  if(ti->term)
+    free(ti->term);
+#endif
 
   free(ti);
 }
