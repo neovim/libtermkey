@@ -218,7 +218,7 @@ static int load_terminfo(TermKeyTI *ti)
     if(ti->tk->ti_getstr_hook)
       value = (ti->tk->ti_getstr_hook)(name, value, ti->tk->ti_getstr_hook_data);
 
-    if(!value || value == (char*)-1)
+    if(!value || value == (char*)-1 || !value[0])
       continue;
 
     struct trie_node *node = NULL;
