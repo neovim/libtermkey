@@ -285,7 +285,9 @@ static TermKey *termkey_alloc(void)
   tk->buffsize  = 256; /* bytes */
   tk->hightide  = 0;
 
+#ifdef HAVE_TERMIOS
   tk->restore_termios_valid = 0;
+#endif
 
   tk->ti_getstr_hook = NULL;
   tk->ti_getstr_hook_data = NULL;
@@ -486,6 +488,7 @@ int termkey_start(TermKey *tk)
   if(tk->is_started)
     return 1;
 
+#ifdef HAVE_TERMIOS
   if(tk->fd != -1 && !(tk->flags & TERMKEY_FLAG_NOTERMIOS)) {
     struct termios termios;
     if(tcgetattr(tk->fd, &termios) == 0) {
@@ -520,6 +523,7 @@ int termkey_start(TermKey *tk)
       tcsetattr(tk->fd, TCSANOW, &termios);
     }
   }
+#endif
 
   struct TermKeyDriverNode *p;
   for(p = tk->drivers; p; p = p->next)
@@ -545,8 +549,10 @@ int termkey_stop(TermKey *tk)
     if(p->driver->stop_driver)
       (*p->driver->stop_driver)(tk, p->info);
 
+#ifdef HAVE_TERMIOS
   if(tk->restore_termios_valid)
     tcsetattr(tk->fd, TCSANOW, &tk->restore_termios);
+#endif
 
   tk->is_started = 0;
 

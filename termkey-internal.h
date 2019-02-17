@@ -1,10 +1,18 @@
 #ifndef GUARD_TERMKEY_INTERNAL_H_
 #define GUARD_TERMKEY_INTERNAL_H_
 
+//#define HAVE_TERMIOS
+
+#ifdef _WIN32
+# undef HAVE_TERMIOS
+#endif
+
 #include "termkey.h"
 
 #include <stdint.h>
-#include <termios.h>
+#ifdef HAVE_TERMIOS
+# include <termios.h>
+#endif
 
 #ifdef _MSC_VER
 #include <BaseTsd.h>
@@ -46,8 +54,10 @@ struct TermKey {
   size_t hightide; /* Position beyond buffstart at which peekkey() should next start
                     * normally 0, but see also termkey_interpret_csi */
 
+#ifdef HAVE_TERMIOS
   struct termios restore_termios;
   char restore_termios_valid;
+#endif
 
   TermKey_Terminfo_Getstr_Hook *ti_getstr_hook;
   void *ti_getstr_hook_data;
