@@ -51,6 +51,8 @@ TESTFILES=$(TESTSOURCES:.c=.t)
 VERSION_MAJOR=0
 VERSION_MINOR=20
 
+VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
+
 VERSION_CURRENT=15
 VERSION_REVISION=0
 VERSION_AGE=14
@@ -110,7 +112,7 @@ install-inc: termkey.h
 	install -d $(DESTDIR)$(INCDIR)
 	install -m644 termkey.h $(DESTDIR)$(INCDIR)
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
-	LIBDIR=$(LIBDIR) INCDIR=$(INCDIR) sh termkey.pc.sh >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
+	LIBDIR=$(LIBDIR) INCDIR=$(INCDIR) VERSION=$(VERSION) sh termkey.pc.sh >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
 
 install-lib: $(LIBRARY)
 	install -d $(DESTDIR)$(LIBDIR)
@@ -133,8 +135,6 @@ install-man:
 
 MANSOURCE=$(wildcard man/*.3.sh)
 BUILTMAN=$(MANSOURCE:.3.sh=.3)
-
-VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
 
 all: doc
 
@@ -164,7 +164,7 @@ distdir: all
 	cp t/*.c t/*.h __distdir/t
 	mkdir __distdir/man
 	cp man/*.[37] man/also __distdir/man
-	sed "s,@VERSION@,$(VERSION)," <termkey.pc.sh >__distdir/termkey.pc.sh
+	cp termkey.pc.sh __distdir/termkey.pc.sh
 	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
 	mv __distdir $(DISTDIR)
 
