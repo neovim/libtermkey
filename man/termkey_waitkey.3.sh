@@ -38,6 +38,8 @@ sed "s/\\\\/\\\\\\\\/g" demo.c
 cat <<EOF
 .in
 .fi
+.SH COMPATIBILITY
+This function is not available on Windows.
 .SH "SEE ALSO"
 .BR termkey_getkey (3),
 .BR termkey_set_waittime (3),

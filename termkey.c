@@ -3,8 +3,10 @@
 
 #include <ctype.h>
 #include <errno.h>
-#include <poll.h>
-#include <unistd.h>
+#ifndef _WIN32
+# include <poll.h>
+# include <unistd.h>
+#endif
 #include <string.h>
 #include <strings.h>
 
@@ -1055,6 +1057,7 @@ TermKeyResult termkey_getkey_force(TermKey *tk, TermKeyKey *key)
   return ret;
 }
 
+#ifndef _WIN32
 TermKeyResult termkey_waitkey(TermKey *tk, TermKeyKey *key)
 {
   if(tk->fd == -1) {
@@ -1114,6 +1117,7 @@ retry:
 
   /* UNREACHABLE */
 }
+#endif
 
 TermKeyResult termkey_advisereadable(TermKey *tk)
 {
