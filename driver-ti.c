@@ -15,11 +15,88 @@
 #endif
 
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#define streq(a,b) (!strcmp(a,b))
+
+#define MAX_FUNCNAME 9
+
+static struct {
+  const char *funcname;
+  TermKeyType type;
+  TermKeySym sym;
+  int mods;
+} funcs[] =
+{
+  /* THIS LIST MUST REMAIN SORTED! */
+  { "backspace", TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BACKSPACE, 0 },
+  { "begin",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN,     0 },
+  { "beg",       TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN,     0 },
+  { "btab",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB,       TERMKEY_KEYMOD_SHIFT },
+  { "cancel",    TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_CANCEL,    0 },
+  { "clear",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_CLEAR,     0 },
+  { "close",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_CLOSE,     0 },
+  { "command",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_COMMAND,   0 },
+  { "copy",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_COPY,      0 },
+  { "dc",        TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    0 },
+  { "down",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,      0 },
+  { "end",       TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       0 },
+  { "enter",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_ENTER,     0 },
+  { "exit",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_EXIT,      0 },
+  { "find",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      0 },
+  { "help",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HELP,      0 },
+  { "home",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      0 },
+  { "ic",        TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    0 },
+  { "left",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,      0 },
+  { "mark",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MARK,      0 },
+  { "message",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MESSAGE,   0 },
+  { "move",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MOVE,      0 },
+  { "next",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 }, // Not quite, but it's the best we can do
+  { "npage",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 },
+  { "open",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_OPEN,      0 },
+  { "options",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_OPTIONS,   0 },
+  { "ppage",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    0 },
+  { "previous",  TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    0 }, // Not quite, but it's the best we can do
+  { "print",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PRINT,     0 },
+  { "redo",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REDO,      0 },
+  { "reference", TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REFERENCE, 0 },
+  { "refresh",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REFRESH,   0 },
+  { "replace",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REPLACE,   0 },
+  { "restart",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RESTART,   0 },
+  { "resume",    TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RESUME,    0 },
+  { "right",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT,     0 },
+  { "save",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SAVE,      0 },
+  { "select",    TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    0 },
+  { "suspend",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SUSPEND,   0 },
+  { "undo",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UNDO,      0 },
+  { "up",        TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,        0 },
+  { NULL },
+};
+
+#ifdef HAVE_UNIBILIUM
+static enum unibi_string unibi_lookup_str(const char *name)
+{
+  for(enum unibi_string ret = unibi_string_begin_+1; ret < unibi_string_end_; ret++)
+    if(streq(unibi_name_str(ret), name))
+      return ret;
+
+  return -1;
+}
+
+static const char *unibi_get_str_by_name(const unibi_term *ut, const char *name)
+{
+  enum unibi_string idx = unibi_lookup_str(name);
+  if(idx == (enum unibi_string)-1)
+    return NULL;
+
+  return unibi_get_str(ut, idx);
+}
+#endif
 
 /* To be efficient at lookups, we store the byte sequence => keyinfo mapping
  * in a trie. This avoids a slow linear search through a flat list of
@@ -62,7 +139,6 @@ typedef struct {
   char *stop_string;
 } TermKeyTI;
 
-static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym *symp, int *modmask, int *modsetp);
 static int insert_seq(TermKeyTI *ti, const char *seq, struct trie_node *node);
 
 static struct trie_node *new_node_key(TermKeyType type, TermKeySym sym, int modmask, int modset)
@@ -169,6 +245,26 @@ static struct trie_node *compress_trie(struct trie_node *n)
   return n;
 }
 
+static bool try_load_terminfo_key(TermKeyTI *ti, const char *name, struct keyinfo *info)
+{
+#ifdef HAVE_UNIBILIUM
+  const char *value = unibi_get_str_by_name(ti->unibi, name);
+#else
+  const char *value = tigetstr(name);
+#endif
+
+  if(ti->tk->ti_getstr_hook)
+    value = (ti->tk->ti_getstr_hook)(name, value, ti->tk->ti_getstr_hook_data);
+
+  if(!value || value == (char*)-1 || !value[0])
+    return false;
+
+  struct trie_node *node = new_node_key(info->type, info->sym, info->modifier_mask, info->modifier_set);
+  insert_seq(ti, value, node);
+
+  return true;
+}
+
 static int load_terminfo(TermKeyTI *ti)
 {
   int i;
@@ -190,59 +286,48 @@ static int load_terminfo(TermKeyTI *ti)
   if(!ti->root)
     return 0;
 
-#ifdef HAVE_UNIBILIUM
-  for(i = unibi_string_begin_+1; i < unibi_string_end_; i++)
-#else
-  for(i = 0; strfnames[i]; i++)
-#endif
-  {
-    // Only care about the key_* constants
-#ifdef HAVE_UNIBILIUM
-    const char *name = unibi_name_str(i);
-#else
-    const char *name = strfnames[i];
-#endif
-    if(strncmp(name, "key_", 4) != 0)
+  /* First the regular key strings
+   */
+  for(i = 0; funcs[i].funcname; i++) {
+    char name[MAX_FUNCNAME + 4 + 1];
+
+    sprintf(name, "key_%s", funcs[i].funcname);
+    if(!try_load_terminfo_key(ti, name, &(struct keyinfo){
+          .type = funcs[i].type,
+          .sym  = funcs[i].sym,
+          .modifier_mask = funcs[i].mods,
+          .modifier_set  = funcs[i].mods,
+      }))
       continue;
 
-#ifdef HAVE_UNIBILIUM
-    const char *value = unibi_get_str(unibi, i);
-#else
-    const char *value = tigetstr(strnames[i]);
-#endif
-
-    if(ti->tk->ti_getstr_hook)
-      value = (ti->tk->ti_getstr_hook)(name, value, ti->tk->ti_getstr_hook_data);
-
-    if(!value || value == (char*)-1 || !value[0])
-      continue;
-
-    struct trie_node *node = NULL;
-
-    if(strcmp(name + 4, "mouse") == 0) {
-      node = new_node_key(TERMKEY_TYPE_MOUSE, 0, 0, 0);
-    }
-    else {
-      TermKeyType type;
-      TermKeySym sym;
-      int mask = 0;
-      int set  = 0;
-
-      if(!funcname2keysym(name + 4, &type, &sym, &mask, &set))
-        continue;
-
-      if(sym == TERMKEY_SYM_NONE)
-        continue;
-
-      node = new_node_key(type, sym, mask, set);
-    }
-
-    if(node)
-      if(!insert_seq(ti, value, node)) {
-        free(node);
-        return 0;
-      }
+    /* Maybe it has a shifted version */
+    sprintf(name, "key_s%s", funcs[i].funcname);
+    try_load_terminfo_key(ti, name, &(struct keyinfo){
+        .type = funcs[i].type,
+        .sym  = funcs[i].sym,
+        .modifier_mask = funcs[i].mods | TERMKEY_KEYMOD_SHIFT,
+        .modifier_set  = funcs[i].mods | TERMKEY_KEYMOD_SHIFT,
+    });
   }
+
+  /* Now the F<digit> keys
+   */
+  for(i = 1; i < 255; i++) {
+    char name[9];
+    sprintf(name, "key_f%d", i);
+    if(!try_load_terminfo_key(ti, name, &(struct keyinfo){
+          .type = TERMKEY_TYPE_FUNCTION,
+          .sym  = i,
+          .modifier_mask = 0,
+          .modifier_set  = 0,
+      }))
+      break;
+  }
+
+  /* Finally mouse mode */
+  try_load_terminfo_key(ti, "key_mouse", &(struct keyinfo){
+      .type = TERMKEY_TYPE_MOUSE,
+  });
 
   /* Take copies of these terminfo strings, in case we build multiple termkey
    * instances for multiple different termtypes, and it's different by the
@@ -460,105 +545,6 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
     return TERMKEY_RES_AGAIN;
 
   return TERMKEY_RES_NONE;
-}
-
-static struct {
-  const char *funcname;
-  TermKeyType type;
-  TermKeySym sym;
-  int mods;
-} funcs[] =
-{
-  /* THIS LIST MUST REMAIN SORTED! */
-  { "backspace", TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BACKSPACE, 0 },
-  { "begin",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN,     0 },
-  { "beg",       TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_BEGIN,     0 },
-  { "btab",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_TAB,       TERMKEY_KEYMOD_SHIFT },
-  { "cancel",    TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_CANCEL,    0 },
-  { "clear",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_CLEAR,     0 },
-  { "close",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_CLOSE,     0 },
-  { "command",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_COMMAND,   0 },
-  { "copy",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_COPY,      0 },
-  { "dc",        TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DELETE,    0 },
-  { "down",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_DOWN,      0 },
-  { "end",       TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_END,       0 },
-  { "enter",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_ENTER,     0 },
-  { "exit",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_EXIT,      0 },
-  { "find",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_FIND,      0 },
-  { "help",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HELP,      0 },
-  { "home",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_HOME,      0 },
-  { "ic",        TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_INSERT,    0 },
-  { "left",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,      0 },
-  { "mark",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MARK,      0 },
-  { "message",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MESSAGE,   0 },
-  { "move",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MOVE,      0 },
-  { "next",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 }, // Not quite, but it's the best we can do
-  { "npage",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 },
-  { "open",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_OPEN,      0 },
-  { "options",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_OPTIONS,   0 },
-  { "ppage",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    0 },
-  { "previous",  TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEUP,    0 }, // Not quite, but it's the best we can do
-  { "print",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PRINT,     0 },
-  { "redo",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REDO,      0 },
-  { "reference", TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REFERENCE, 0 },
-  { "refresh",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REFRESH,   0 },
-  { "replace",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_REPLACE,   0 },
-  { "restart",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RESTART,   0 },
-  { "resume",    TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RESUME,    0 },
-  { "right",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_RIGHT,     0 },
-  { "save",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SAVE,      0 },
-  { "select",    TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SELECT,    0 },
-  { "suspend",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_SUSPEND,   0 },
-  { "undo",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UNDO,      0 },
-  { "up",        TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_UP,        0 },
-  { NULL },
-};
-
-static int funcname2keysym(const char *funcname, TermKeyType *typep, TermKeySym *symp, int *modmaskp, int *modsetp)
-{
-  // Binary search
-
-  int start = 0;
-  int end   = sizeof(funcs)/sizeof(funcs[0]); // is "one past" the end of the range
-
-  while(1) {
-    int i = (start+end) / 2;
-    int cmp = strcmp(funcname, funcs[i].funcname);
-
-    if(cmp == 0) {
-      *typep    = funcs[i].type;
-      *symp     = funcs[i].sym;
-      *modmaskp = funcs[i].mods;
-      *modsetp  = funcs[i].mods;
-      return 1;
-    }
-    else if(end == start + 1)
-      // That was our last choice and it wasn't it - not found
-      break;
-    else if(cmp > 0)
-      start = i;
-    else
-      end = i;
-  }
-
-  if(funcname[0] == 'f' && isdigit(funcname[1])) {
-    *typep = TERMKEY_TYPE_FUNCTION;
-    *symp  = atoi(funcname + 1);
-    return 1;
-  }
-
-  // Last-ditch attempt; maybe it's a shift key?
-  if(funcname[0] == 's' && funcname2keysym(funcname + 1, typep, symp, modmaskp, modsetp)) {
-    *modmaskp |= TERMKEY_KEYMOD_SHIFT;
-    *modsetp  |= TERMKEY_KEYMOD_SHIFT;
-    return 1;
-  }
-
-#ifdef DEBUG
-  fprintf(stderr, "TODO: Need to convert funcname %s to a type/sym\n", funcname);
-#endif
-
-  return 0;
 }
 
 static int insert_seq(TermKeyTI *ti, const char *seq, struct trie_node *node)
