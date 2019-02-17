@@ -30,7 +30,6 @@
 typedef enum {
   TYPE_KEY,
   TYPE_ARR,
-  TYPE_MOUSE,
 } trie_nodetype;
 
 struct trie_node {
@@ -102,7 +101,6 @@ static struct trie_node *lookup_next(struct trie_node *n, unsigned char b)
 {
   switch(n->type) {
   case TYPE_KEY:
-  case TYPE_MOUSE:
     fprintf(stderr, "ABORT: lookup_next within a TYPE_KEY node\n");
     abort();
   case TYPE_ARR:
@@ -121,7 +119,6 @@ static void free_trie(struct trie_node *n)
 {
   switch(n->type) {
   case TYPE_KEY:
-  case TYPE_MOUSE:
     break;
   case TYPE_ARR:
     {
@@ -144,7 +141,6 @@ static struct trie_node *compress_trie(struct trie_node *n)
 
   switch(n->type) {
   case TYPE_KEY:
-  case TYPE_MOUSE:
     return n;
   case TYPE_ARR:
     {
@@ -224,11 +220,7 @@ static int load_terminfo(TermKeyTI *ti)
     struct trie_node *node = NULL;
 
     if(strcmp(name + 4, "mouse") == 0) {
-      node = malloc(sizeof(*node));
-      if(!node)
-        return 0;
-
-      node->type = TYPE_MOUSE;
+      node = new_node_key(TERMKEY_TYPE_MOUSE, 0, 0, 0);
     }
     else {
       TermKeyType type;
@@ -436,15 +428,11 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
 
     pos++;
 
-    if(p->type == TYPE_KEY) {
-      struct trie_node_key *nk = (struct trie_node_key*)p;
-      key->type      = nk->key.type;
-      key->code.sym  = nk->key.sym;
-      key->modifiers = nk->key.modifier_set;
-      *nbytep = pos;
-      return TERMKEY_RES_KEY;
-    }
-    else if(p->type == TYPE_MOUSE) {
+    if(p->type != TYPE_KEY)
+      continue;
+
+    struct trie_node_key *nk = (struct trie_node_key*)p;
+    if(nk->key.type == TERMKEY_TYPE_MOUSE) {
       tk->buffstart += pos;
       tk->buffcount -= pos;
 
@@ -458,6 +446,12 @@ static TermKeyResult peekkey(TermKey *tk, void *info, TermKeyKey *key, int force
 
       return mouse_result;
     }
+
+    key->type      = nk->key.type;
+    key->code.sym  = nk->key.sym;
+    key->modifiers = nk->key.modifier_set;
+    *nbytep = pos;
+    return TERMKEY_RES_KEY;
   }
 
   // If p is not NULL then we hadn't walked off the end yet, so we have a
@@ -497,7 +491,6 @@ static struct {
   { "left",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_LEFT,      0 },
   { "mark",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MARK,      0 },
   { "message",   TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MESSAGE,   0 },
-  { "mouse",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_NONE,      0 },
   { "move",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_MOVE,      0 },
   { "next",      TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 }, // Not quite, but it's the best we can do
   { "npage",     TERMKEY_TYPE_KEYSYM, TERMKEY_SYM_PAGEDOWN,  0 },
@@ -610,7 +603,6 @@ static int insert_seq(TermKeyTI *ti, const char *seq, struct trie_node *node)
         break;
       }
     case TYPE_KEY:
-    case TYPE_MOUSE:
       fprintf(stderr, "ASSERT FAIL: Tried to insert child node in TYPE_KEY\n");
       abort();
     }
