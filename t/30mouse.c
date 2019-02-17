@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 
   tk = termkey_new_abstract("vt100", 0);
 
-  termkey_push_bytes(tk, "\e[M !!", 6);
+  termkey_push_bytes(tk, "\x1b[M !!", 6);
 
   key.type = -1;
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse press");
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   is_int(len, 21, "string length for press");
   is_str(buffer, "MousePress(1) @ (1,1)", "string buffer for press");
 
-  termkey_push_bytes(tk, "\e[M@\"!", 6);
+  termkey_push_bytes(tk, "\x1b[M@\"!", 6);
 
   key.type = -1;
   ev = -1; button = -1; line = -1; col = -1;
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   is_int(col,    2,                   "mouse column for drag");
   is_int(key.modifiers, 0,            "modifiers for press");
 
-  termkey_push_bytes(tk, "\e[M##!", 6);
+  termkey_push_bytes(tk, "\x1b[M##!", 6);
 
   key.type = -1;
   ev = -1; button = -1; line = -1; col = -1;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
   is_int(col,    3,                     "mouse column for release");
   is_int(key.modifiers, 0,            "modifiers for press");
 
-  termkey_push_bytes(tk, "\e[M0++", 6);
+  termkey_push_bytes(tk, "\x1b[M0++", 6);
 
   key.type = -1;
   ev = -1; button = -1; line = -1; col = -1;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
   is_str(buffer, "C-MousePress(1)", "string buffer for Ctrl-press");
 
   // rxvt protocol
-  termkey_push_bytes(tk, "\e[0;20;20M", 10);
+  termkey_push_bytes(tk, "\x1b[0;20;20M", 10);
 
   key.type = -1;
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse press rxvt protocol");
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   is_int(col,    20,                  "mouse column for press rxvt protocol");
   is_int(key.modifiers, 0,            "modifiers for press rxvt protocol");
 
-  termkey_push_bytes(tk, "\e[3;20;20M", 10);
+  termkey_push_bytes(tk, "\x1b[3;20;20M", 10);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse release rxvt protocol");
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   is_int(key.modifiers, 0,            "modifiers for release rxvt protocol");
 
   // SGR protocol
-  termkey_push_bytes(tk, "\e[<0;30;30M", 11);
+  termkey_push_bytes(tk, "\x1b[<0;30;30M", 11);
 
   key.type = -1;
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse press SGR encoding");
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
   is_int(col,    30,                  "mouse column for press SGR");
   is_int(key.modifiers, 0,            "modifiers for press SGR");
 
-  termkey_push_bytes(tk, "\e[<0;30;30m", 11);
+  termkey_push_bytes(tk, "\x1b[<0;30;30m", 11);
 
   key.type = -1;
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mouse release SGR encoding");
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
   is_int(ev,     TERMKEY_MOUSE_RELEASE, "mouse event for release SGR");
 
-  termkey_push_bytes(tk, "\e[<0;500;300M", 13);
+  termkey_push_bytes(tk, "\x1b[<0;500;300M", 13);
 
   key.type = -1;
   ev = -1; button = -1; line = -1; col = -1;

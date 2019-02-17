@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
   tk = termkey_new_abstract("vt100", 0);
 
-  termkey_push_bytes(tk, "\e[?1;2$y", 8);
+  termkey_push_bytes(tk, "\x1b[?1;2$y", 8);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mode report");
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   is_int(mode,      1, "mode number from mode report");
   is_int(value,     2, "mode value from mode report");
 
-  termkey_push_bytes(tk, "\e[4;1$y", 7);
+  termkey_push_bytes(tk, "\x1b[4;1$y", 7);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for mode report");
 
