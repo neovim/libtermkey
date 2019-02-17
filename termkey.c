@@ -6,13 +6,17 @@
 #ifndef _WIN32
 # include <poll.h>
 # include <unistd.h>
+# include <strings.h>
 #endif
 #include <string.h>
-#include <strings.h>
 
 #include <stdio.h>
 
-#define strcaseeq(a,b) (strcasecmp(a,b) == 0)
+#ifdef _MSC_VER
+# define strcaseeq(a,b) (_stricmp(a,b) == 0)
+#else
+# define strcaseeq(a,b) (strcasecmp(a,b) == 0)
+#endif
 
 void termkey_check_version(int major, int minor)
 {
