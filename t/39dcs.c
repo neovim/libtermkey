@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
   tk = termkey_new_abstract("xterm", 0);
 
   // 7bit DCS
-  termkey_push_bytes(tk, "\eP1$r1 q\e\\", 10);
+  termkey_push_bytes(tk, "\x1bP1$r1 q\x1b\\", 10);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for DCS");
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_NONE, "getkey again yields RES_NONE");
 
   // 7bit OSC
-  termkey_push_bytes(tk, "\e]15;abc\e\\", 10);
+  termkey_push_bytes(tk, "\x1b]15;abc\x1b\\", 10);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for OSC");
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_NONE, "getkey again yields RES_NONE");
 
   // False alarm
-  termkey_push_bytes(tk, "\eP", 2);
+  termkey_push_bytes(tk, "\x1bP", 2);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_AGAIN, "getkey yields RES_AGAIN for false alarm");
 

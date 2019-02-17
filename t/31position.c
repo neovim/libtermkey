@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
   tk = termkey_new_abstract("vt100", 0);
 
-  termkey_push_bytes(tk, "\e[?15;7R", 8);
+  termkey_push_bytes(tk, "\x1b[?15;7R", 8);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for position report");
 
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   /* A plain CSI R is likely to be <F3> though.
    * This is tricky :/
    */
-  termkey_push_bytes(tk, "\e[R", 3);
+  termkey_push_bytes(tk, "\x1b[R", 3);
 
   is_int(termkey_getkey(tk, &key), TERMKEY_RES_KEY, "getkey yields RES_KEY for <F3>");
 
