@@ -1,7 +1,7 @@
 #ifndef GUARD_TERMKEY_INTERNAL_H_
 #define GUARD_TERMKEY_INTERNAL_H_
 
-//#define HAVE_TERMIOS
+#define HAVE_TERMIOS
 
 #ifdef _WIN32
 # undef HAVE_TERMIOS
