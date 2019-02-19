@@ -291,7 +291,7 @@ static int load_terminfo(TermKeyTI *ti)
   /* First the regular key strings
    */
   for(i = 0; funcs[i].funcname; i++) {
-    char name[MAX_FUNCNAME + 4 + 1];
+    char name[MAX_FUNCNAME + 5 + 1];
 
     sprintf(name, "key_%s", funcs[i].funcname);
     if(!try_load_terminfo_key(ti, name, &(struct keyinfo){
