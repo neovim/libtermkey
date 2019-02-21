@@ -15,6 +15,7 @@
 #endif
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -249,10 +250,14 @@ static struct trie_node *compress_trie(struct trie_node *n)
 
 static bool try_load_terminfo_key(TermKeyTI *ti, const char *name, struct keyinfo *info)
 {
+  const char *value = NULL;
+
 #ifdef HAVE_UNIBILIUM
-  const char *value = unibi_get_str_by_name(ti->unibi, name);
+  if(ti->unibi)
+    value = unibi_get_str_by_name(ti->unibi, name);
 #else
-  const char *value = tigetstr(name);
+  if(ti->term)
+    value = tigetstr(name);
 #endif
 
   if(ti->tk->ti_getstr_hook)
@@ -336,7 +341,9 @@ static int load_terminfo(TermKeyTI *ti)
    * time we want to use it
    */
 #ifdef HAVE_UNIBILIUM
-  const char *keypad_xmit = unibi_get_str(unibi, unibi_keypad_xmit);
+  const char *keypad_xmit = unibi ?
+    unibi_get_str(unibi, unibi_keypad_xmit) :
+    NULL;
 #endif
 
   if(keypad_xmit)
@@ -345,7 +352,9 @@ static int load_terminfo(TermKeyTI *ti)
     ti->start_string = NULL;
 
 #ifdef HAVE_UNIBILIUM
-  const char *keypad_local = unibi_get_str(unibi, unibi_keypad_local);
+  const char *keypad_local = unibi ?
+    unibi_get_str(unibi, unibi_keypad_local) :
+    NULL;
 #endif
 
   if(keypad_local)
@@ -354,10 +363,14 @@ static int load_terminfo(TermKeyTI *ti)
     ti->stop_string = NULL;
 
 #ifdef HAVE_UNIBILIUM
-  unibi_destroy(unibi);
+  if(unibi)
+    unibi_destroy(unibi);
+
   ti->unibi = NULL;
 #else
-  free(ti->term);
+  if(ti->term)
+    free(ti->term);
+
   ti->term = NULL;
 #endif
 
@@ -379,27 +392,29 @@ static void *new_driver(TermKey *tk, const char *term)
 
 #ifdef HAVE_UNIBILIUM
   ti->unibi = unibi_from_term(term);
-  if(!ti->unibi)
-    goto abort_free;
+  int saved_errno = errno;
+  if(!ti->unibi && saved_errno != ENOENT) {
+    free(ti);
+    return NULL;
+  }
+  /* ti->unibi may be NULL if errno == ENOENT. That means the terminal wasn't
+   * known. Lets keep going because if we get getstr hook that might invent
+   * new strings for us
+   */
 #else
   {
     int err;
 
+    ti->term = NULL;
+
     /* Have to cast away the const. But it's OK - we know terminfo won't really
     * modify term */
-    if(setupterm((char*)term, 1, &err) != OK)
-      goto abort_free;
-
-    ti->term = strdup(term);
+    if(setupterm((char*)term, 1, &err) == OK)
+      ti->term = strdup(term);
   }
 #endif
 
   return ti;
-
-abort_free:
-  free(ti);
-
-  return NULL;
 }
 
 static int start_driver(TermKey *tk, void *info)
