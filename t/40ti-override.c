@@ -22,7 +22,11 @@ int main(int argc, char *argv[])
 
   plan_tests(3);
 
-  tk = termkey_new_abstract("vt100", TERMKEY_FLAG_NOSTART);
+  /* There was never a VT750. We've just made this string up.
+   * This test ensures that the hooked function can invent TI strings for new
+   * terminal types that don't exist in the TI database yet.
+   */
+  tk = termkey_new_abstract("vt750", TERMKEY_FLAG_NOSTART);
   termkey_hook_terminfo_getstr(tk, &backspace_is_X, NULL);
   termkey_start(tk);
 
