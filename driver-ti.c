@@ -251,13 +251,21 @@ static struct trie_node *compress_trie(struct trie_node *n)
 static bool try_load_terminfo_key(TermKeyTI *ti, const char *name, struct keyinfo *info)
 {
   const char *value = NULL;
+#ifndef HAVE_UNIBILIUM
+  int i;
+#endif
 
 #ifdef HAVE_UNIBILIUM
   if(ti->unibi)
     value = unibi_get_str_by_name(ti->unibi, name);
 #else
-  if(ti->term)
-    value = tigetstr(name);
+  for (i = 0; strfnames[i]; i++) {
+    if (strcmp(strfnames[i], name) == 0) {
+      if(ti->term)
+        value = tigetstr(strnames[i]);
+      break;
+    }
+  }
 #endif
 
   if(ti->tk->ti_getstr_hook)
@@ -340,7 +348,7 @@ static int load_terminfo(TermKeyTI *ti)
       value = unibi_get_str_by_name(ti->unibi, "key_mouse");
 #else
     if(ti->term)
-      value = tigetstr("key_mouse");
+      value = tigetstr("kmous");
 #endif
 
     if(ti->tk->ti_getstr_hook)
