@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   char       buffer[32];
   size_t     len;
 
-  plan_tests(60);
+  plan_tests(66);
 
   tk = termkey_new_abstract("vt100", 0);
 
@@ -79,6 +79,26 @@ int main(int argc, char *argv[])
   len = termkey_strfkey(tk, buffer, sizeof buffer, &key, 0);
   is_int(len, 15, "string length for Ctrl-press");
   is_str(buffer, "C-MousePress(1)", "string buffer for Ctrl-press");
+
+  termkey_push_bytes(tk, "\x1b[M`!!", 6);
+
+  key.type = -1;
+  ev = -1; button = -1; line = -1; col = -1;
+  termkey_getkey(tk, &key);
+  is_int(termkey_interpret_mouse(tk, &key, &ev, &button, &line, &col), TERMKEY_RES_KEY, "interpret_mouse yields RES_KEY");
+
+  is_int(ev,     TERMKEY_MOUSE_PRESS, "mouse event for wheel down");
+  is_int(button, 4,                   "mouse button for wheel down");
+
+  termkey_push_bytes(tk, "\x1b[Mb!!", 6);
+
+  key.type = -1;
+  ev = -1; button = -1; line = -1; col = -1;
+  termkey_getkey(tk, &key);
+  is_int(termkey_interpret_mouse(tk, &key, &ev, &button, &line, &col), TERMKEY_RES_KEY, "interpret_mouse yields RES_KEY");
+
+  is_int(ev,     TERMKEY_MOUSE_PRESS, "mouse event for wheel left");
+  is_int(button, 6,                   "mouse button for wheel left");
 
   // rxvt protocol
   termkey_push_bytes(tk, "\x1b[0;20;20M", 10);
