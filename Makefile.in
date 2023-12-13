@@ -1,14 +1,10 @@
 pkgconfig = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config $(1))
 
-ifeq ($(shell uname),Darwin)
-  LIBTOOL ?= glibtool
-else
-  LIBTOOL ?= libtool
-endif
+CC = @CC@
+LIBTOOL = @LIBTOOL@
 
-ifneq ($(VERBOSE),1)
-  LIBTOOL +=--quiet
-endif
+override CFLAGS = @CFLAGS@
+override LDFLAGS = @LDFLAGS@
 
 override CFLAGS +=-Wall -std=c99
 
@@ -48,8 +44,8 @@ DEMO_OBJECTS=$(DEMOS:=.lo)
 TESTSOURCES=$(wildcard t/[0-9]*.c)
 TESTFILES=$(TESTSOURCES:.c=.t)
 
-VERSION_MAJOR=0
-VERSION_MINOR=23
+VERSION_MAJOR=@MAJOR@
+VERSION_MINOR=@MINOR@
 
 VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
 
@@ -57,10 +53,15 @@ VERSION_CURRENT=15
 VERSION_REVISION=3
 VERSION_AGE=14
 
-PREFIX=/usr/local
-LIBDIR=$(PREFIX)/lib
-INCDIR=$(PREFIX)/include
-MANDIR=$(PREFIX)/share/man
+top_builddir=@top_builddir@
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
+datadir=@datadir@
+LIBDIR=@libdir@
+INCDIR=@includedir@
+MANDIR=@mandir@
 MAN3DIR=$(MANDIR)/man3
 MAN7DIR=$(MANDIR)/man7
 
